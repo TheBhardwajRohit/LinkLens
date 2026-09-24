@@ -8,6 +8,7 @@ Full original brief: `docs/PROJECT_BRIEF.md`. This file wins where they disagree
 
 - Final-year B.Tech Cybersecurity student, has the GitHub Student Developer Pack (GitHub Pro). Personal, non-commercial project, no deadline.
 - Repo: https://github.com/TheBhardwajRohit/LinkLens (public from day one). Commit as `TheBhardwajRohit <149057886+TheBhardwajRohit@users.noreply.github.com>` (set in repo-local git config) so no personal email is exposed.
+- **Commits and PRs carry no Claude attribution.** Never add `Co-Authored-By` trailers or "Generated with Claude" lines. Every commit must show only TheBhardwajRohit (Rohit's rule, 2026-09-24).
 - Datasets: Claude picks the best ones and downloads them when needed (Rohit's OK, 2026-09-24).
 - Explain in simple, plain words. Define any technical term in one line.
 - Docs, UI text, commits: plain, human, concise. No filler. **No em-dashes.**
