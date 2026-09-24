@@ -1,0 +1,82 @@
+name: linklens
+
+# Networks keep the sandbox away from everything internal:
+#   backend      api <-> db
+#   sandbox_net  api <-> sandbox
+# The sandbox is not on "backend", so it cannot reach the database.
+
+services:
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://linklens:linklens@db:5432/linklens}
+      SANDBOX_URL: http://sandbox:8100
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,https://thebhardwajrohit.github.io
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      sandbox:
+        condition: service_healthy
+    networks: [backend, sandbox_net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  sandbox:
+    build: ./sandbox
+    # No env_file on purpose: the sandbox never gets secrets.
+    networks: [sandbox_net]
+    cpus: 1.0
+    mem_limit: 1g
+    pids_limit: 256
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    # Local dev only. No ports published, so only the api can reach it.
+    environment:
+      POSTGRES_USER: linklens
+      POSTGRES_PASSWORD: linklens
+      POSTGRES_DB: linklens
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U linklens -d linklens"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+networks:
+  backend: {}
+  sandbox_net: {}
+
+volumes:
+  db_data: {}
