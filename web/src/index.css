@@ -4,6 +4,12 @@
   --color-ink: #05070d;
   --color-panel: #0c111c;
   --color-line: #1c2536;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
 }
 
 html,
@@ -15,4 +21,35 @@ body,
 body {
   background: var(--color-ink);
   color: #e2e8f0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+::selection {
+  background: rgb(34 211 238 / 0.3);
+  color: #fff;
+}
+
+/* Static background: soft glows plus a faint dot grid. Used while 3D loads and on weak devices. */
+.bg-fallback {
+  background:
+    radial-gradient(circle at 50% 50%, rgb(56 189 248 / 0.22) 1px, transparent 1.6px) 0 0 / 34px 34px,
+    radial-gradient(60% 50% at 20% 15%, rgb(34 211 238 / 0.16), transparent 70%),
+    radial-gradient(50% 45% at 80% 30%, rgb(59 130 246 / 0.14), transparent 70%),
+    radial-gradient(40% 35% at 70% 85%, rgb(244 63 94 / 0.08), transparent 70%),
+    var(--color-ink);
+  mask-image: radial-gradient(120% 90% at 50% 40%, #000 40%, transparent 100%);
+}
+
+/* Darkens the edges so text stays readable over the 3D scene. */
+.bg-vignette {
+  background:
+    radial-gradient(70% 55% at 50% 45%, transparent 30%, rgb(5 7 13 / 0.55) 100%),
+    linear-gradient(to bottom, transparent 60%, rgb(5 7 13 / 0.6));
 }
