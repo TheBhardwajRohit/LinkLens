@@ -10,13 +10,25 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] Google Safe Browsing key saved in `.env` and tested (test URL flagged as MALWARE)
 - [x] Dataset research written to `docs/DATASETS.md`
 - [x] `.gitignore`, `.env.example`, `docs/TECH_DECISIONS.md` created
-- [ ] Docker Desktop engine running (it was stopped during the check)
+- [x] Docker Desktop engine running, GitHub CLI installed
+
+## Phase 0 checklist
+
+- [x] Git repo, commits as TheBhardwajRohit (noreply email)
+- [x] `api/`: FastAPI `/health` (database, sandbox, key names only) + 4 tests
+- [x] `sandbox/`: placeholder service with health route + 1 test
+- [x] `web/`: Vite + React + TS + Tailwind placeholder with live status card
+- [x] `docker-compose.yml`: web, api, sandbox, db; sandbox isolated (checked it can't reach the DB by name or IP)
+- [x] CI workflow: API tests, sandbox tests, web build, full stack health check, isolation check
+- [x] README
+- [ ] GitHub repo created and pushed
+- [ ] CI passes on GitHub
 
 ## Phases
 
 | # | What | Done when | Status |
 |---|---|---|---|
-| 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Plan proposed |
+| 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Done locally, push pending |
 | 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Not started |
 | 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Not started |
 | 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Not started |
@@ -30,4 +42,5 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 
 ## Log
 
-- **2026-09-24:** Project set up. No code yet.
+- **2026-09-24:** Project set up. Repo public from day one; Rohit has the Student Developer Pack; Actions will run the cron jobs.
+- **2026-09-24:** Phase 0 built. `docker compose up` serves the placeholder on :3000 and `/health` reports database ok, sandbox ok, Safe Browsing key set.
