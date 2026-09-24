@@ -12,10 +12,9 @@ venv/
 .mypy_cache/
 .ruff_cache/
 
-# Node / Next.js
+# Node / Vite
 node_modules/
-.next/
-out/
+dist/
 
 # Data and scan output (lives in Supabase, not git)
 data/
