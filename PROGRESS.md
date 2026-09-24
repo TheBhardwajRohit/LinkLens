@@ -21,15 +21,15 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] `docker-compose.yml`: web, api, sandbox, db; sandbox isolated (checked it can't reach the DB by name or IP)
 - [x] CI workflow: API tests, sandbox tests, web build, full stack health check, isolation check
 - [x] README
-- [ ] GitHub repo created and pushed
-- [ ] CI passes on GitHub
+- [x] GitHub repo created and pushed: https://github.com/TheBhardwajRohit/LinkLens
+- [x] CI passes on GitHub (all 4 jobs green)
 
 ## Phases
 
 | # | What | Done when | Status |
 |---|---|---|---|
-| 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Done locally, push pending |
-| 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Not started |
+| 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Done |
+| 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Plan proposed |
 | 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Not started |
 | 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Not started |
 | 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Not started |
