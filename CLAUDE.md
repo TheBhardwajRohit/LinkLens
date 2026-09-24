@@ -22,7 +22,7 @@ Full original brief: `docs/PROJECT_BRIEF.md`. This file wins where they disagree
 
 | Piece | Runs on | Notes |
 |---|---|---|
-| Website | GitHub Pages (static single-page app) | Free for public repos. |
+| Website | GitHub Pages (static single-page app), live at https://thebhardwajrohit.github.io/LinkLens/ | Deployed by `.github/workflows/pages.yml`. Built with `VITE_API_URL=none` until a public scan server exists, so the live site makes no API calls. |
 | Scheduled jobs (feed ingestion, nightly clustering, dataset seeding) | GitHub Actions | Public repo, so standard runner minutes are free. Ingest every 30 to 60 min. |
 | Database + screenshots | Supabase free (Postgres 500 MB, storage 1 GB, 50 MB max file) | Pauses after 1 week without DB activity; the cron keeps it awake. Local Postgres in Docker for dev and tests. |
 | Live scan server (API + sandbox) | Docker containers. Rohit's PC for now; free cloud host picked in phase 10 | GitHub cannot host it. Actions terms forbid using Actions as part of a serverless app. |

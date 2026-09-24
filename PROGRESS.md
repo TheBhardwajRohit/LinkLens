@@ -24,13 +24,28 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] GitHub repo created and pushed: https://github.com/TheBhardwajRohit/LinkLens
 - [x] CI passes on GitHub (all 4 jobs green)
 
+## Phase 1 checklist
+
+- [x] MIT license
+- [x] 3D background: 4 depth layers, glowing dots, a few pulsing red ones, drift, mouse and scroll parallax
+- [x] Falls back to a static gradient on weak devices, low frame rate, or any 3D error (error case checked in the browser)
+- [x] Reduced motion: scene renders once and stays still; cards don't float or tilt (code path in place; the browser pane can't emulate this setting, so not checked live)
+- [x] Hero: name, tagline, "Scan a link" button that scrolls to the input and focuses it
+- [x] 10 feature cards at 3 depths, float, scroll parallax, tilt on hover (mouse only)
+- [x] URL input: adds https, refangs, rejects non-web schemes, local and private addresses; 31 tests
+- [x] API `POST /scan` placeholder with the same rules; 31 tests (35 API tests total)
+- [x] Checked on desktop and phone (375 px wide) in the browser pane
+- [x] Content Security Policy on the built site, no violations
+- [x] Live on GitHub Pages: https://thebhardwajrohit.github.io/LinkLens/ (shows "scanner offline", makes no API calls)
+- [x] Commits carry no Claude attribution; history rewritten to remove the earlier co-author lines
+
 ## Phases
 
 | # | What | Done when | Status |
 |---|---|---|---|
 | 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Done |
-| 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Plan proposed |
-| 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Not started |
+| 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Done |
+| 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Plan proposed |
 | 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Not started |
 | 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Not started |
 | 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Not started |
@@ -44,3 +59,5 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 
 - **2026-09-24:** Project set up. Repo public from day one; Rohit has the Student Developer Pack; Actions will run the cron jobs.
 - **2026-09-24:** Phase 0 built. `docker compose up` serves the placeholder on :3000 and `/health` reports database ok, sandbox ok, Safe Browsing key set.
+- **2026-09-24:** Removed Claude co-author lines from all commits (history rewritten, force-pushed by Rohit). No attribution from now on.
+- **2026-09-24:** Phase 1 built. Homepage live on GitHub Pages. Local stack scans reach the `/scan` placeholder.

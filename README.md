@@ -12,7 +12,9 @@ LinkLens checks a suspicious link safely and tells you:
 
 You never open the page yourself. A locked-down sandbox browser visits it and takes a screenshot.
 
-> **Status:** early build (phase 0 of 10). See [PROGRESS.md](PROGRESS.md).
+> **Status:** early build (phase 1 of 10). See [PROGRESS.md](PROGRESS.md).
+>
+> **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only; the scanner isn't online yet)
 
 ## How it's put together
 
@@ -47,6 +49,13 @@ Website, with live reload on http://localhost:5173:
 cd web
 npm install
 npm run dev
+```
+
+Website tests:
+
+```bash
+cd web
+npm test
 ```
 
 API tests:
