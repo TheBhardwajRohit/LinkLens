@@ -62,5 +62,5 @@ def scan(req: ScanRequest) -> ScanAccepted:
         id=str(uuid.uuid4()),
         status="received",
         url=url,
-        message="Link received. Real scanning arrives in phase 2.",
+        message="The real scan arrives in phase 2.",
     )
