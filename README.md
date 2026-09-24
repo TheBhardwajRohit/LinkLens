@@ -79,3 +79,7 @@ LinkLens handles live scam links, so a few rules never bend:
 ## Credits
 
 Research datasets are credited here once they're loaded (phase 6).
+
+## License
+
+Code: [MIT](LICENSE). Datasets keep their own licenses (listed in [docs/DATASETS.md](docs/DATASETS.md)).
