@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Recon, Visit } from "../lib/api";
-import { EXAMPLE_MODEL, modelFromVisit, shortHost } from "./model";
+import { EXAMPLE_MODEL, modelFromPreview, modelFromVisit, shortHost } from "./model";
 import { createSim, settle } from "./sim";
 
 function visit(overrides: Partial<Visit>): Visit {
@@ -103,6 +103,29 @@ describe("modelFromVisit with recon", () => {
   it("mentions a brand-new domain on the final page", () => {
     const m = modelFromVisit(visit({ hops: [hop("https://c.example/", "start")] }), "k", recon);
     expect(m.bubbles.find((b) => b.node === "c.example")?.text).toBe("Ends at c[.]example, registered 3 days ago");
+  });
+});
+
+describe("modelFromPreview (a scan that's still running)", () => {
+  const partial = { requested_url: "https://c.example/", final_url: "https://c.example/", hops: [hop("https://c.example/", "start")], contacted_domains: [], blocked: [], stopped: null };
+
+  it("pulses on the link until the sandbox reports back", () => {
+    const m = modelFromPreview("https://c.example/", "id1", {});
+    expect(m.mode).toBe("searching");
+  });
+
+  it("gets a new key at each stage, so the graph grows step by step", () => {
+    const keys = [
+      modelFromPreview("x", "id1", { visit: partial }).key,
+      modelFromPreview("x", "id1", { visit: partial, server: null, registration: null }).key,
+      modelFromPreview("x", "id1", { visit: partial, server: null, verdict: { score: 87, verdict: "dangerous" } }).key,
+    ];
+    expect(new Set(keys).size).toBe(3);
+  });
+
+  it("puts the verdict on the final page once scored", () => {
+    const m = modelFromPreview("x", "id1", { visit: partial, server: null, verdict: { score: 87, verdict: "dangerous" } });
+    expect(m.bubbles.find((b) => b.node === "c.example")).toMatchObject({ text: "Likely dangerous · 87/100", tone: "red" });
   });
 });
 

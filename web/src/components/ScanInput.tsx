@@ -1,7 +1,38 @@
-import { ArrowDown, ArrowRight, Check, CircleAlert, Link2, LoaderCircle } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, CircleAlert, Link2, LoaderCircle, X } from "lucide-react";
 import { useEffect, useId, useState, type RefObject } from "react";
 
+import type { Step } from "../lib/api";
 import type { ScanControl } from "../lib/useScan";
+
+/** The live checklist while a scan runs: each step ticks off as the server reports it. */
+function StepList({ steps, startedAt }: { steps: Step[]; startedAt: number }) {
+  if (steps.length === 0) {
+    return <p className="text-slate-300">Starting the scan...</p>;
+  }
+  return (
+    <ol className="space-y-1.5">
+      {steps.map((step) => (
+        <li key={step.id} className="flex items-center gap-2.5">
+          <span className="flex h-5 w-5 items-center justify-center" aria-hidden="true">
+            {step.status === "done" && <Check className="h-4 w-4 text-blue-400" />}
+            {step.status === "running" && (
+              <LoaderCircle className="h-4 w-4 animate-spin text-blue-300 motion-reduce:animate-none" />
+            )}
+            {step.status === "failed" && <X className="h-4 w-4 text-amber-300" />}
+            {step.status === "pending" && <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />}
+          </span>
+          <span className={step.status === "pending" ? "text-slate-500" : "text-slate-200"}>{step.label}</span>
+          {step.status === "running" && (
+            <span className="font-mono text-xs text-slate-500">
+              <Elapsed since={startedAt} />
+            </span>
+          )}
+          <span className="sr-only">{step.status}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 function Elapsed({ since }: { since: number }) {
   const [now, setNow] = useState(() => Date.now());
@@ -113,17 +144,16 @@ export default function ScanInput({
             {error}
           </p>
         )}
-        {sending && (
-          <p className="text-slate-300">
-            Opening the link in the sandbox. This usually takes 5 to 30 seconds.{" "}
-            <span className="font-mono text-slate-500">
-              <Elapsed since={state.startedAt} />
-            </span>
+        {sending && <StepList steps={state.steps} startedAt={state.startedAt} />}
+        {state.kind === "loading" && (
+          <p className="flex items-center gap-2 text-slate-300">
+            <LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+            Opening the saved scan...
           </p>
         )}
         {state.kind === "done" && (
           <p className="flex flex-wrap items-center gap-x-2 text-slate-300">
-            Scan finished.
+            {state.reopened ? "Saved scan." : "Scan finished."}
             {state.refanged && <span className="text-slate-400">(We turned the defanged link back into a normal one.)</span>}
             <button
               type="button"

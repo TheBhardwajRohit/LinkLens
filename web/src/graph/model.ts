@@ -1,12 +1,12 @@
 // Turns a scan result into a small graph: the redirect chain, the final page, the domains it
 // loads from, and anything the sandbox blocked. Also holds the example graph shown before a scan.
 
-import type { Recon, Visit } from "../lib/api";
+import type { Preview, Recon, Verdict, Visit } from "../lib/api";
 import { formatAge, NEW_DOMAIN_DAYS } from "../lib/format";
 
 export type NodeKind = "origin" | "hop" | "final" | "domain" | "blocked" | "server";
 export type LinkKind = "hop" | "loads" | "blocked" | "hosted";
-export type BubbleTone = "white" | "blue" | "red";
+export type BubbleTone = "white" | "blue" | "red" | "amber" | "green";
 
 export type GraphNode = { id: string; kind: NodeKind };
 export type GraphLink = { source: string; target: string; kind: LinkKind };
@@ -43,8 +43,18 @@ function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
+// The parts of a scan the graph uses, so it can also draw a scan that's still running.
+type VisitLike = Pick<Visit, "requested_url" | "hops" | "contacted_domains" | "blocked" | "stopped">;
+type ReconLike = Pick<Recon, "server" | "registration">;
+
+const VERDICT_BUBBLE: Record<Verdict, { text: string; tone: BubbleTone }> = {
+  safe: { text: "Looks safe", tone: "green" },
+  suspicious: { text: "Suspicious", tone: "amber" },
+  dangerous: { text: "Likely dangerous", tone: "red" },
+};
+
 /** "Hosted in Pune, India · Microsoft" (short, for a bubble). */
-function hostingText(recon: Recon): string | null {
+function hostingText(recon: ReconLike): string | null {
   const s = recon.server;
   if (!s || s.status !== "ok") return null;
   const place = s.city && s.country ? `${s.city}, ${s.country}` : s.country;
@@ -53,7 +63,12 @@ function hostingText(recon: Recon): string | null {
   return [place ? `Hosted in ${place}` : "Hosted", org].filter(Boolean).join(" · ");
 }
 
-export function modelFromVisit(visit: Visit, key: string, recon?: Recon): GraphModel {
+export function modelFromVisit(
+  visit: VisitLike,
+  key: string,
+  recon?: ReconLike,
+  verdict?: { score: number; verdict: Verdict },
+): GraphModel {
   // The chain of distinct hosts the link passed through (http -> https on the same host counts once).
   const hosts: string[] = [];
   for (const hop of visit.hops) {
@@ -106,6 +121,9 @@ export function modelFromVisit(visit: Visit, key: string, recon?: Recon): GraphM
     bubbles.push({ node: final, text: `Stopped: ${lastHop?.reason ?? "private address"}`, tone: "red" });
   } else if (visit.stopped === "unreachable") {
     bubbles.push({ node: final, text: `${shortHost(final)} didn't respond${young}`, tone: "white" });
+  } else if (verdict) {
+    const v = VERDICT_BUBBLE[verdict.verdict];
+    bubbles.push({ node: final, text: `${v.text} · ${verdict.score}/100`, tone: v.tone });
   } else {
     bubbles.push({ node: final, text: `Ends at ${shortHost(final)}${young}`, tone: "blue" });
   }
@@ -138,7 +156,17 @@ export const BUBBLE_TONE: Record<BubbleTone, string> = {
   white: "[--bubble-bg:#ffffff] [--bubble-fg:#0f172a]",
   blue: "[--bubble-bg:#3b82f6] [--bubble-fg:#ffffff]",
   red: "[--bubble-bg:#f43f5e] [--bubble-fg:#ffffff]",
+  amber: "[--bubble-bg:#f59e0b] [--bubble-fg:#1c1206]",
+  green: "[--bubble-bg:#10b981] [--bubble-fg:#04140d]",
 };
+
+/** The graph for a scan that's still running: it grows as each step's data arrives. */
+export function modelFromPreview(url: string, id: string, preview: Preview): GraphModel {
+  if (!preview.visit) return searchingModel(url, `searching-${id}`);
+  const recon = preview.server !== undefined ? { server: preview.server ?? null, registration: preview.registration ?? null } : undefined;
+  const stage = preview.verdict ? "scored" : recon ? "recon" : "visit";
+  return { ...modelFromVisit(preview.visit, `${id}-${stage}`, recon, preview.verdict), mode: "result" };
+}
 
 export function searchingModel(url: string, key: string): GraphModel {
   const host = hostOf(url);

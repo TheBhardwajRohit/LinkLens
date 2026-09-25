@@ -19,7 +19,7 @@ const HOP_LABEL: Record<HopKind, string> = {
 };
 
 const OUTCOME: Record<string, { text: string; tone: "good" | "warn" | "bad" | "muted"; icon: typeof ShieldCheck }> = {
-  ok: { text: "Page captured", tone: "good", icon: ShieldCheck },
+  ok: { text: "Sandbox visit: page captured", tone: "muted", icon: ShieldCheck },
   timeout: { text: "Partial result: the page was slow", tone: "warn", icon: ShieldAlert },
   blocked: { text: "Stopped: the link leads somewhere private", tone: "bad", icon: ShieldX },
   unreachable: { text: "The site didn't respond", tone: "muted", icon: ShieldAlert },
@@ -75,7 +75,7 @@ export default function VisitReport({ visit, recon }: { visit: Visit; recon?: Re
 
   return (
     <div className="mt-2 space-y-6">
-      <div className={`rounded-xl border p-4 ${TONE[outcome.tone]}`}>
+      <div className={`rounded-xl border px-4 py-3 text-sm ${TONE[outcome.tone]}`}>
         <p className="flex items-center gap-2 font-medium">
           <Icon className="h-5 w-5" aria-hidden="true" />
           {outcome.text}
@@ -90,10 +90,6 @@ export default function VisitReport({ visit, recon }: { visit: Visit; recon?: Re
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-slate-500">
-          No risk score yet: scoring and scam type arrive in the next phase. Took{" "}
-          {(visit.duration_ms / 1000).toFixed(1)} s.
-        </p>
       </div>
 
       {visit.screenshot_jpeg_b64 && (

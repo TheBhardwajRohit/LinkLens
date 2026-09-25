@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getHealth, submitScan, type Scan } from "./api";
+import { followScan, getHealth, getScan, startScan, type Preview, type Scan, type Step } from "./api";
 import { checkUrl } from "./url";
 
 export type ScanState =
   | { kind: "idle" }
   | { kind: "invalid"; error: string }
-  | { kind: "sending"; url: string; startedAt: number }
-  | { kind: "done"; scan: Scan; refanged: boolean }
+  | { kind: "loading" } // reopening a saved scan
+  | { kind: "sending"; id: string | null; url: string; startedAt: number; steps: Step[]; preview: Preview }
+  | { kind: "done"; scan: Scan; refanged: boolean; reopened: boolean }
   | { kind: "rejected"; error: string }
   | { kind: "unavailable"; error: string }
   | { kind: "offline" };
@@ -19,17 +20,41 @@ export type ScanControl = {
   clearError: () => void;
 };
 
+const PARAM = "scan";
+
+/** The address of a saved result, to reopen or share. */
+export function resultLink(id: string): string {
+  const url = new URL(window.location.href);
+  url.search = `?${PARAM}=${encodeURIComponent(id)}`;
+  url.hash = "";
+  return url.toString();
+}
+
 /** Everything about the current scan, shared by the input, the graph, and the report. */
 export function useScan(): ScanControl {
   const [state, setState] = useState<ScanState>({ kind: "idle" });
   const [online, setOnline] = useState<boolean | null>(null);
+  const stop = useRef<() => void>(() => {});
 
   useEffect(() => {
     const controller = new AbortController();
     getHealth(controller.signal).then((h) => {
       if (!controller.signal.aborted) setOnline(h !== null);
     });
-    return () => controller.abort();
+    // Opened from a result link (?scan=...): load that scan.
+    const id = new URLSearchParams(window.location.search).get(PARAM);
+    if (id) {
+      setState({ kind: "loading" });
+      getScan(id).then((r) => {
+        if (r.kind === "found") setState({ kind: "done", scan: r.scan, refanged: false, reopened: true });
+        else if (r.kind === "missing") setState({ kind: "unavailable", error: r.error });
+        else setState({ kind: "offline" });
+      });
+    }
+    return () => {
+      controller.abort();
+      stop.current();
+    };
   }, []);
 
   const submit = useCallback(async (raw: string) => {
@@ -38,17 +63,47 @@ export function useScan(): ScanControl {
       setState({ kind: "invalid", error: check.error });
       return;
     }
-    setState({ kind: "sending", url: check.url, startedAt: Date.now() });
-    const result = await submitScan(check.url);
-    if (result.kind === "done") {
-      setState({ kind: "done", scan: result.scan, refanged: check.refanged });
-      setOnline(true);
-    } else if (result.kind === "rejected" || result.kind === "unavailable") {
-      setState({ kind: result.kind, error: result.error });
-    } else {
-      setState({ kind: "offline" });
-      setOnline(false);
+    stop.current();
+    const startedAt = Date.now();
+    setState({ kind: "sending", id: null, url: check.url, startedAt, steps: [], preview: {} });
+    const started = await startScan(check.url);
+    if (started.kind !== "started") {
+      if (started.kind === "offline") {
+        setState({ kind: "offline" });
+        setOnline(false);
+      } else {
+        setState({ kind: started.kind, error: started.error });
+      }
+      return;
     }
+    setOnline(true);
+    setState({ kind: "sending", id: started.id, url: started.url, startedAt, steps: started.steps, preview: {} });
+
+    stop.current = followScan(started.id, {
+      onStep(step, status, data) {
+        setState((s) => {
+          if (s.kind !== "sending") return s;
+          const steps = s.steps.map((x) => (x.id === step ? { ...x, status } : x));
+          const preview = { ...s.preview };
+          if (status === "done" && data) {
+            if (step === "sandbox") preview.visit = data as Preview["visit"];
+            if (step === "recon") {
+              preview.server = (data.server as Preview["server"]) ?? null;
+              preview.registration = (data.registration as Preview["registration"]) ?? null;
+            }
+            if (step === "analysis") preview.verdict = data as Preview["verdict"];
+          }
+          return { ...s, steps, preview };
+        });
+      },
+      onDone(scan) {
+        setState({ kind: "done", scan, refanged: check.refanged, reopened: false });
+        if (scan.saved) window.history.pushState(null, "", resultLink(scan.id));
+      },
+      onError(message) {
+        setState({ kind: "unavailable", error: message });
+      },
+    });
   }, []);
 
   const clearError = useCallback(() => {
