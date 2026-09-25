@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app import sandbox_client
 from app.main import app
 from app.urls import UrlError, normalize_url
 
@@ -54,13 +55,64 @@ def test_normalize_rejects(raw):
         normalize_url(raw)
 
 
-def test_scan_accepts_a_valid_link():
+FAKE_VISIT = {
+    "requested_url": "https://example.com/login",
+    "final_url": "https://example.com/login",
+    "hops": [{"url": "https://example.com/login", "kind": "start", "status": 200, "blocked": False}],
+    "screenshot_jpeg_b64": "abc",
+    "html": "<script>evil()</script>",
+    "stopped": None,
+}
+
+
+@pytest.fixture
+def fake_sandbox(monkeypatch):
+    calls = []
+
+    async def fake_visit(sandbox_url, url):
+        calls.append(url)
+        return dict(FAKE_VISIT)
+
+    monkeypatch.setattr(sandbox_client, "visit", fake_visit)
+    return calls
+
+
+def test_scan_sends_the_cleaned_link_to_the_sandbox(fake_sandbox):
     resp = TestClient(app).post("/scan", json={"url": "example.com/login"})
-    assert resp.status_code == 202
+    assert resp.status_code == 200
     body = resp.json()
-    assert body["status"] == "received"
     assert body["url"] == "https://example.com/login"
     assert body["id"]
+    assert fake_sandbox == ["https://example.com/login"]
+    assert body["visit"]["screenshot_jpeg_b64"] == "abc"
+
+
+def test_scan_never_passes_captured_html_to_the_website(fake_sandbox):
+    body = TestClient(app).post("/scan", json={"url": "example.com"}).json()
+    assert "html" not in body["visit"]
+    assert "evil()" not in str(body)
+
+
+def test_bad_links_never_reach_the_sandbox(fake_sandbox):
+    TestClient(app).post("/scan", json={"url": "http://169.254.169.254/"})
+    assert fake_sandbox == []
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (sandbox_client.SandboxUnavailable, "isn't running"),
+        (sandbox_client.SandboxBusy, "busy"),
+    ],
+)
+def test_sandbox_problems_give_a_plain_503(monkeypatch, error, message):
+    async def broken_visit(sandbox_url, url):
+        raise error
+
+    monkeypatch.setattr(sandbox_client, "visit", broken_visit)
+    resp = TestClient(app).post("/scan", json={"url": "example.com"})
+    assert resp.status_code == 503
+    assert message in resp.json()["detail"]
 
 
 def test_scan_rejects_a_bad_link_with_a_plain_message():

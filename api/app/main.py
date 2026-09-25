@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app import __version__, checks
+from app import __version__, checks, sandbox_client
 from app.config import Settings, get_settings
 from app.urls import UrlError, normalize_url
 
@@ -25,11 +25,12 @@ class ScanRequest(BaseModel):
     url: str = Field(max_length=4096)
 
 
-class ScanAccepted(BaseModel):
+class ScanResult(BaseModel):
     id: str
-    status: str
     url: str
-    message: str
+    # What the sandbox saw. Captured HTML is removed before it leaves the API:
+    # the website only ever shows the screenshot (safety rule 5).
+    visit: dict
 
 
 @app.get("/")
@@ -51,16 +52,24 @@ def health(settings: SettingsDep) -> dict:
     }
 
 
-@app.post("/scan", status_code=status.HTTP_202_ACCEPTED)
-def scan(req: ScanRequest) -> ScanAccepted:
-    """Placeholder. Checks the link and accepts it, but does not scan yet (phase 2)."""
+@app.post("/scan")
+async def scan(req: ScanRequest, settings: SettingsDep) -> ScanResult:
+    """Check the link, then have the sandbox visit it. Analysis and scoring come in later phases."""
     try:
         url = normalize_url(req.url)
     except UrlError as err:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err)) from err
-    return ScanAccepted(
-        id=str(uuid.uuid4()),
-        status="received",
-        url=url,
-        message="The real scan arrives in phase 2.",
-    )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(err)) from err
+    try:
+        visit = await sandbox_client.visit(settings.sandbox_url, url)
+    except sandbox_client.SandboxBusy as err:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "The sandbox is busy with another link. Try again in a minute.",
+        ) from err
+    except sandbox_client.SandboxUnavailable as err:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "The sandbox isn't running, so the link can't be opened right now.",
+        ) from err
+    visit.pop("html", None)
+    return ScanResult(id=str(uuid.uuid4()), url=url, visit=visit)
