@@ -1,16 +1,27 @@
-import { CircleAlert, LoaderCircle, ScanSearch, ShieldCheck } from "lucide-react";
+import { CircleAlert, LoaderCircle, ScanSearch } from "lucide-react";
 import { useEffect, useId, useState, type FormEvent, type RefObject } from "react";
 
-import { getHealth, submitScan } from "../lib/api";
-import { checkUrl, defang } from "../lib/url";
+import { getHealth, submitScan, type Scan } from "../lib/api";
+import { checkUrl } from "../lib/url";
+import VisitReport from "./VisitReport";
 
 type Status =
   | { kind: "idle" }
   | { kind: "invalid"; error: string }
-  | { kind: "sending" }
-  | { kind: "accepted"; url: string; message: string; refanged: boolean }
+  | { kind: "sending"; startedAt: number }
+  | { kind: "done"; scan: Scan; refanged: boolean }
   | { kind: "rejected"; error: string }
+  | { kind: "unavailable"; error: string }
   | { kind: "offline" };
+
+function Elapsed({ since }: { since: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return <>{Math.max(0, Math.round((now - since) / 1000))} s</>;
+}
 
 function ScannerPill({ online }: { online: boolean | null }) {
   const [dot, label] =
@@ -45,13 +56,13 @@ export default function ScanForm({ inputRef }: { inputRef: RefObject<HTMLInputEl
       setStatus({ kind: "invalid", error: check.error });
       return;
     }
-    setStatus({ kind: "sending" });
+    setStatus({ kind: "sending", startedAt: Date.now() });
     const result = await submitScan(check.url);
-    if (result.kind === "accepted") {
-      setStatus({ kind: "accepted", url: result.scan.url, message: result.scan.message, refanged: check.refanged });
+    if (result.kind === "done") {
+      setStatus({ kind: "done", scan: result.scan, refanged: check.refanged });
       setOnline(true);
-    } else if (result.kind === "rejected") {
-      setStatus({ kind: "rejected", error: result.error });
+    } else if (result.kind === "rejected" || result.kind === "unavailable") {
+      setStatus({ kind: result.kind, error: result.error });
     } else {
       setStatus({ kind: "offline" });
       setOnline(false);
@@ -124,18 +135,26 @@ export default function ScanForm({ inputRef }: { inputRef: RefObject<HTMLInputEl
               The scanner isn't online right now. LinkLens is still being built, and scanning only runs on a local machine for now.
             </p>
           )}
-          {status.kind === "accepted" && (
-            <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
-              <p className="flex items-center gap-2 font-medium text-emerald-300">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                Link received
-              </p>
-              <p className="mt-2 break-all font-mono text-slate-300">{defang(status.url)}</p>
-              {status.refanged && <p className="mt-2 text-slate-400">We turned the defanged link back into a normal one first.</p>}
-              <p className="mt-2 text-slate-400">{status.message}</p>
-            </div>
+          {status.kind === "unavailable" && (
+            <p className="flex items-start gap-2 text-slate-300">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
+              {status.error}
+            </p>
+          )}
+          {status.kind === "sending" && (
+            <p className="flex items-center gap-2 text-slate-300">
+              <LoaderCircle className="h-4 w-4 animate-spin text-cyan-300 motion-reduce:animate-none" aria-hidden="true" />
+              Opening the link in the sandbox. This usually takes 5 to 30 seconds.{" "}
+              <span className="font-mono text-slate-500">
+                <Elapsed since={status.startedAt} />
+              </span>
+            </p>
+          )}
+          {status.kind === "done" && status.refanged && (
+            <p className="mb-3 text-slate-400">We turned the defanged link back into a normal one first.</p>
           )}
         </div>
+        {status.kind === "done" && <VisitReport visit={status.scan.visit} />}
       </div>
     </section>
   );

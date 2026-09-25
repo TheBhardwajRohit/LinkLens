@@ -5,6 +5,9 @@ const configured = import.meta.env.VITE_API_URL;
 export const API_URL: string =
   configured === undefined ? "http://localhost:8000" : configured === "none" ? "" : configured;
 
+// A visit can take up to a minute, plus time waiting for the sandbox to be free.
+const SCAN_TIMEOUT_MS = 150_000;
+
 export type Health = {
   status: "ok" | "degraded";
   version: string;
@@ -12,11 +15,35 @@ export type Health = {
   keys: Record<string, boolean>;
 };
 
-export type ScanAccepted = { id: string; status: string; url: string; message: string };
+export type HopKind = "start" | "server" | "header" | "meta" | "script" | "form" | "page";
+
+export type Hop = { url: string; kind: HopKind; status: number | null; blocked: boolean; reason: string | null };
+
+export type Visit = {
+  requested_url: string;
+  final_url: string | null;
+  title: string | null;
+  status: number | null;
+  hops: Hop[];
+  blocked: { host: string; port: number; reason: string }[];
+  contacted_domains: string[];
+  screenshot_jpeg_b64: string | null;
+  html_truncated: boolean;
+  bot_check: string | null;
+  downloads: string[];
+  popups: string[];
+  pending_refresh: string | null;
+  stopped: "timeout" | "blocked" | "unreachable" | "download" | "crashed" | "error" | null;
+  notes: string[];
+  duration_ms: number;
+};
+
+export type Scan = { id: string; url: string; visit: Visit };
 
 export type ScanResult =
-  | { kind: "accepted"; scan: ScanAccepted }
+  | { kind: "done"; scan: Scan }
   | { kind: "rejected"; error: string }
+  | { kind: "unavailable"; error: string }
   | { kind: "offline" };
 
 export async function getHealth(signal?: AbortSignal): Promise<Health | null> {
@@ -29,6 +56,11 @@ export async function getHealth(signal?: AbortSignal): Promise<Health | null> {
   }
 }
 
+async function detail(resp: Response): Promise<string | null> {
+  const body = (await resp.json().catch(() => null)) as { detail?: unknown } | null;
+  return typeof body?.detail === "string" ? body.detail : null;
+}
+
 export async function submitScan(url: string): Promise<ScanResult> {
   if (!API_URL) return { kind: "offline" };
   let resp: Response;
@@ -37,14 +69,20 @@ export async function submitScan(url: string): Promise<ScanResult> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(SCAN_TIMEOUT_MS),
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "TimeoutError") {
+      return { kind: "unavailable", error: "The scan took too long and was stopped. Try again in a minute." };
+    }
     return { kind: "offline" };
   }
-  if (resp.status === 202) return { kind: "accepted", scan: (await resp.json()) as ScanAccepted };
+  if (resp.status === 200) return { kind: "done", scan: (await resp.json()) as Scan };
   if (resp.status === 400) {
-    const body = (await resp.json().catch(() => null)) as { detail?: unknown } | null;
-    if (typeof body?.detail === "string") return { kind: "rejected", error: body.detail };
+    return { kind: "rejected", error: (await detail(resp)) ?? "That link couldn't be read. Check it and try again." };
   }
-  return { kind: "rejected", error: "The scanner couldn't read that link. Check it and try again." };
+  if (resp.status === 503) {
+    return { kind: "unavailable", error: (await detail(resp)) ?? "The scanner isn't available right now." };
+  }
+  return { kind: "rejected", error: "Something went wrong on the scanner. Try again." };
 }
