@@ -11,6 +11,7 @@ import asyncio
 import base64
 import contextlib
 import re
+import ssl
 import time
 from dataclasses import dataclass
 from urllib.parse import urljoin, urlsplit
@@ -20,8 +21,10 @@ from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import TimeoutError as PlaywrightTimeout
 from pydantic import BaseModel
 
+from app import tls
 from app.guard import Blocked, Guard
 from app.proxy import BLOCKED_HEADER, FilteringProxy
+from app.tls import TlsInfo
 
 VIEWPORT = {"width": 1280, "height": 800}
 MAX_HTML_BYTES = 2 * 1024 * 1024
@@ -101,6 +104,11 @@ class VisitResult(BaseModel):
     downloads: list[str] = []
     popups: list[str] = []
     pending_refresh: str | None = None
+    # HTTP headers of the final page. Cookie values are dropped; only their count is kept.
+    headers: dict[str, str] = {}
+    # The IP address the sandbox actually connected to, for each host.
+    server_ips: dict[str, str] = {}
+    tls: TlsInfo | None = None
     # None means the visit finished normally. Otherwise:
     # timeout | blocked | unreachable | download | crashed | error
     stopped: str | None = None
@@ -138,6 +146,7 @@ class _Recorder:
         self.result = result
         self.nav: list[Request] = []
         self.status: dict[int, int] = {}
+        self.responses: dict[int, Response] = {}
         self.blocked: set[int] = set()
         self.failed: dict[int, str] = {}
         self.read_docs: set[str] = set()
@@ -178,6 +187,7 @@ class _Recorder:
         if not self._is_main_nav(request):
             return
         self.status[id(request)] = response.status
+        self.responses[id(request)] = response
         if response.headers.get(BLOCKED_HEADER.lower()):
             self.blocked.add(id(request))
         elif 200 <= response.status < 300:
@@ -200,6 +210,21 @@ class _Recorder:
     async def finish(self) -> None:
         if self._reads:
             await asyncio.wait(self._reads, timeout=2)
+
+    async def final_headers(self) -> dict[str, str]:
+        """Headers of the last page the main frame loaded, with cookie values removed."""
+        response = next((self.responses[id(r)] for r in reversed(self.nav) if id(r) in self.responses), None)
+        if response is None:
+            return {}
+        try:
+            raw = await response.all_headers()
+        except PlaywrightError:
+            return {}
+        headers = {k.lower(): v[:500] for k, v in list(raw.items())[:60] if k.lower() != "set-cookie"}
+        cookies = raw.get("set-cookie")
+        if cookies:
+            headers["set-cookie"] = f"{len(cookies.splitlines())} cookie(s), values not kept"
+        return headers
 
     def _page_redirect_kind(self, url: str, prev_url: str, reasons: list[tuple[str, str]]) -> str:
         target = url.split("#")[0]
@@ -337,6 +362,7 @@ async def _browse(
 
             if result.stopped not in ("blocked", "unreachable", "crashed", "download"):
                 await _capture(page, result)
+                result.headers = await rec.final_headers()
         finally:
             with contextlib.suppress(Exception):
                 await browser.close()
@@ -370,6 +396,9 @@ async def _capture(page: Page, result: VisitResult) -> None:
 
 def _summarize_network(result: VisitResult, proxy: FilteringProxy) -> None:
     result.contacted_domains = sorted({e.host for e in proxy.events if e.allowed})
+    for e in proxy.events:
+        if e.allowed and e.ip and e.host not in result.server_ips:
+            result.server_ips[e.host] = e.ip
     seen: set[tuple[str, int]] = set()
     for e in proxy.events:
         if not e.allowed and (e.host, e.port) not in seen:
@@ -442,5 +471,17 @@ async def visit(url: str, guard: Guard, limits: Limits | None = None) -> VisitRe
         await proxy.stop()
         _summarize_network(result, proxy)
         _explain(result)
-        result.duration_ms = int((time.monotonic() - started) * 1000)
+    await _read_certificate(result, guard)
+    result.duration_ms = int((time.monotonic() - started) * 1000)
     return result
+
+
+async def _read_certificate(result: VisitResult, guard: Guard) -> None:
+    """Read the final page's TLS certificate (https only). A failure just leaves it empty."""
+    if not result.final_url or result.stopped in ("blocked", "unreachable"):
+        return
+    parts = urlsplit(result.final_url)
+    if parts.scheme != "https" or not parts.hostname:
+        return
+    with contextlib.suppress(Blocked, OSError, TimeoutError, ssl.SSLError, ValueError):
+        result.tls = await asyncio.wait_for(tls.fetch(parts.hostname, parts.port or 443, guard), 15)

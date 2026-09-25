@@ -9,11 +9,19 @@ resolved by a fake resolver:
     anything else -> "not found"
 """
 
+import ssl
+import tempfile
 import threading
 import time
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import NameOID
 
 from app.guard import Guard
 
@@ -81,6 +89,16 @@ class FixtureServer:
                 elif path in PAGES:
                     body = PAGES[path].replace("{port}", port).encode()
                     self._send(200, body, {"Content-Type": "text/html; charset=utf-8"})
+                elif path == "/cookie":
+                    self._send(
+                        200,
+                        b"<title>Cookie</title>",
+                        {
+                            "Content-Type": "text/html",
+                            "Set-Cookie": "session=secret-value",
+                            "X-Powered-By": "PHP/8.3",
+                        },
+                    )
                 elif path == "/refresh-header":
                     self._send(
                         200,
@@ -111,15 +129,56 @@ class FixtureServer:
         self.port = self._httpd.server_address[1]
         self._thread = threading.Thread(target=self._httpd.serve_forever, daemon=True)
 
+        # The same pages over HTTPS, with a self-signed certificate made just for this test run.
+        self._https = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self._https.daemon_threads = True
+        self._https.socket = _self_signed_context().wrap_socket(self._https.socket, server_side=True)
+        self.tls_port = self._https.server_address[1]
+        self._tls_thread = threading.Thread(target=self._https.serve_forever, daemon=True)
+
     def url(self, path: str, host: str = "site.test") -> str:
         return f"http://{host}:{self.port}{path}"
 
+    def https_url(self, path: str, host: str = "site.test") -> str:
+        return f"https://{host}:{self.tls_port}{path}"
+
     def start(self):
         self._thread.start()
+        self._tls_thread.start()
 
     def stop(self):
-        self._httpd.shutdown()
-        self._httpd.server_close()
+        for server in (self._httpd, self._https):
+            server.shutdown()
+            server.server_close()
+
+
+def _self_signed_context() -> ssl.SSLContext:
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "site.test")])
+    now = datetime.now(UTC)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=30))
+        .add_extension(
+            x509.SubjectAlternativeName([x509.DNSName("site.test"), x509.DNSName("www.site.test")]), False
+        )
+        .sign(key, hashes.SHA256())
+    )
+    folder = Path(tempfile.mkdtemp())
+    (folder / "cert.pem").write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    (folder / "key.pem").write_bytes(
+        key.private_bytes(
+            serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
+        )
+    )
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(folder / "cert.pem", folder / "key.pem")
+    return context
 
 
 def fake_resolver(mapping: dict[str, list[str]]):
@@ -149,7 +208,10 @@ def fixture_server():
 @pytest.fixture
 def guard(fixture_server):
     # Only the fixture server's exact address and port get through. Every other private address is blocked.
-    return Guard(resolver=fake_resolver(RESOLVE), allow=frozenset({("127.0.0.1", fixture_server.port)}))
+    return Guard(
+        resolver=fake_resolver(RESOLVE),
+        allow=frozenset({("127.0.0.1", fixture_server.port), ("127.0.0.1", fixture_server.tls_port)}),
+    )
 
 
 @pytest.fixture
