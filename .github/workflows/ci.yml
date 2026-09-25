@@ -37,11 +37,13 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: sandbox/requirements-dev.txt
-      - run: pip install -r requirements-dev.txt
+      - run: pip install ruff==0.16.8
       - run: ruff check .
-      - run: pytest -q
+      - run: ruff format --check .
+      # Tests run inside the sandbox image, against the same Chromium that real scans use,
+      # with networking turned off so they can't reach the internet.
+      - run: docker build --target test -t linklens-sandbox-test .
+      - run: docker run --rm --network none linklens-sandbox-test
 
   web:
     name: Web build
@@ -78,6 +80,29 @@ jobs:
           if docker compose exec -T sandbox python -c "import socket; socket.create_connection(('db', 5432), timeout=3)"; then
             echo "Sandbox reached the database. This must never happen." && exit 1
           fi
+      # example.com is a reserved, always-safe example domain.
+      - name: A real scan of a safe page works
+        run: |
+          curl -fsS -X POST http://localhost:8000/scan -H "Content-Type: application/json" \
+            -d '{"url": "https://example.com"}' -o scan.json
+          python3 -c "
+          import json
+          v = json.load(open('scan.json'))['visit']
+          assert v['stopped'] is None, v['notes']
+          assert v['title'] == 'Example Domain', v['title']
+          assert v['screenshot_jpeg_b64'], 'no screenshot'
+          assert 'html' not in v, 'captured HTML must never leave the API'
+          "
+      # localtest.me is a public test name whose DNS answer is 127.0.0.1.
+      - name: A public name that points at this machine is blocked
+        run: |
+          curl -fsS -X POST http://localhost:8000/scan -H "Content-Type: application/json" \
+            -d '{"url": "http://localtest.me"}' -o blocked.json
+          python3 -c "
+          import json
+          v = json.load(open('blocked.json'))['visit']
+          assert v['stopped'] == 'blocked', v
+          "
       - name: Show logs on failure
         if: failure()
         run: docker compose logs

@@ -56,6 +56,8 @@ Full original brief: `docs/PROJECT_BRIEF.md`. This file wins where they disagree
 9. Tests never hit live malicious URLs. Use saved fixtures and safe test URLs (e.g. Google's `malware.testing.google.test`).
 10. Live-feed ingestion runs in isolated environments (Actions runners or a VM), never on Rohit's PC or campus network.
 
+How the sandbox enforces this (phase 2): `guard.py` resolves every host and allows only public IPs; `proxy.py` is the only way out for Chromium and connects to the exact IP the guard checked; `visit.py` drives the browser (no typing, clicking, submitting, or downloads). Tests run in the sandbox image with `--network none` against a local fixture server. The guard's `allow` list is for tests only and is never read from config.
+
 ## Scan pipeline (target: blacklist verdict in seconds, full result in about 1 minute)
 
 1. Normalize: add scheme, decode punycode/IDN (show both, flag lookalikes), expand shorteners, redact personal data.

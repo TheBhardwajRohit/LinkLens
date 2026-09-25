@@ -39,14 +39,26 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] Live on GitHub Pages: https://thebhardwajrohit.github.io/LinkLens/ (shows "scanner offline", makes no API calls)
 - [x] Commits carry no Claude attribution; history rewritten to remove the earlier co-author lines
 
+## Phase 2 checklist
+
+- [x] SSRF guard (`sandbox/app/guard.py`): looks up every host, allows only public addresses; blocks private, local, cloud metadata, reserved, IPv6 forms hiding IPv4, odd number forms like `2130706433`, and non-web ports
+- [x] Filtering proxy (`sandbox/app/proxy.py`): every browser connection goes through it; connects to the exact IP the guard checked (stops DNS rebinding); caps connections and bytes; logs contacted domains
+- [x] Sandbox browser (`sandbox/app/visit.py`): Playwright 1.63 + Chromium; redirect chain (server, Refresh header, meta, script, page-submitted form), final address, screenshot, HTML, title
+- [x] Never types, clicks, submits, or downloads; dialogs dismissed, popups closed, service workers blocked, UDP off; bot checks detected, never bypassed; hard time limits; one visit at a time
+- [x] API `/scan` hands the link to the sandbox and drops captured HTML before replying
+- [x] Website shows the outcome, screenshot, final address, link trail, blocked requests, contacted domains (all defanged, copy button)
+- [x] 85 sandbox tests, run in the real image with networking off; 39 API tests; 31 website tests
+- [x] Live check: example.com and github.com captured; localtest.me (DNS points at 127.0.0.1) and 169.254.169.254.nip.io (cloud metadata) blocked
+- [x] CI: sandbox tests in the image offline, plus a real scan of example.com and a blocked localtest.me in the full-stack job
+
 ## Phases
 
 | # | What | Done when | Status |
 |---|---|---|---|
 | 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Done |
 | 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Done |
-| 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Plan proposed |
-| 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Not started |
+| 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Done |
+| 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Plan proposed |
 | 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Not started |
 | 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Not started |
 | 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Not started |
@@ -61,3 +73,4 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - **2026-09-24:** Phase 0 built. `docker compose up` serves the placeholder on :3000 and `/health` reports database ok, sandbox ok, Safe Browsing key set.
 - **2026-09-24:** Removed Claude co-author lines from all commits (history rewritten, force-pushed by Rohit). No attribution from now on.
 - **2026-09-24:** Phase 1 built. Homepage live on GitHub Pages. Local stack scans reach the `/scan` placeholder.
+- **2026-09-25:** Phase 2 built. Real scans on the local stack (http://localhost:3000). The live Pages site still shows "scanner offline" by design until a public scan server exists.
