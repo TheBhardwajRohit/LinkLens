@@ -27,6 +27,8 @@ services:
     volumes:
       # MaxMind GeoLite2 files live here (never in git; their license forbids sharing them).
       - geoip_data:/data/geoip
+      # The Tranco top-sites list (downloaded monthly, not committed).
+      - lists_data:/data/lists
     ports:
       - "8000:8000"
     depends_on:
@@ -88,3 +90,4 @@ networks:
 volumes:
   db_data: {}
   geoip_data: {}
+  lists_data: {}

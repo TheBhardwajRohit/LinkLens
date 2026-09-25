@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://linklens:linklens@localhost:5432/linklens"
     sandbox_url: str = "http://localhost:8100"
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    scan_rate_limit_per_hour: int = 20
+    # Database setup and list downloads at startup. Tests turn this off.
+    startup_tasks: bool = True
 
     # Optional keys. SecretStr keeps values out of logs and error messages.
     google_safe_browsing_api_key: SecretStr = SecretStr("")

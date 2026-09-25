@@ -39,12 +39,19 @@ FIELD_WORDS = {
 def impersonated_brands(
     link: LinkFeatures, page: PageFeatures, page_host: str, page_domain: str | None
 ) -> list[Brand]:
-    """Brands the link or page pretends to be, while not being that brand's real site."""
+    """Brands the link or page pretends to be, while not being that brand's real site.
+
+    A plain mention isn't enough (real sites mention other brands all the time). It counts when the
+    link imitates the brand, the page's title claims it, or the page names it while asking for
+    passwords, card numbers, or similar."""
     by_name = {b.name: b for b in brands()}
     found: list[Brand] = []
     if link.lookalike and link.lookalike.brand in by_name:
         found.append(by_name[link.lookalike.brand])
-    for name in page.brand_in_title + page.brands_mentioned:
+    candidates = list(page.brand_in_title)
+    if page.asks_for:
+        candidates += page.brands_mentioned
+    for name in candidates:
         brand = by_name.get(name)
         if brand and brand not in found and not brand.is_official(page_host, page_domain):
             found.append(brand)

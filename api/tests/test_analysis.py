@@ -170,6 +170,14 @@ def test_fake_sbi_page_is_dangerous_with_plain_reasons():
     assert a.reasons[0].points >= a.reasons[-1].points  # strongest first
 
 
+def test_mentioning_other_brands_is_not_impersonation():
+    html = "<title>Our partners</title><p>We work with Microsoft, Google and PayPal.</p>"
+    url = "https://partners-blog-example.com/"
+    a = analyze(visit_for(url, html), recon(age_days=900), url)
+    assert not any("isn't" in r.text for r in a.reasons)
+    assert a.verdict == "safe"
+
+
 def test_harmless_old_page_is_safe():
     url = "https://lemon-cakes-example.com/"
     a = analyze(visit_for(url, page("benign.html")), recon(age_days=4000), url)
