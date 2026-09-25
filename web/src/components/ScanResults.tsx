@@ -27,7 +27,7 @@ export default function ScanResults({
             Scan another link
           </button>
         </div>
-        <VisitReport visit={scan.visit} />
+        <VisitReport visit={scan.visit} recon={scan.recon} />
       </div>
     </section>
   );

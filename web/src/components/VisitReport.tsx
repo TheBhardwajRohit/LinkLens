@@ -1,11 +1,12 @@
 // Shows what the sandbox saw. Everything here came from a possibly dangerous page, so:
 // the page is shown only as a screenshot (an image), and every address is defanged plain text.
 
-import { Check, CircleAlert, Copy, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { CircleAlert, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 
-import type { Hop, HopKind, Visit } from "../lib/api";
+import type { Hop, HopKind, Recon, Visit } from "../lib/api";
 import { defang } from "../lib/url";
+import ReconReport from "./ReconReport";
+import { CopyButton, Section } from "./ReportParts";
 
 const HOP_LABEL: Record<HopKind, string> = {
   start: "Start",
@@ -34,29 +35,6 @@ const TONE = {
   muted: "border-line bg-ink/40 text-slate-300",
 };
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        navigator.clipboard
-          ?.writeText(text)
-          .then(() => {
-            setCopied(true);
-            window.setTimeout(() => setCopied(false), 1500);
-          })
-          .catch(() => {});
-      }}
-      className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-cyan-300"
-      aria-label={copied ? "Copied" : "Copy the defanged address"}
-      title="Copy (defanged)"
-    >
-      {copied ? <Check className="h-4 w-4 text-emerald-300" /> : <Copy className="h-4 w-4" />}
-    </button>
-  );
-}
-
 function Address({ url }: { url: string }) {
   const safe = defang(url);
   return (
@@ -64,15 +42,6 @@ function Address({ url }: { url: string }) {
       <span className="min-w-0 break-all font-mono text-sm text-slate-200">{safe}</span>
       <CopyButton text={safe} />
     </span>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
-      {children}
-    </section>
   );
 }
 
@@ -100,7 +69,7 @@ function HopRow({ hop, index }: { hop: Hop; index: number }) {
   );
 }
 
-export default function VisitReport({ visit }: { visit: Visit }) {
+export default function VisitReport({ visit, recon }: { visit: Visit; recon?: Recon }) {
   const outcome = OUTCOME[visit.stopped ?? "ok"] ?? OUTCOME.error;
   const Icon = outcome.icon;
 
@@ -122,7 +91,7 @@ export default function VisitReport({ visit }: { visit: Visit }) {
           </ul>
         )}
         <p className="mt-2 text-xs text-slate-500">
-          Visual check only. The risk score and scam type arrive in a later phase. Took{" "}
+          No risk score yet: scoring and scam type arrive in the next phase. Took{" "}
           {(visit.duration_ms / 1000).toFixed(1)} s.
         </p>
       </div>
@@ -152,6 +121,8 @@ export default function VisitReport({ visit }: { visit: Visit }) {
           )}
         </Section>
       )}
+
+      {recon && <ReconReport recon={recon} finalUrl={visit.final_url ?? visit.requested_url} />}
 
       {visit.hops.length > 0 && (
         <Section title={`Link trail (${visit.hops.length} ${visit.hops.length === 1 ? "step" : "steps"})`}>

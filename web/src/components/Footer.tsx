@@ -12,6 +12,18 @@ export default function Footer() {
           Source on GitHub
         </a>
       </p>
+      <p className="mt-4 text-xs text-slate-600">
+        This product includes GeoLite Data created by MaxMind, available from{" "}
+        <a
+          href="https://www.maxmind.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline-offset-4 hover:text-slate-400 hover:underline"
+        >
+          https://www.maxmind.com
+        </a>
+        .
+      </p>
     </footer>
   );
 }

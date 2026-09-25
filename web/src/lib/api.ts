@@ -38,7 +38,105 @@ export type Visit = {
   duration_ms: number;
 };
 
-export type Scan = { id: string; url: string; visit: Visit };
+export type ReconStatus = "ok" | "not_found" | "not_configured" | "timeout" | "error" | "skipped";
+
+export type Registration = {
+  domain: string;
+  status: ReconStatus;
+  source: "rdap" | "whois" | null;
+  registrar: string | null;
+  registrar_abuse_email: string | null;
+  registrant: string | null;
+  created: string | null;
+  updated: string | null;
+  expires: string | null;
+  age_days: number | null;
+  nameservers: string[];
+  flags: string[];
+  dnssec: boolean | null;
+  note: string | null;
+};
+
+export type DnsRecords = {
+  host: string;
+  status: ReconStatus;
+  a: string[];
+  aaaa: string[];
+  cname: string[];
+  mx: string[];
+  ns: string[];
+  txt: string[];
+  note: string | null;
+};
+
+export type ServerInfo = {
+  ip: string | null;
+  status: ReconStatus;
+  country_code: string | null;
+  country: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  accuracy_km: number | null;
+  asn: number | null;
+  as_org: string | null;
+  network_name: string | null;
+  network_range: string | null;
+  abuse_email: string | null;
+  note: string | null;
+};
+
+export type Certificate = {
+  host: string;
+  protocol: string | null;
+  subject: string | null;
+  issuer: string | null;
+  issuer_org: string | null;
+  not_before: string | null;
+  not_after: string | null;
+  days_left: number | null;
+  names: string[];
+  self_signed: boolean;
+  trusted: boolean;
+  problem: string | null;
+};
+
+export type CertHistory = {
+  domain: string;
+  status: ReconStatus;
+  source: "crt.sh" | "certspotter" | null;
+  cert_count: number;
+  first_seen: string | null;
+  latest: string | null;
+  issuers: string[];
+  subdomains: string[];
+  other_domains: string[];
+  note: string | null;
+};
+
+export type HttpInfo = {
+  status: ReconStatus;
+  server: string | null;
+  powered_by: string | null;
+  generator: string | null;
+  tech: string[];
+  security_headers: Record<string, boolean>;
+};
+
+export type Recon = {
+  host: string | null;
+  registered_domain: string | null;
+  registration: Registration | null;
+  chain_domains: Registration[];
+  dns: DnsRecords | null;
+  server: ServerInfo | null;
+  certificate: Certificate | null;
+  cert_history: CertHistory | null;
+  http: HttpInfo | null;
+  duration_ms: number;
+};
+
+export type Scan = { id: string; url: string; visit: Visit; recon: Recon };
 
 export type ScanResult =
   | { kind: "done"; scan: Scan }

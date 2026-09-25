@@ -20,7 +20,7 @@ export const FEATURES: Feature[] = [
   { title: "Family Finder", text: "Which scam group or scam template this link belongs to", icon: Fingerprint, status: "soon" },
   { title: "Sibling Hunter", text: "Other websites run by the same people", icon: Users, status: "soon" },
   { title: "Scam Type", text: "Financial fraud, fake login, crypto scam, fake prize, and more", icon: Tags, status: "soon" },
-  { title: "Server Tracker", text: "Server location, hosting company, and who registered it", icon: Server, status: "soon" },
+  { title: "Server Tracker", text: "Server location, hosting company, and who registered it", icon: Server, status: "live" },
   { title: "Link Trail", text: "Every jump the link makes before the final page", icon: Route, status: "live" },
   { title: "Safe Preview", text: "A screenshot, so you never open the page yourself", icon: Camera, status: "live" },
   { title: "Why It's Flagged", text: "Plain reasons, not just a number", icon: Flag, status: "soon" },

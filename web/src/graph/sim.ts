@@ -16,7 +16,7 @@ export type Sim = {
   alpha: number;
 };
 
-const REST: Record<LinkKind, number> = { hop: 2.5, loads: 2.0, blocked: 2.2 };
+const REST: Record<LinkKind, number> = { hop: 2.5, loads: 2.0, blocked: 2.2, hosted: 1.8 };
 const REPULSE = 1.3;
 const SPRING = 0.08;
 const CENTER = 0.012;

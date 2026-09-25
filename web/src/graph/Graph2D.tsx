@@ -11,11 +11,13 @@ const NODE: Record<NodeKind, { color: string; r: number }> = {
   final: { color: "#3b82f6", r: 0.64 },
   domain: { color: "#6a8ff0", r: 0.22 },
   blocked: { color: "#f43f5e", r: 0.34 },
+  server: { color: "#a78bfa", r: 0.4 },
 };
 const LINK: Record<LinkKind, { color: string; width: number }> = {
   hop: { color: "#60a5fa", width: 0.2 },
   loads: { color: "#4a6fd1", width: 0.07 },
   blocked: { color: "#f43f5e", width: 0.1 },
+  hosted: { color: "#a78bfa", width: 0.14 },
 };
 
 export default function Graph2D({ model }: { model: GraphModel }) {

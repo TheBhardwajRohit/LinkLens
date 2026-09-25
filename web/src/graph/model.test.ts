@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Visit } from "../lib/api";
+import type { Recon, Visit } from "../lib/api";
 import { EXAMPLE_MODEL, modelFromVisit, shortHost } from "./model";
 import { createSim, settle } from "./sim";
 
@@ -72,7 +72,7 @@ describe("modelFromVisit", () => {
     expect(m.bubbles[m.bubbles.length - 1]).toMatchObject({ tone: "red", text: "Stopped: private network address" });
   });
 
-  it("never shows more than four bubbles", () => {
+  it("never shows more than five bubbles", () => {
     const m = modelFromVisit(
       visit({
         hops: [hop("https://a.example/", "start"), hop("https://b.example/"), hop("https://c.example/")],
@@ -81,7 +81,28 @@ describe("modelFromVisit", () => {
       }),
       "k",
     );
-    expect(m.bubbles.length).toBeLessThanOrEqual(4);
+    expect(m.bubbles.length).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("modelFromVisit with recon", () => {
+  const recon = {
+    host: "c.example",
+    registered_domain: "c.example",
+    registration: { age_days: 3 },
+    server: { ip: "93.184.215.14", status: "ok", city: "Pune", country: "India", as_org: "Microsoft Corporation" },
+  } as unknown as Recon;
+
+  it("adds a server node with a hosting bubble", () => {
+    const m = modelFromVisit(visit({ hops: [hop("https://c.example/", "start")] }), "k", recon);
+    expect(m.nodes.find((n) => n.kind === "server")?.id).toBe("server:93.184.215.14");
+    expect(m.links.some((l) => l.kind === "hosted")).toBe(true);
+    expect(m.bubbles.map((b) => b.text)).toContain("Hosted in Pune, India · Microsoft");
+  });
+
+  it("mentions a brand-new domain on the final page", () => {
+    const m = modelFromVisit(visit({ hops: [hop("https://c.example/", "start")] }), "k", recon);
+    expect(m.bubbles.find((b) => b.node === "c.example")?.text).toBe("Ends at c[.]example, registered 3 days ago");
   });
 });
 

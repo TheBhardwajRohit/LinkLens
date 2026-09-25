@@ -20,7 +20,7 @@ export default function App() {
   const model = useMemo(() => {
     const s = scan.state;
     if (s.kind === "sending") return searchingModel(s.url, `searching-${s.startedAt}`);
-    if (s.kind === "done") return modelFromVisit(s.scan.visit, s.scan.id);
+    if (s.kind === "done") return modelFromVisit(s.scan.visit, s.scan.id, s.scan.recon);
     return EXAMPLE_MODEL;
   }, [scan.state]);
 

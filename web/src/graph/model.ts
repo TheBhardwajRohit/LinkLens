@@ -1,10 +1,11 @@
 // Turns a scan result into a small graph: the redirect chain, the final page, the domains it
 // loads from, and anything the sandbox blocked. Also holds the example graph shown before a scan.
 
-import type { Visit } from "../lib/api";
+import type { Recon, Visit } from "../lib/api";
+import { formatAge, NEW_DOMAIN_DAYS } from "../lib/format";
 
-export type NodeKind = "origin" | "hop" | "final" | "domain" | "blocked";
-export type LinkKind = "hop" | "loads" | "blocked";
+export type NodeKind = "origin" | "hop" | "final" | "domain" | "blocked" | "server";
+export type LinkKind = "hop" | "loads" | "blocked" | "hosted";
 export type BubbleTone = "white" | "blue" | "red";
 
 export type GraphNode = { id: string; kind: NodeKind };
@@ -42,7 +43,17 @@ function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
-export function modelFromVisit(visit: Visit, key: string): GraphModel {
+/** "Hosted in Pune, India · Microsoft" (short, for a bubble). */
+function hostingText(recon: Recon): string | null {
+  const s = recon.server;
+  if (!s || s.status !== "ok") return null;
+  const place = s.city && s.country ? `${s.city}, ${s.country}` : s.country;
+  const org = s.as_org?.replace(/,? (Inc|LLC|Ltd|Limited|Corporation|Corp|GmbH|B\.V\.|S\.A\.)\.?$/i, "");
+  if (!place && !org) return null;
+  return [place ? `Hosted in ${place}` : "Hosted", org].filter(Boolean).join(" · ");
+}
+
+export function modelFromVisit(visit: Visit, key: string, recon?: Recon): GraphModel {
   // The chain of distinct hosts the link passed through (http -> https on the same host counts once).
   const hosts: string[] = [];
   for (const hop of visit.hops) {
@@ -76,17 +87,30 @@ export function modelFromVisit(visit: Visit, key: string): GraphModel {
     links.push({ source: final, target: `blocked:${b}`, kind: "blocked" });
   }
 
+  // The server the final page runs on, from recon.
+  const hosting = recon && !endBlocked ? hostingText(recon) : null;
+  const serverId = recon?.server?.ip ? `server:${recon.server.ip}` : null;
+  if (hosting && serverId) {
+    nodes.push({ id: serverId, kind: "server" });
+    links.push({ source: final, target: serverId, kind: "hosted" });
+  }
+
   const bubbles: Bubble[] = [];
   const redirects = Math.max(visit.hops.length - 1, 0);
+  const age = recon?.registration?.age_days ?? null;
+  const young = age !== null && age < NEW_DOMAIN_DAYS ? `, registered ${formatAge(age)} ago` : "";
   if (hosts.length > 1) {
     bubbles.push({ node: hosts[0], text: `You pasted ${shortHost(hosts[0])}`, tone: "white" });
   }
   if (endBlocked) {
     bubbles.push({ node: final, text: `Stopped: ${lastHop?.reason ?? "private address"}`, tone: "red" });
   } else if (visit.stopped === "unreachable") {
-    bubbles.push({ node: final, text: `${shortHost(final)} didn't respond`, tone: "white" });
+    bubbles.push({ node: final, text: `${shortHost(final)} didn't respond${young}`, tone: "white" });
   } else {
-    bubbles.push({ node: final, text: `Ends at ${shortHost(final)}`, tone: "blue" });
+    bubbles.push({ node: final, text: `Ends at ${shortHost(final)}${young}`, tone: "blue" });
+  }
+  if (hosting && serverId) {
+    bubbles.push({ node: serverId, text: hosting, tone: "white" });
   }
   if (redirects > 0 && hosts.length > 2) {
     bubbles.push({ node: hosts[1], text: plural(redirects, "redirect"), tone: "white" });
@@ -100,7 +124,7 @@ export function modelFromVisit(visit: Visit, key: string): GraphModel {
     bubbles.push({ node: domains[0], text: `Loads from ${plural(visit.contacted_domains.length, "domain")}`, tone: "white" });
   }
 
-  return { key, nodes, links, chain: hosts, bubbles: bubbles.slice(0, 4), mode: "result" };
+  return { key, nodes, links, chain: hosts, bubbles: bubbles.slice(0, 5), mode: "result" };
 }
 
 /** The bubbles to show: only the newest one for each node, so two never sit on the same spot. */

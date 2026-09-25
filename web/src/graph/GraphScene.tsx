@@ -17,11 +17,13 @@ const NODE: Record<NodeKind, { color: string; size: number; halo: number }> = {
   final: { color: "#3b82f6", size: 0.64, halo: 2 },
   domain: { color: "#6a8ff0", size: 0.22, halo: 0.6 },
   blocked: { color: "#f43f5e", size: 0.34, halo: 1.6 },
+  server: { color: "#a78bfa", size: 0.4, halo: 1.3 },
 };
 const LINK: Record<LinkKind, { color: string; radius: number }> = {
   hop: { color: "#60a5fa", radius: 0.1 },
   loads: { color: "#4a6fd1", radius: 0.035 },
   blocked: { color: "#f43f5e", radius: 0.05 },
+  hosted: { color: "#a78bfa", radius: 0.07 },
 };
 const PACKETS = 3;
 const STEP_MS = 1600; // time between story bubbles in the example
