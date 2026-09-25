@@ -24,6 +24,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://linklens:linklens@db:5432/linklens}
       SANDBOX_URL: http://sandbox:8100
       CORS_ORIGINS: http://localhost:3000,http://localhost:5173,https://thebhardwajrohit.github.io
+    volumes:
+      # MaxMind GeoLite2 files live here (never in git; their license forbids sharing them).
+      - geoip_data:/data/geoip
     ports:
       - "8000:8000"
     depends_on:
@@ -84,3 +87,4 @@ networks:
 
 volumes:
   db_data: {}
+  geoip_data: {}

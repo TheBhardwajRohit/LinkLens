@@ -1,8 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app import sandbox_client
+from app import recon, sandbox_client
 from app.main import app
+from app.recon.models import Recon
 from app.urls import UrlError, normalize_url
 
 # Only safe, reserved example domains here. Tests never touch real scam links.
@@ -73,7 +74,13 @@ def fake_sandbox(monkeypatch):
         calls.append(url)
         return dict(FAKE_VISIT)
 
+    async def fake_recon(visit, url):
+        # Recon may read the captured HTML (to spot site builders), but it never leaves the API.
+        assert "evil()" in visit["html"]
+        return Recon(host="example.com", registered_domain="example.com")
+
     monkeypatch.setattr(sandbox_client, "visit", fake_visit)
+    monkeypatch.setattr(recon, "run_recon", fake_recon)
     return calls
 
 
@@ -85,6 +92,7 @@ def test_scan_sends_the_cleaned_link_to_the_sandbox(fake_sandbox):
     assert body["id"]
     assert fake_sandbox == ["https://example.com/login"]
     assert body["visit"]["screenshot_jpeg_b64"] == "abc"
+    assert body["recon"]["registered_domain"] == "example.com"
 
 
 def test_scan_never_passes_captured_html_to_the_website(fake_sandbox):

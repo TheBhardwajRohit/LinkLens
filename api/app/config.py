@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     virustotal_api_key: SecretStr = SecretStr("")
     urlscan_api_key: SecretStr = SecretStr("")
     abusech_auth_key: SecretStr = SecretStr("")
+    maxmind_account_id: str = ""
     maxmind_license_key: SecretStr = SecretStr("")
     supabase_service_role_key: SecretStr = SecretStr("")
 
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
             "virustotal": bool(self.virustotal_api_key.get_secret_value()),
             "urlscan": bool(self.urlscan_api_key.get_secret_value()),
             "abusech": bool(self.abusech_auth_key.get_secret_value()),
-            "maxmind": bool(self.maxmind_license_key.get_secret_value()),
+            "maxmind": bool(self.maxmind_account_id and self.maxmind_license_key.get_secret_value()),
             "supabase": bool(self.supabase_service_role_key.get_secret_value()),
         }
 

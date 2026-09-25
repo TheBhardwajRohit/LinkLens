@@ -1,0 +1,9 @@
+[
+  {
+    "id": "5001",
+    "dns_names": ["secure-login-example.com", "www.secure-login-example.com"],
+    "not_before": "2026-09-20T11:00:00Z",
+    "not_after": "2026-12-19T11:00:00Z",
+    "issuer": { "friendly_name": "Let's Encrypt", "name": "C=US, O=Let's Encrypt, CN=R11" }
+  }
+]
