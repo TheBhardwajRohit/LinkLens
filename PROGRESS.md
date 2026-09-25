@@ -76,6 +76,20 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] Tests: 71 API (all sources on saved samples or fakes), 90 sandbox (incl. a self-signed HTTPS fixture), 45 website
 - [x] Live check: github.com (MarkMonitor, 2007, Pune / Microsoft AS8075, trusted Sectigo cert) and example.com; CI checks example.com recon and that missing MaxMind keys degrade gracefully
 
+## Phase 4 checklist
+
+- [x] Link checks: lookalikes (typos, digit swaps, letters from other alphabets, brand plus extra words, brand in front of another domain), IP hosts, @ tricks, odd ports, free hosting, abused TLDs, random-looking names, scammy words, shorteners
+- [x] Page checks (server side only): sensitive fields (password, card, CVV, OTP, UPI PIN, ATM PIN, Aadhaar, PAN, net banking, recovery phrase), forms posting elsewhere, brand names on the wrong site, wallets, pressure/prize/job/tech-support/government/shopping/crypto/download wording, hidden frames, blocked right-click, scrambled code, empty links
+- [x] Brand list (60+ global and Indian brands); .bank.in and .gov.in treated as official
+- [x] Tranco top 100k as a popularity signal (downloaded into a volume, refreshed monthly)
+- [x] Scam types by rules: banking, fake login, crypto, prize, shop, tech support, malware, job, government
+- [x] Rule-based score 0 to 100 with plain reasons and good signs; blocked private-address links at least Suspicious
+- [x] Every scan saved in Postgres; personal data removed from stored and shared links
+- [x] Live progress over Server-Sent Events, with a polling fallback; per-network rate limit
+- [x] Website: live step checklist, graph grows per step and ends with a colored verdict bubble, verdict card, "Why we flagged it", coming-soon list, shareable `?scan=` links that reopen saved results
+- [x] Tests: 122 API (made-up scam pages for every type), 48 website, 90 sandbox
+- [x] Live check: github.com Safe 0/100 (Tranco #29, 18 years old), localtest.me Suspicious 40/100, reopened from its link; CI checks the stream, saving, and redaction
+
 ## Phases
 
 | # | What | Done when | Status |
@@ -84,8 +98,8 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 | 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Done |
 | 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Done |
 | 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Done |
-| 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Plan proposed |
-| 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Not started |
+| 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Done |
+| 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Plan proposed |
 | 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Not started |
 | 7 | Nightly family clustering, Family Finder, 4 sibling tabs | A scanned page matches a family when a similar page exists | Not started |
 | 8 | SiNMULI graph module + network map | Local signed graph built, signs inferred, unknown neighbors labeled, map renders | Not started |
@@ -101,3 +115,4 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - **2026-09-25:** Phase 2 built. Real scans on the local stack (http://localhost:3000). The live Pages site still shows "scanner offline" by design until a public scan server exists.
 - **2026-09-25:** Homepage redesigned (OneText-inspired split hero with a live scan graph). MaxMind key added.
 - **2026-09-25:** Phase 3 built. Recon adds about 3 seconds to a scan.
+- **2026-09-25:** Phase 4 built. Scans give a verdict, a score, a scam type, and plain reasons; progress streams live; results are saved and reopen from a link.

@@ -99,6 +99,27 @@ jobs:
           assert r['certificate']['trusted'] is True, r['certificate']
           # CI has no MaxMind key: location must say so plainly instead of failing.
           assert r['server']['status'] in ('ok', 'not_configured'), r['server']
+          a = json.load(open('scan.json'))['analysis']
+          assert a['verdict'] == 'safe', a
+          assert json.load(open('scan.json'))['saved'] is True, 'scan was not saved'
+          "
+      - name: Live progress streams every step and the result reopens from the database
+        run: |
+          id=$(curl -fsS -X POST http://localhost:8000/scans -H "Content-Type: application/json" \
+            -d '{"url": "https://example.com/?email=someone@example.com"}' | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])")
+          curl -fsS -N -m 120 "http://localhost:8000/scans/$id/events" -o events.txt
+          python3 -c "
+          import json
+          lines = open('events.txt').read().splitlines()
+          kinds = [l[7:] for l in lines if l.startswith('event: ')]
+          assert kinds.count('step') == 8 and kinds[-1] == 'done', kinds
+          "
+          curl -fsS "http://localhost:8000/scans/$id" -o saved.json
+          python3 -c "
+          import json
+          s = json.load(open('saved.json'))
+          assert s['analysis']['verdict'] == 'safe', s['analysis']
+          assert 'someone@example.com' not in json.dumps(s), 'personal data must be removed from saved scans'
           "
       # localtest.me is a public test name whose DNS answer is 127.0.0.1.
       - name: A public name that points at this machine is blocked
@@ -109,6 +130,7 @@ jobs:
           import json
           v = json.load(open('blocked.json'))['visit']
           assert v['stopped'] == 'blocked', v
+          assert json.load(open('blocked.json'))['analysis']['verdict'] != 'safe'
           "
       - name: Show logs on failure
         if: failure()
