@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #05070d;
-  --color-panel: #0c111c;
-  --color-line: #1c2536;
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #070b16;
+  --color-panel: #141821;
+  --color-line: #232b3b;
+  --color-cream: #f4f1ea;
+  --font-sans: "Red Hat Text Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Red Hat Display Variable", "Red Hat Text Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -32,24 +33,92 @@ body {
 }
 
 ::selection {
-  background: rgb(34 211 238 / 0.3);
+  background: rgb(59 130 246 / 0.35);
   color: #fff;
 }
 
-/* Static background: soft glows plus a faint dot grid. Used while 3D loads and on weak devices. */
-.bg-fallback {
+/* Quiet page background: deep navy with a faint grid that fades out. */
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
   background:
-    radial-gradient(circle at 50% 50%, rgb(56 189 248 / 0.22) 1px, transparent 1.6px) 0 0 / 34px 34px,
-    radial-gradient(60% 50% at 20% 15%, rgb(34 211 238 / 0.16), transparent 70%),
-    radial-gradient(50% 45% at 80% 30%, rgb(59 130 246 / 0.14), transparent 70%),
-    radial-gradient(40% 35% at 70% 85%, rgb(244 63 94 / 0.08), transparent 70%),
+    linear-gradient(rgb(148 163 184 / 0.045) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, rgb(148 163 184 / 0.045) 1px, transparent 1px) 0 0 / 56px 56px,
     var(--color-ink);
-  mask-image: radial-gradient(120% 90% at 50% 40%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(90% 70% at 50% 0%, #000 30%, transparent 90%);
 }
 
-/* Darkens the edges so text stays readable over the 3D scene. */
-.bg-vignette {
+/* Blue light behind the graph, with a hint of red, like studio lighting. */
+.hero-glow {
   background:
-    radial-gradient(70% 55% at 50% 45%, transparent 30%, rgb(5 7 13 / 0.55) 100%),
-    linear-gradient(to bottom, transparent 60%, rgb(5 7 13 / 0.6));
+    radial-gradient(45% 55% at 76% 42%, rgb(37 99 235 / 0.38), transparent 70%),
+    radial-gradient(30% 35% at 88% 78%, rgb(244 63 94 / 0.1), transparent 70%),
+    radial-gradient(40% 40% at 10% 0%, rgb(30 58 138 / 0.3), transparent 70%);
+}
+
+.card-spotlight {
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(59 130 246 / 0.14), transparent 70%);
+}
+
+/* Speech bubbles on the graph. The anchor sits on the node; the card floats above it (or below). */
+.bubble-anchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+
+.bubble-place {
+  transform: translate(-50%, calc(-100% - var(--lift, 14px)));
+}
+
+.bubble-anchor[data-below="true"] .bubble-place {
+  transform: translate(-50%, var(--lift, 14px));
+}
+
+.bubble-card {
+  position: relative;
+  width: max-content;
+  max-width: 13.5rem;
+  border-radius: 0.9rem;
+  padding: 0.45rem 0.8rem;
+  background: var(--bubble-bg);
+  color: var(--bubble-fg);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.65);
+  transform-origin: bottom center;
+}
+
+.bubble-card::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: var(--bubble-bg);
+}
+
+.bubble-anchor[data-below="true"] .bubble-card {
+  transform-origin: top center;
+}
+
+.bubble-anchor[data-below="true"] .bubble-card::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--bubble-bg);
+}
+
+@media (max-width: 640px) {
+  .bubble-card {
+    max-width: 11rem;
+    font-size: 0.74rem;
+  }
 }
