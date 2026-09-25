@@ -35,7 +35,7 @@ Full original brief: `docs/PROJECT_BRIEF.md`. This file wins where they disagree
 
 ## Stack
 
-- **web/**: Vite + React + TypeScript (static build for GitHub Pages; chosen over Next.js, see TECH_DECISIONS), Tailwind, react-three-fiber (3D hero), Framer Motion, Cytoscape.js (network map), Leaflet + OSM (server map).
+- **web/**: Vite + React + TypeScript (static build for GitHub Pages; chosen over Next.js, see TECH_DECISIONS), Tailwind, react-three-fiber (hero graph), Motion (Framer Motion), Cytoscape.js (network map), Leaflet + OSM (server map).
 - **api/**: Python + FastAPI. Live progress via Server-Sent Events.
 - **sandbox/**: separate container, Playwright + Chromium.
 - **jobs/**: Python scripts run by GitHub Actions workflows in `.github/workflows/`.
@@ -81,7 +81,16 @@ Verdict card, screenshot, scam type tag, family card, siblings (4 tabs), network
 
 ## Homepage
 
-Dark theme. Full-screen 3D "web of links" (layered glowing dots and lines, slow drift, mouse parallax; mostly blue/cyan, a few red). Order: name + tagline, floating feature cards (tilt on hover), URL input + Scan. Mobile-friendly, respects `prefers-reduced-motion`, static gradient fallback on weak devices.
+Redesigned 2026-09-25, inspired by OneText's split hero (Rohit approved). Replaces the brief's original layout.
+
+- Slim top bar: logo, Features, How it stays safe, GitHub, "Scan a link".
+- Hero 60/40. Left: "See who's really behind the link.", subheading, glass input with blue Scan button, trust line with scanner status. Right: 3D force graph (`web/src/graph/`). Before a scan it plays a looping example story in speech bubbles (labeled "Example scan", reserved `.example` names only); during a scan it pulses; after, it draws the real scan (chain, loaded domains, blocked hosts in red).
+- Dark panel overlapping the hero bottom: safety quote + 4 tiles. Then the scan report (after a scan), then the feature grid.
+- Feature cards: glass, hover glow, Live / Coming soon badges. Flip `status` in `web/src/features.ts` when a phase ships. Never claim a check that doesn't exist.
+- Blue is the action color. Green, yellow, and red mean verdicts only (red also marks blocked hosts in the graph).
+- No full-page 3D background. Phones stack text first. Reduced motion renders a still graph; no WebGL, a crash, or under 24 fps falls back to a flat SVG graph.
+- Fonts: Red Hat Display (headings), Red Hat Text (body), self-hosted.
+- To see 3D visually when the browser pane is hidden (it pauses animation frames), screenshot the local web container with Playwright from the sandbox test image.
 
 ## Family data
 
@@ -93,7 +102,8 @@ Dark theme. Full-screen 3D "web of links" (layered glowing dots and lines, slow 
 ## Data sources and keys
 
 - Configured: Google Safe Browsing (non-commercial Lookup API; key tested OK 2026-09-24).
-- Not yet: VirusTotal, urlscan.io, abuse.ch (URLhaus), MaxMind GeoLite2.
+- Configured: MaxMind GeoLite2 (account ID + license key in `.env`; download auth checked OK with HEAD requests 2026-09-25, which don't count toward the daily limit).
+- Not yet: VirusTotal, urlscan.io, abuse.ch (URLhaus).
 - Feeds: OpenPhish community (free, 12h), URLhaus, Phishing.Database. No OpenPhish academic access (Rohit's choice). **Never use PhishTank** (registration closed).
 
 ## SiNMULI (phase 8)

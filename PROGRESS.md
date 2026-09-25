@@ -51,6 +51,17 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] Live check: example.com and github.com captured; localtest.me (DNS points at 127.0.0.1) and 169.254.169.254.nip.io (cloud metadata) blocked
 - [x] CI: sandbox tests in the image offline, plus a real scan of example.com and a blocked localtest.me in the full-stack job
 
+## Homepage redesign (between phases 2 and 3)
+
+- [x] OneText-inspired split hero: heading, glass input, blue Scan button, trust line (left 60%); live 3D graph (right 40%)
+- [x] Graph plays a looping example story in speech bubbles before a scan, pulses during a scan, and draws the real result after (chain, loaded domains, blocked hosts)
+- [x] Glossy nodes and rails with packets rolling along the redirect chain; flat SVG fallback for no WebGL, crashes, or slow devices (checked with WebGL turned off)
+- [x] Slim top bar, overlapping safety panel, glass feature cards with hover glow and honest Live / Coming soon badges
+- [x] Full-page 3D background removed; fonts now Red Hat Display and Red Hat Text
+- [x] Checked at 1440 px and 390 px wide, plus real scans of github.com and localtest.me (blocked)
+- [x] 8 new graph tests (39 website tests in total)
+- [x] MaxMind account ID and license key saved in `.env`; download auth checked OK
+
 ## Phases
 
 | # | What | Done when | Status |
@@ -74,3 +85,4 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - **2026-09-24:** Removed Claude co-author lines from all commits (history rewritten, force-pushed by Rohit). No attribution from now on.
 - **2026-09-24:** Phase 1 built. Homepage live on GitHub Pages. Local stack scans reach the `/scan` placeholder.
 - **2026-09-25:** Phase 2 built. Real scans on the local stack (http://localhost:3000). The live Pages site still shows "scanner offline" by design until a public scan server exists.
+- **2026-09-25:** Homepage redesigned (OneText-inspired split hero with a live scan graph). MaxMind key added.
