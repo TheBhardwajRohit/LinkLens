@@ -12,7 +12,7 @@ LinkLens checks a suspicious link safely and tells you:
 
 You never open the page yourself. A locked-down sandbox browser visits it and takes a screenshot.
 
-> **Status:** early build (phase 2 of 10). Scans work on a local install: the sandbox opens the link and returns a screenshot and the full redirect chain. Scoring comes later. See [PROGRESS.md](PROGRESS.md).
+> **Status:** early build (phase 3 of 10). Scans work on a local install: the sandbox opens the link and returns a screenshot and the full redirect chain, and recon shows the server's location and host, the domain's registration and age, DNS records, and the certificate. Scoring comes next. See [PROGRESS.md](PROGRESS.md).
 >
 > **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only; the scanner runs locally for now)
 
@@ -94,7 +94,12 @@ LinkLens handles live scam links, so a few rules never bend:
 
 ## Credits
 
-Research datasets are credited here once they're loaded (phase 6).
+- This product includes GeoLite Data created by MaxMind, available from https://www.maxmind.com.
+- Domain and IP registration data: RDAP servers listed by [IANA](https://data.iana.org/rdap/).
+- Certificate history: [crt.sh](https://crt.sh/) and [Cert Spotter](https://sslmate.com/certspotter/).
+- Research datasets are credited here once they're loaded (phase 6).
+
+To get server locations locally, put your free MaxMind account ID and license key in `.env`. The API downloads the GeoLite2 databases into a Docker volume and refreshes them weekly. Without a key, everything else still works.
 
 ## License
 

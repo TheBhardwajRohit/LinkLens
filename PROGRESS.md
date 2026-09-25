@@ -62,6 +62,20 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] 8 new graph tests (39 website tests in total)
 - [x] MaxMind account ID and license key saved in `.env`; download auth checked OK
 
+## Phase 3 checklist
+
+- [x] Domain registration: RDAP via IANA bootstrap (registrar, dates, age, name servers, flags, DNSSEC, registrar abuse contact); WHOIS fallback for TLDs without RDAP (.io, .co)
+- [x] Registration age for every other domain in the link trail
+- [x] DNS: A, AAAA, CNAME, MX, NS, TXT; public resolvers first; partial results when one record type stalls
+- [x] Server: MaxMind GeoLite2 City + ASN (local files, weekly refresh, HEAD check first) plus IP RDAP for network name and abuse contact; uses the IP the sandbox actually connected to; private IPs never looked up
+- [x] TLS certificate captured by the sandbox through the guard: issuer, validity, days left, names, trusted or not (and why)
+- [x] Certificate history: crt.sh, with Cert Spotter as the backup (crt.sh was down all day while building this)
+- [x] HTTP headers (cookie values dropped) and tech detection: hosting/CDN, server software, site builders, security headers
+- [x] Report: "Who's behind it" cards (Server, Domain, Certificate) + DNS and headers sections; graph gains a server node with a "Hosted in ..." bubble; brand-new domains called out
+- [x] Server Tracker card now Live; GeoLite2 attribution in the footer and README
+- [x] Tests: 71 API (all sources on saved samples or fakes), 90 sandbox (incl. a self-signed HTTPS fixture), 45 website
+- [x] Live check: github.com (MarkMonitor, 2007, Pune / Microsoft AS8075, trusted Sectigo cert) and example.com; CI checks example.com recon and that missing MaxMind keys degrade gracefully
+
 ## Phases
 
 | # | What | Done when | Status |
@@ -69,8 +83,8 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 | 0 | Repo, Docker Compose skeleton, `.env.example`, README, CLAUDE.md, PROGRESS.md, CI workflow | `docker compose up` shows a placeholder page and the API health check passes | Done |
 | 1 | Homepage UI (3D hero, name, feature cards, URL input) + API stub | Looks right on desktop and mobile; input validates URLs and calls the stub | Done |
 | 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Done |
-| 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Plan proposed |
-| 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Not started |
+| 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Done |
+| 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Plan proposed |
 | 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Not started |
 | 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Not started |
 | 7 | Nightly family clustering, Family Finder, 4 sibling tabs | A scanned page matches a family when a similar page exists | Not started |
@@ -86,3 +100,4 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - **2026-09-24:** Phase 1 built. Homepage live on GitHub Pages. Local stack scans reach the `/scan` placeholder.
 - **2026-09-25:** Phase 2 built. Real scans on the local stack (http://localhost:3000). The live Pages site still shows "scanner offline" by design until a public scan server exists.
 - **2026-09-25:** Homepage redesigned (OneText-inspired split hero with a live scan graph). MaxMind key added.
+- **2026-09-25:** Phase 3 built. Recon adds about 3 seconds to a scan.

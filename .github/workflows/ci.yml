@@ -92,6 +92,13 @@ jobs:
           assert v['title'] == 'Example Domain', v['title']
           assert v['screenshot_jpeg_b64'], 'no screenshot'
           assert 'html' not in v, 'captured HTML must never leave the API'
+          r = json.load(open('scan.json'))['recon']
+          assert r['registered_domain'] == 'example.com', r
+          assert r['registration']['status'] == 'ok' and r['registration']['registrar'], r['registration']
+          assert r['dns']['a'], r['dns']
+          assert r['certificate']['trusted'] is True, r['certificate']
+          # CI has no MaxMind key: location must say so plainly instead of failing.
+          assert r['server']['status'] in ('ok', 'not_configured'), r['server']
           "
       # localtest.me is a public test name whose DNS answer is 127.0.0.1.
       - name: A public name that points at this machine is blocked

@@ -58,6 +58,8 @@ Full original brief: `docs/PROJECT_BRIEF.md`. This file wins where they disagree
 
 How the sandbox enforces this (phase 2): `guard.py` resolves every host and allows only public IPs; `proxy.py` is the only way out for Chromium and connects to the exact IP the guard checked; `visit.py` drives the browser (no typing, clicking, submitting, or downloads). Tests run in the sandbox image with `--network none` against a local fixture server. The guard's `allow` list is for tests only and is never read from config.
 
+How recon works (phase 3, `api/app/recon/`): runs in the API after the sandbox visit, all sources in parallel with per-source time limits and a plain-words `status` + `note` on every part. Sources: RDAP via IANA bootstrap (WHOIS port 43 only for TLDs without RDAP, e.g. .io, .co), DNS via public resolvers 1.1.1.1/8.8.8.8 then the system resolver (Docker's DNS helper stalls on some NS queries), MaxMind GeoLite2 City + ASN read locally from the `geoip_data` volume (refreshed weekly in the background; HEAD checks first because they don't count toward MaxMind's download limit), IP RDAP for the network owner and abuse contact, crt.sh for certificate history with Cert Spotter (free, personal use, current certs only) as the backup. The sandbox captures what needs the site itself: TLS certificate (separate guarded connection), final-page headers (cookie values dropped), and the IP it connected to. Results are cached in memory for now; phase 4 moves caching to the DB. GeoLite2 needs the attribution line in the footer and README.
+
 ## Scan pipeline (target: blacklist verdict in seconds, full result in about 1 minute)
 
 1. Normalize: add scheme, decode punycode/IDN (show both, flag lookalikes), expand shorteners, redact personal data.
