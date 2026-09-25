@@ -195,8 +195,10 @@ def test_popular_real_site_is_safe():
 
 def test_link_to_private_address_is_flagged_even_without_a_page():
     url = "http://localtest.me/"
-    a = analyze(visit_for(url, None, stopped="blocked"), {"registration": None}, url)
+    old_domain = {"registration": {"status": "ok", "age_days": 5000, "flags": []}}
+    a = analyze(visit_for(url, None, stopped="blocked"), old_domain, url)
     assert a.partial
+    assert a.verdict == "suspicious"  # an old domain can't make this look safe
     assert "private address" in a.summary
     assert any("private or internal address" in r.text for r in a.reasons)
 

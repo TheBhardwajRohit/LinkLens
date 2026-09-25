@@ -93,11 +93,14 @@ async def run_recon(visit: dict, requested_url: str) -> Recon:
         ip = host.strip("[]")
     if not ip and recon.dns:
         ip = next((a for a in recon.dns.a + recon.dns.aaaa if _public(a)), None)
+    private = ip or next(iter((recon.dns.a + recon.dns.aaaa) if recon.dns else []), None)
     if ip and _public(ip):
         recon.server = await server_info(ip)
-    elif ip:
+    elif private:
         recon.server = Server(
-            ip=ip, status="skipped", note="This is a private address, so there's nothing to look up."
+            ip=private,
+            status="skipped",
+            note=f"The name points to a private address ({private}), so there's no public server to look up.",
         )
 
     recon.certificate = visit.get("tls")

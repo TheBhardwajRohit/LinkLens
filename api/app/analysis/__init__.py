@@ -37,6 +37,9 @@ def analyze(visit: dict, recon: dict, requested_url: str) -> Analysis:
     reasons.sort(key=lambda r: -r.points)
     good.sort(key=lambda r: r.points)
     total = max(0, min(100, sum(r.points for r in reasons) + sum(r.points for r in good)))
+    if visit.get("stopped") == "blocked":
+        # A link that leads to a private address is never a normal website, whatever else looks fine.
+        total = max(total, rules.SAFE_MAX + 10)
     verdict = rules.verdict_for(total)
     partial = visit.get("stopped") in NOT_CAPTURED or not page.captured
     scam = classify(final, page, impersonated, downloads) if verdict != "safe" else None

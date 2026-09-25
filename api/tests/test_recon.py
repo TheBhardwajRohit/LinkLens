@@ -335,6 +335,18 @@ async def test_recon_never_looks_up_private_addresses(fake_sources):
 
 
 @pytest.mark.anyio
+async def test_a_name_pointing_only_at_private_addresses_says_so(fake_sources, monkeypatch):
+    async def private_dns(host, domain):
+        return DnsRecords(host=host, a=["127.0.0.1"])
+
+    monkeypatch.setattr(recon.dns_records, "lookup", private_dns)
+    r = await recon.run_recon(visit(server_ips={}), "https://x")
+    assert r.server.status == "skipped"
+    assert "127.0.0.1" in r.server.note
+    assert fake_sources["ip"] == []
+
+
+@pytest.mark.anyio
 async def test_slow_sources_time_out_with_a_plain_note():
     async def slow():
         await asyncio.sleep(5)
