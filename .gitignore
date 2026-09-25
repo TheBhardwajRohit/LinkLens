@@ -16,10 +16,10 @@ venv/
 node_modules/
 dist/
 
-# Data and scan output (lives in Supabase, not git)
-data/
-datasets/
-screenshots/
+# Data and scan output at the project root (lives in the database, not git)
+/data/
+/datasets/
+/screenshots/
 *.parquet
 
 # Local Claude Code tool config
