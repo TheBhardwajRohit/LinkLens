@@ -144,6 +144,8 @@ class PageFeatures(BaseModel):
     title: str | None = None
     forms: int = 0
     inputs: int = 0
+    password_fields: int = 0
+    hidden_fields: int = 0
     asks_for: list[str] = []  # keys of SENSITIVE
     form_targets: list[str] = []  # other domains that forms send data to
     form_to_other_domain: bool = False
@@ -163,6 +165,11 @@ class PageFeatures(BaseModel):
     external_link_share: float = 0.0
     executable_links: list[str] = []
     phone_numbers: int = 0
+    scripts: int = 0
+    external_scripts: int = 0  # scripts loaded from another site
+    images: int = 0
+    meta_refresh: bool = False
+    noindex: bool = False  # asks search engines not to list the page
 
 
 def _registered(url: str) -> str | None:
@@ -199,10 +206,13 @@ def analyze_page(html: str | None, page_url: str | None) -> PageFeatures:
     f.inputs = len(fields)
     for field in fields:
         kind = (field.get("type") or "").lower()
+        if kind == "hidden":
+            f.hidden_fields += 1
         if kind in ("hidden", "submit", "button", "image", "reset", "checkbox", "radio"):
             continue
         text = _field_text(field, soup)
         if kind == "password":
+            f.password_fields += 1
             asks.add("password")
         for key, pattern in SENSITIVE_RE.items():
             if pattern.search(text):
@@ -225,6 +235,22 @@ def analyze_page(html: str | None, page_url: str | None) -> PageFeatures:
                 targets.add(target)
     f.form_targets = sorted(targets)
     f.form_to_other_domain = bool(targets)
+
+    # Counted now, because scripts are removed from the tree just below.
+    scripts = soup.find_all("script")
+    f.scripts = len(scripts)
+    for script in scripts:
+        src = (script.get("src") or "").strip()
+        if src.lower().startswith(("http://", "https://", "//")):
+            owner = _registered(urljoin(page_url, src))
+            if owner and page_domain and owner != page_domain:
+                f.external_scripts += 1
+    f.images = len(soup.find_all("img"))
+    for meta in soup.find_all("meta"):
+        if (meta.get("http-equiv") or "").lower() == "refresh":
+            f.meta_refresh = True
+        if (meta.get("name") or "").lower() == "robots" and "noindex" in (meta.get("content") or "").lower():
+            f.noindex = True
 
     # Words on the page (visible text, the title, and image descriptions).
     for tag in soup(["script", "style", "noscript", "template"]):

@@ -5,7 +5,7 @@ os.environ["STARTUP_TASKS"] = "false"
 
 import pytest  # noqa: E402
 
-from app import blacklists, cache, storage  # noqa: E402
+from app import blacklists, cache, pages, storage  # noqa: E402
 from app.blacklists import virustotal  # noqa: E402
 from app.blacklists.models import Blacklists  # noqa: E402
 from app.ratelimit import limiter  # noqa: E402
@@ -27,8 +27,12 @@ def fake_storage(monkeypatch):
     async def load(database_url, scan_id):
         return saved.get(scan_id)
 
+    async def save_page(database_url, row):
+        saved.setdefault("pages", {})[row["source_ref"]] = row
+
     monkeypatch.setattr(storage, "save", save)
     monkeypatch.setattr(storage, "load", load)
+    monkeypatch.setattr(pages, "save", save_page)
     limiter.reset()
     return saved
 

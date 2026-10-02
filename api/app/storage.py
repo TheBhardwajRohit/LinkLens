@@ -7,7 +7,7 @@ from typing import Any
 
 import psycopg
 
-from app import cache
+from app import cache, pages
 from app.redact import redact
 
 log = logging.getLogger("linklens.storage")
@@ -34,6 +34,7 @@ async def init(database_url: str) -> None:
     async with await psycopg.AsyncConnection.connect(database_url, connect_timeout=5) as conn:
         await conn.execute(SCHEMA)
         await conn.execute(cache.SCHEMA)
+        await conn.execute(pages.SCHEMA)
 
 
 async def save(database_url: str, result: dict[str, Any]) -> None:

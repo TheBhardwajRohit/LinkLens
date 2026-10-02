@@ -190,7 +190,20 @@ export type Scan = {
   recon: Recon;
   blacklists?: Blacklists; // missing on scans saved before blacklist checks existed
   analysis: Analysis;
+  fingerprints?: Fingerprints;
   saved: boolean;
+};
+
+/** Short codes that stay almost the same when a page is copied with small changes. */
+export type Fingerprints = {
+  tlsh: string | null;
+  dom_hash: string | null;
+  dom_simhash: string | null;
+  text_simhash: string | null;
+  phash: string | null;
+  favicon_hash: number | null;
+  tags: number;
+  words: number;
 };
 
 export type StepId = "blacklists" | "sandbox" | "recon" | "analysis" | "save";
@@ -308,6 +321,27 @@ export async function getHealth(signal?: AbortSignal): Promise<Health | null> {
   try {
     const resp = await fetch(`${API_URL}/health`, { signal });
     return resp.ok ? ((await resp.json()) as Health) : null;
+  } catch {
+    return null;
+  }
+}
+
+export type Stats = {
+  pages: number;
+  newest_page: string | null;
+  by_source: Record<string, Record<string, number>>;
+  families: number;
+  pages_in_families: number;
+  scans: number;
+  last_runs: { job: string; started_at: string; finished_at: string; ok: boolean; fetched: number; added: number; failed: number; note: string | null }[];
+  phishing_lists: { links: number; domains: number; updated: string | null } | null;
+};
+
+export async function getStats(signal?: AbortSignal): Promise<Stats | null> {
+  if (!API_URL) return null;
+  try {
+    const resp = await fetch(`${API_URL}/stats`, { signal });
+    return resp.ok ? ((await resp.json()) as Stats) : null;
   } catch {
     return null;
   }

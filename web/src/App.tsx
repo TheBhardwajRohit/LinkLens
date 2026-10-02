@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 
+import DataHealth from "./components/DataHealth";
 import Features from "./components/Features";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -62,6 +63,7 @@ export default function App() {
           />
         )}
         <Features />
+        <DataHealth online={scan.online} />
       </main>
       <Footer />
     </>

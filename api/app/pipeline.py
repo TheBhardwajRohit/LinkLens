@@ -7,9 +7,10 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from app import blacklists, recon, sandbox_client, storage
+from app import blacklists, pages, recon, sandbox_client, storage
 from app.analysis import analyze
 from app.config import Settings
+from app.fingerprint import Fingerprints, fingerprint_visit, thumbnail
 
 log = logging.getLogger("linklens.pipeline")
 
@@ -73,9 +74,11 @@ async def run_scan(
 
     await progress("analysis", "running", None)
     verdict = analyze(visit, found.model_dump(), url, listed.model_dump())
+    prints = await asyncio.to_thread(fingerprint_visit, visit)
     await progress("analysis", "done", {"score": verdict.score, "verdict": verdict.verdict})
 
     visit.pop("html", None)  # never leaves the API (safety rule 5)
+    visit.pop("favicon_b64", None)  # only its hash is kept
     result = {
         "id": scan_id,
         "url": url,
@@ -84,6 +87,7 @@ async def run_scan(
         "recon": found.model_dump(),
         "blacklists": listed.model_dump(),
         "analysis": verdict.model_dump(),
+        "fingerprints": prints.model_dump(),
         "saved": False,
     }
 
@@ -92,6 +96,7 @@ async def run_scan(
         try:
             await storage.save(settings.database_url, result)
             result["saved"] = True
+            await _remember_page(settings.database_url, result, prints)
             await progress("save", "done", None)
         except Exception as err:  # a failed save must not lose the result the user is waiting for
             log.warning("could not save scan: %s", type(err).__name__)
@@ -99,6 +104,42 @@ async def run_scan(
                 "save", "failed", {"note": "The result couldn't be saved, so its link won't work later."}
             )
     return result
+
+
+def _label(analysis: dict) -> str:
+    """What this scan teaches the page library. Only clear cases get a label."""
+    link = analysis.get("final_link") or analysis.get("link") or {}
+    if analysis["verdict"] == "dangerous":
+        return "phish"
+    if analysis["verdict"] == "safe" and (link.get("tranco_rank") or link.get("official_brand")):
+        return "benign"
+    return "unknown"
+
+
+async def _remember_page(database_url: str, result: dict, prints: Fingerprints) -> None:
+    """Add the scanned page's fingerprints to the page library, so later scans can match it."""
+    if not (prints.tlsh or prints.dom_hash or prints.phash):
+        return  # nothing was captured
+    analysis, visit = result["analysis"], result["visit"]
+    link = analysis.get("final_link") or analysis.get("link") or {}
+    scam = analysis.get("scam_type") or {}
+    try:
+        row = pages.page_row(
+            source="scan",
+            source_ref=result["id"],
+            url=visit.get("final_url") or result["url"],
+            fp=prints,
+            site=link.get("site") or link.get("registered_domain"),
+            label=_label(analysis),
+            brand=scam.get("brand") or link.get("official_brand"),
+            scam_type=scam.get("id"),
+            title=visit.get("title"),
+            recon=result["recon"],
+            thumb=await asyncio.to_thread(thumbnail, visit.get("screenshot_jpeg_b64")),
+        )
+        await pages.save(database_url, row)
+    except Exception as err:  # the library is a bonus; the scan result is already saved
+        log.warning("could not add the page to the library: %s", type(err).__name__)
 
 
 async def _same[T](value: T) -> T:

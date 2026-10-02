@@ -45,3 +45,27 @@ def test_checks_never_raise_on_bad_targets():
     # Port 9 on localhost is closed, so both should fail fast and quietly.
     assert checks.database("postgresql://x:x@127.0.0.1:9/x") == "unreachable"
     assert checks.sandbox("http://127.0.0.1:9") == "unreachable"
+
+
+def test_stats_reports_the_page_library(monkeypatch):
+    from app import pages
+
+    async def fake_stats(database_url):
+        return {"pages": 12, "by_source": {"scan": {"phish": 2}}, "families": 1, "last_runs": []}
+
+    monkeypatch.setattr(pages, "stats", fake_stats)
+    body = TestClient(app).get("/stats").json()
+    assert body["pages"] == 12
+    assert body["by_source"] == {"scan": {"phish": 2}}
+
+
+def test_stats_says_so_when_the_database_is_down(monkeypatch):
+    from app import pages
+
+    async def broken(database_url):
+        raise ConnectionError("down")
+
+    monkeypatch.setattr(pages, "stats", broken)
+    resp = TestClient(app).get("/stats")
+    assert resp.status_code == 503
+    assert "can't be read" in resp.json()["detail"]

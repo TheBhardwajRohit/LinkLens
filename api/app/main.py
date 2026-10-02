@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import __version__, cache, checks, jobs, pipeline, sandbox_client, storage
+from app import __version__, cache, checks, jobs, pages, pipeline, sandbox_client, storage
 from app.analysis.toplist import keep_fresh as keep_toplist_fresh
 from app.analysis.toplist import toplist
 from app.blacklists.lists import keep_fresh as keep_lists_fresh
@@ -146,6 +146,23 @@ async def start_scan(req: ScanRequest, request: Request, settings: SettingsDep) 
 
     job.task = asyncio.create_task(run())
     return {"id": scan_id, "url": url, "steps": [{"id": s, "label": label} for s, label in pipeline.STEPS]}
+
+
+@app.get("/stats")
+async def stats(settings: SettingsDep) -> dict:
+    """How much LinkLens knows: pages in the library, by source, and when data last came in."""
+    hit = await cache.get("stats", "all")
+    if hit is not None:
+        return hit
+    try:
+        found = await pages.stats(settings.database_url)
+    except Exception as err:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "The data library can't be read right now."
+        ) from err
+    found["phishing_lists"] = known_lists.status() if settings.known_lists else None
+    cache.remember("stats", "all", found, 60)
+    return found
 
 
 def _valid_id(scan_id: str) -> str:

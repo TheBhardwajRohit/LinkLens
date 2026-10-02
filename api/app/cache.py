@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS lookup_cache (
 CREATE INDEX IF NOT EXISTS lookup_cache_expires_idx ON lookup_cache (expires_at);
 """
 MAX_ITEMS = 5000
+MEMORY_ONLY = {"stats"}
 
 _memory: dict[tuple[str, str], tuple[float, Any]] = {}
 _database_url: str | None = None
@@ -38,7 +39,8 @@ def clear() -> None:
     _memory.clear()
 
 
-def _remember(source: str, key: str, value: Any, ttl_s: float) -> None:
+def remember(source: str, key: str, value: Any, ttl_s: float) -> None:
+    """Memory only, for short-lived things that aren't worth a database row."""
     if len(_memory) >= MAX_ITEMS:
         _memory.pop(next(iter(_memory)))
     _memory[(source, key)] = (time.time() + ttl_s, value)
@@ -50,7 +52,7 @@ async def get(source: str, key: str) -> Any | None:
         if item[0] > time.time():
             return item[1]
         _memory.pop((source, key), None)
-    if not _database_url:
+    if not _database_url or source in MEMORY_ONLY:
         return None
     try:
         async with await psycopg.AsyncConnection.connect(_database_url, connect_timeout=3) as conn:
@@ -66,12 +68,12 @@ async def get(source: str, key: str) -> Any | None:
     if row is None:
         return None
     value = row[0] if not isinstance(row[0], str) else json.loads(row[0])
-    _remember(source, key, value, float(row[1]))
+    remember(source, key, value, float(row[1]))
     return value
 
 
 async def put(source: str, key: str, value: Any, ttl_s: float) -> None:
-    _remember(source, key, value, ttl_s)
+    remember(source, key, value, ttl_s)
     if not _database_url:
         return
     try:

@@ -83,6 +83,28 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # Data jobs (dataset loading, clustering, training). Not started by "docker compose up".
+  # Run one with:  docker compose run --rm jobs python -m jobs.seed_phreshphish --limit 2000
+  jobs:
+    profiles: [jobs]
+    build:
+      context: .
+      dockerfile: jobs/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://linklens:linklens@db:5432/linklens}
+    volumes:
+      - lists_data:/data/lists
+      - geoip_data:/data/geoip
+      # Feature files and trained models (never in git).
+      - ml_data:/data/ml
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [backend]
+
 networks:
   backend: {}
   sandbox_net: {}
@@ -91,3 +113,4 @@ volumes:
   db_data: {}
   geoip_data: {}
   lists_data: {}
+  ml_data: {}
