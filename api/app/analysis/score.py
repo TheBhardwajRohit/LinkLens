@@ -287,6 +287,47 @@ def blacklist_reasons(blacklists: dict | None) -> list[Reason]:
     return r
 
 
+def family_reasons(family: dict | None, siblings: dict | None, trusted: bool) -> list[Reason]:
+    """What the page library says: a known scam family, look-alike scam pages, or known scam sites
+    on the same server or under the same owner. `trusted` (a brand's real site, or a very popular
+    one) switches these off, because scam kits copy real sites and would otherwise "match" them."""
+    r: list[Reason] = []
+    if trusted:
+        return r
+    add = lambda text, pts: r.append(Reason(text=text, points=pts, area="family"))  # noqa: E731
+    family = family or {}
+    status = family.get("status")
+    fam = family.get("family") or {}
+    if status == "matched" and fam:
+        size, percent = fam.get("size", 0), fam.get("percent", 0)
+        add(
+            f'It looks {percent}% like a known scam family ("{fam.get("label")}", {size:,} pages).',
+            40 if percent >= 90 else 35,
+        )
+    elif status == "similar":
+        n = family.get("scam_matches", 0)
+        best = (family.get("similar") or [{}])[0].get("percent", 0)
+        add(f"It looks {best}% like {n} known scam {'page' if n == 1 else 'pages'}.", 25)
+    elif status == "copy" and family.get("copied_site"):
+        shown = family["copied_site"].replace(".", "[.]")
+        add(f"It is a near copy of a page on {shown}, but hosted somewhere else.", 20)
+
+    for key, phrase, base in (
+        ("same_server", "It shares its server address with", 15),
+        ("same_owner", "It shares registration or certificate details with", 20),
+    ):
+        tab = (siblings or {}).get(key) or {}
+        scams = sum(1 for s in tab.get("items") or [] if s.get("known_scam"))
+        # A shared network (noted on the tab) serves thousands of unrelated sites: no points.
+        shared = key == "same_server" and "thousands of unrelated sites" in (tab.get("note") or "")
+        if scams and not shared:
+            add(
+                f"{phrase} {scams} known scam {'site' if scams == 1 else 'sites'}.",
+                base + (5 if scams >= 3 else 0),
+            )
+    return r
+
+
 def reputation_reasons(final: LinkFeatures, impersonated: list[str]) -> list[Reason]:
     good: list[Reason] = []
     if final.official_brand and not final.lookalike:

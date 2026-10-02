@@ -1,0 +1,47 @@
+name: Family grouping
+
+# Once a night: group the stored pages into scam families (see jobs/cluster.py).
+# Like feed ingestion, the schedule is skipped until the repository variable INGEST_ENABLED is
+# "true" and a DATABASE_URL secret exists. It can always be run by hand.
+
+on:
+  schedule:
+    - cron: "43 21 * * *" # 03:13 in India, an odd minute to avoid the busy top of the hour
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only print the families, don't save them
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: family-grouping
+  cancel-in-progress: false
+
+jobs:
+  cluster:
+    name: Group pages into families
+    if: github.event_name == 'workflow_dispatch' || vars.INGEST_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PYTHONPATH: api:.
+      DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Stop early when there is no database
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Add the DATABASE_URL secret first (Settings, Secrets and variables, Actions)." && exit 1
+          fi
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: api/requirements.txt
+      - run: pip install -r api/requirements.txt
+      - run: python -m jobs.cluster $DRY_RUN

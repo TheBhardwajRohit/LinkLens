@@ -6,7 +6,10 @@ requires-python = ">=3.12"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-markers = ["real_blacklists: uses the real blacklist code with a fake HTTP transport"]
+markers = [
+    "real_blacklists: uses the real blacklist code with a fake HTTP transport",
+    "real_library: uses the real family and sibling code",
+]
 
 [tool.ruff]
 line-length = 110

@@ -1,6 +1,6 @@
 # Everything the data jobs need: the API's own libraries plus dataset, graph, and model tools.
 -r ../api/requirements.txt
-datasets==5.0.1
+huggingface-hub==2.1.1
 pyarrow==25.0.1
 scikit-learn==1.9.1
 lightgbm==4.7.0

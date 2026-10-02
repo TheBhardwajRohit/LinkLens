@@ -51,8 +51,12 @@ CREATE TABLE IF NOT EXISTS pages (
     cert_domains TEXT[] NOT NULL DEFAULT '{}',
     family_id BIGINT,
     thumb BYTEA,
+    tags INTEGER,                         -- how many HTML tags the page has (tiny pages match by chance)
+    words INTEGER,
     UNIQUE (source, source_ref)
 );
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS tags INTEGER;
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS words INTEGER;
 CREATE INDEX IF NOT EXISTS pages_bands_idx ON pages USING GIN (bands);
 CREATE INDEX IF NOT EXISTS pages_dom_hash_idx ON pages (dom_hash) WHERE dom_hash IS NOT NULL;
 CREATE INDEX IF NOT EXISTS pages_favicon_idx ON pages (favicon_hash) WHERE favicon_hash IS NOT NULL;
@@ -165,7 +169,8 @@ def page_row(
         "bands": all_bands(fp),
         "terms": fp.terms,
         "out_domains": fp.out_domains,
-        "ip": server.get("ip") if server.get("status") == "ok" else None,
+        # "not_configured" only means there is no location data; the address itself is still public.
+        "ip": server.get("ip") if server.get("status") in ("ok", "not_configured") else None,
         "asn": server.get("asn"),
         "as_org": server.get("as_org"),
         "country": server.get("country_code"),
@@ -175,6 +180,8 @@ def page_row(
         "ns_key": ",".join(nameservers) or None,
         "cert_domains": cert_domains,
         "thumb": thumb,
+        "tags": fp.tags,
+        "words": fp.words,
     }
 
 

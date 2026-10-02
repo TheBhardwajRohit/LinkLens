@@ -18,13 +18,15 @@ already in the database are simply written again.
 """
 
 import argparse
+import multiprocessing
 import os
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from itertools import islice
-from multiprocessing import Pool
 from pathlib import Path
 
 from app import pages
+from app.analysis.brands import display_brand
 from app.analysis.toplist import toplist
 from app.library import digest_page
 from app.ml.features import NAMES
@@ -36,11 +38,16 @@ MIN_HTML = 200
 MAX_HTML = 2_000_000
 # Rows are handed to the workers a window at a time, so only this many pages (a few hundred kB
 # each) are ever in memory, however large --limit is.
-WINDOW = 128
+WINDOW = 96
 # A feature part file is written after this many rows, so a crash loses little.
 PART_ROWS = WINDOW * 32
 # Workers are replaced after this many pages, which keeps their memory from creeping up.
-PAGES_PER_WORKER = 300
+PAGES_PER_WORKER = 400
+# Rows decoded at once. Each dataset file stores thousands of pages in one block of up to 2.6 GB,
+# so the files are read directly with pyarrow in small batches. (The `datasets` library decoded
+# whole blocks and, with forked workers on top, ran an 8 GB machine out of memory.)
+READ_ROWS = 32
+COLUMNS = ["sha256", "url", "label", "target", "date", "html"]
 
 
 def _work(row: dict) -> dict | None:
@@ -55,8 +62,7 @@ def _work(row: dict) -> dict | None:
     if not (d.prints.tlsh or d.prints.dom_hash):
         return None
     phish = row.get("label") == "phish"
-    target = row.get("target")
-    brand = target if phish and target and target != "None" else None
+    brand = display_brand(row.get("target")) if phish else None
     seen = row.get("date")
     if isinstance(seen, date) and not isinstance(seen, datetime):
         seen = datetime(seen.year, seen.month, seen.day, tzinfo=UTC)
@@ -72,7 +78,13 @@ def _work(row: dict) -> dict | None:
         title=d.page.title,
         seen_at=seen if isinstance(seen, datetime) else None,
     )
-    return {"page": page, "features": d.features, "label": int(phish), "date": str(row.get("date") or "")}
+    return {
+        "page": page,
+        "features": d.features,
+        "rule_score": d.rule_score,
+        "label": int(phish),
+        "date": str(row.get("date") or ""),
+    }
 
 
 def _init_worker() -> None:
@@ -91,6 +103,32 @@ def _slim(row: dict) -> dict:
     }
 
 
+def read_rows(split: str, skip: int = 0) -> Iterator[dict]:
+    """Rows of one split, in the dataset's own order, streamed straight from Hugging Face.
+    Whole files are skipped by their row counts (read from the file footer, no download)."""
+    import pyarrow.parquet as pq
+    from huggingface_hub import HfFileSystem
+
+    fs = HfFileSystem()
+    files = sorted(fs.glob(f"datasets/{DATASET}/data/{split}-*.parquet"))
+    if not files:
+        raise RuntimeError(f"No {split} files found in {DATASET}")
+    for path in files:
+        with fs.open(path, "rb", block_size=8 * 1024 * 1024) as f:
+            parquet = pq.ParquetFile(f, pre_buffer=False)
+            rows_here = parquet.metadata.num_rows
+            if skip >= rows_here:
+                skip -= rows_here
+                continue
+            for batch in parquet.iter_batches(batch_size=READ_ROWS, columns=COLUMNS):
+                if skip >= batch.num_rows:
+                    skip -= batch.num_rows
+                    continue
+                rows = batch.to_pylist()
+                yield from rows[skip:]
+                skip = 0
+
+
 def write_features(path: Path, records: list[dict]) -> None:
     import pyarrow as pa
     import pyarrow.parquet as pq
@@ -101,6 +139,8 @@ def write_features(path: Path, records: list[dict]) -> None:
         "date": [r["date"] for r in records],
         "brand": [r["page"]["brand"] for r in records],
         "site": [r["page"]["site"] for r in records],
+        # What the plain rules score this page from the link and HTML alone, to compare with the model.
+        "rule_score": pa.array([r["rule_score"] for r in records], type=pa.int16()),
     }
     for i, name in enumerate(NAMES):
         columns[name] = pa.array([r["features"][i] for r in records], type=pa.float32())
@@ -115,12 +155,10 @@ def main() -> None:
     parser.add_argument("--split", choices=["train", "test"], default="train")
     parser.add_argument("--limit", type=int, default=40_000, help="how many dataset rows to read")
     parser.add_argument("--skip", type=int, default=0, help="rows to skip first")
-    parser.add_argument("--workers", type=int, default=min(max((os.cpu_count() or 2) - 2, 1), 6))
+    parser.add_argument("--workers", type=int, default=min(max((os.cpu_count() or 2) - 2, 1), 5))
     parser.add_argument("--features-dir", default=os.environ.get("FEATURES_DIR", "/data/ml"))
     parser.add_argument("--no-database", action="store_true", help="only write the feature files")
     args = parser.parse_args()
-
-    from datasets import load_dataset
 
     started = now()
     conn = None if args.no_database else connect()
@@ -135,10 +173,7 @@ def main() -> None:
         for old in parts.glob("part-*.parquet"):
             old.unlink()
 
-    stream = load_dataset(DATASET, split=args.split, streaming=True)
-    if args.skip:
-        stream = stream.skip(args.skip)
-    rows = iter(stream)
+    rows = read_rows(args.split, args.skip)
 
     pending: list[dict] = []
     read = skipped = kept_total = phish = 0
@@ -151,7 +186,11 @@ def main() -> None:
         part_start = args.skip + read
         pending = []
 
-    with Pool(args.workers, initializer=_init_worker, maxtasksperchild=PAGES_PER_WORKER) as pool:
+    # Workers start from a clean helper process (forkserver), not as copies of this one, so they
+    # never hold on to the big blocks of rows this process is reading.
+    workers = multiprocessing.get_context("forkserver")
+    workers.set_forkserver_preload(["app.library"])
+    with workers.Pool(args.workers, initializer=_init_worker, maxtasksperchild=PAGES_PER_WORKER) as pool:
         while read < args.limit:
             window = [_slim(r) for r in islice(rows, min(WINDOW, args.limit - read))]
             if not window:

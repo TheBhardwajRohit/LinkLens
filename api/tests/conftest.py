@@ -5,7 +5,7 @@ os.environ["STARTUP_TASKS"] = "false"
 
 import pytest  # noqa: E402
 
-from app import blacklists, cache, pages, storage  # noqa: E402
+from app import blacklists, cache, family, pages, siblings, storage  # noqa: E402
 from app.blacklists import virustotal  # noqa: E402
 from app.blacklists.models import Blacklists  # noqa: E402
 from app.ratelimit import limiter  # noqa: E402
@@ -51,3 +51,20 @@ def no_outside_lookups(monkeypatch, request):
         return Blacklists(checked=urls)
 
     monkeypatch.setattr(blacklists, "check", nothing_listed)
+
+
+@pytest.fixture(autouse=True)
+def empty_library(monkeypatch, request):
+    """Scans in tests don't search the page library or look up lookalike names in DNS. Tests of
+    that code carry the `real_library` mark and call it directly."""
+    if "real_library" in request.keywords:
+        return
+
+    async def no_family(database_url, fp, **kwargs):
+        return family.FamilyResult(status="none", note="Nothing known looks like this page.")
+
+    async def no_siblings(database_url, recon, kin, own_site, **kwargs):
+        return siblings.Siblings()
+
+    monkeypatch.setattr(family, "find", no_family)
+    monkeypatch.setattr(siblings, "find", no_siblings)

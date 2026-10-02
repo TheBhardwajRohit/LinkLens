@@ -11,7 +11,9 @@ Verdict = Literal["safe", "suspicious", "dangerous"]
 class Reason(BaseModel):
     text: str  # plain words, e.g. "The domain is only 3 days old"
     points: int  # positive raises the risk, negative lowers it
-    area: Literal["link", "page", "domain", "certificate", "server", "behavior", "reputation", "blacklist"]
+    area: Literal[
+        "link", "page", "domain", "certificate", "server", "behavior", "reputation", "blacklist", "family"
+    ]
 
 
 class ScamType(BaseModel):

@@ -7,8 +7,9 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from app import blacklists, pages, recon, sandbox_client, storage
+from app import blacklists, family, pages, recon, sandbox_client, siblings, storage
 from app.analysis import analyze
+from app.analysis.lexical import analyze_link
 from app.config import Settings
 from app.fingerprint import Fingerprints, fingerprint_visit, thumbnail
 
@@ -18,6 +19,7 @@ STEPS = [
     ("blacklists", "Checking known scam lists"),
     ("sandbox", "Opening the link in the sandbox"),
     ("recon", "Looking up who's behind it"),
+    ("family", "Looking for its family and siblings"),
     ("analysis", "Reading the page and scoring it"),
     ("save", "Saving the result"),
 ]
@@ -72,9 +74,31 @@ async def run_scan(
         },
     )
 
-    await progress("analysis", "running", None)
-    verdict = analyze(visit, found.model_dump(), url, listed.model_dump())
+    # Fingerprint the page, then look for pages like it and for sites run by the same people.
+    await progress("family", "running", None)
     prints = await asyncio.to_thread(fingerprint_visit, visit)
+    where = analyze_link(visit.get("final_url") or url)
+    own_site = where.site or where.registered_domain
+    kin = await family.find(settings.database_url, prints, own_ref=scan_id, own_site=own_site)
+    others = await siblings.find(
+        settings.database_url,
+        found.model_dump(),
+        kin,
+        own_site,
+        free_hosting=where.free_hosting is not None,
+        urlscan=settings.urlscan_search,
+        urlscan_key=settings.urlscan_api_key.get_secret_value(),
+    )
+    await progress(
+        "family",
+        "done",
+        {"status": kin.status, "family": kin.family.label if kin.family else None, "note": kin.note},
+    )
+
+    await progress("analysis", "running", None)
+    verdict = analyze(
+        visit, found.model_dump(), url, listed.model_dump(), kin.model_dump(), others.model_dump()
+    )
     await progress("analysis", "done", {"score": verdict.score, "verdict": verdict.verdict})
 
     visit.pop("html", None)  # never leaves the API (safety rule 5)
@@ -88,6 +112,8 @@ async def run_scan(
         "blacklists": listed.model_dump(),
         "analysis": verdict.model_dump(),
         "fingerprints": prints.model_dump(),
+        "family": kin.model_dump(),
+        "siblings": others.model_dump(),
         "saved": False,
     }
 

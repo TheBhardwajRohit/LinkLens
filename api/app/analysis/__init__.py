@@ -1,8 +1,8 @@
 """Analysis: turn everything the scan found into a score, a verdict, a scam type, and reasons."""
 
 from app.analysis import score as rules
-from app.analysis.content import analyze_page
-from app.analysis.lexical import analyze_link
+from app.analysis.content import PageFeatures, analyze_page
+from app.analysis.lexical import LinkFeatures, analyze_link
 from app.analysis.models import Analysis, ScamType
 from app.analysis.scamtype import LABELS, classify, impersonated_brands
 from app.analysis.toplist import toplist
@@ -17,12 +17,34 @@ def _lists_malware(blacklists: dict | None) -> bool:
     )
 
 
-def analyze(visit: dict, recon: dict, requested_url: str, blacklists: dict | None = None) -> Analysis:
+def analyze(
+    visit: dict,
+    recon: dict,
+    requested_url: str,
+    blacklists: dict | None = None,
+    family: dict | None = None,
+    siblings: dict | None = None,
+) -> Analysis:
+    """Read the link and the page, then judge them."""
     link = analyze_link(requested_url)
     final_url = visit.get("final_url") or requested_url
     final = analyze_link(final_url) if final_url != requested_url else link
-
     page = analyze_page(visit.get("html"), visit.get("final_url"))
+    return judge(link, final, page, visit, recon, blacklists, family, siblings)
+
+
+def judge(
+    link: LinkFeatures,
+    final: LinkFeatures,
+    page: PageFeatures,
+    visit: dict,
+    recon: dict,
+    blacklists: dict | None = None,
+    family: dict | None = None,
+    siblings: dict | None = None,
+) -> Analysis:
+    """Score what was already read. Split from `analyze` so the data jobs can score a dataset page
+    without parsing it twice."""
     page_domain = final.registered_domain
     impersonated = impersonated_brands(final, page, final.host, page_domain)
     if link is not final and link.lookalike:
@@ -38,6 +60,8 @@ def analyze(visit: dict, recon: dict, requested_url: str, blacklists: dict | Non
     reasons += rules.page_reasons(page, names, visit.get("final_url"), official)
     reasons += rules.behavior_reasons(visit)
     reasons += rules.blacklist_reasons(blacklists)
+    trusted = official or (final.tranco_rank is not None and final.tranco_rank <= 10_000)
+    reasons += rules.family_reasons(family, siblings, trusted)
     domain_risks, good = rules.domain_reasons(recon)
     reasons += domain_risks
     good += rules.reputation_reasons(final, names)

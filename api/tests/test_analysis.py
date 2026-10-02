@@ -219,3 +219,13 @@ def test_shortened_link_is_judged_by_where_it_lands():
     texts = [r.text for r in a.reasons]
     assert any("imitating PayPal" in t for t in texts)
     assert any("shortened" in t for t in texts)
+
+
+def test_display_brand_tidies_outside_names():
+    from app.analysis.brands import display_brand
+
+    assert display_brand("other") is None and display_brand("None") is None and display_brand(None) is None
+    assert display_brand("sbi") == "SBI"
+    assert display_brand("paypal") == "PayPal"
+    assert display_brand("naver") == "Naver"
+    assert display_brand("DHL Express") == "DHL Express"

@@ -8,10 +8,10 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import __version__, cache, checks, jobs, pages, pipeline, sandbox_client, storage
+from app import __version__, cache, checks, family, jobs, pages, pipeline, sandbox_client, storage
 from app.analysis.toplist import keep_fresh as keep_toplist_fresh
 from app.analysis.toplist import toplist
 from app.blacklists.lists import keep_fresh as keep_lists_fresh
@@ -163,6 +163,23 @@ async def stats(settings: SettingsDep) -> dict:
     found["phishing_lists"] = known_lists.status() if settings.known_lists else None
     cache.remember("stats", "all", found, 60)
     return found
+
+
+@app.get("/pages/{page_id}/thumb")
+async def page_thumb(page_id: int, settings: SettingsDep) -> Response:
+    """A small picture of a known page, for the sibling list. It is a JPEG that LinkLens made
+    itself from its own screenshot, so it can't carry anything from the page."""
+    try:
+        data = await family.thumbnail(settings.database_url, page_id)
+    except Exception as err:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Pictures can't be read right now.") from err
+    if data is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No picture for that page.")
+    return Response(
+        data,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"},
+    )
 
 
 def _valid_id(scan_id: str) -> str:

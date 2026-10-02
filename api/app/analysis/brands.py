@@ -79,3 +79,19 @@ def official_name(host: str, registered: str | None) -> str | None:
     if brand:
         return brand.name
     return next((name for suffix, name in RESTRICTED_NAMES.items() if host.lower().endswith(suffix)), None)
+
+
+NOT_A_BRAND = {"", "none", "other", "unknown", "generic", "n/a", "na", "null"}
+
+
+def display_brand(raw: str | None) -> str | None:
+    """Tidy a brand name that came from outside (a dataset's "target" column, say): placeholders
+    like "other" become None, known brands get their proper spelling, the rest get a capital."""
+    text = (raw or "").strip()
+    if text.lower() in NOT_A_BRAND:
+        return None
+    wanted = text.lower()
+    for brand in brands():
+        if wanted == brand.name.lower() or wanted in brand.labels:
+            return brand.name
+    return text if any(c.isupper() for c in text) else text[:1].upper() + text[1:]

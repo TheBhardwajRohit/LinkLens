@@ -150,7 +150,7 @@ jobs:
           import json
           lines = open('events.txt').read().splitlines()
           kinds = [l[7:] for l in lines if l.startswith('event: ')]
-          assert kinds.count('step') == 10 and kinds[-1] == 'done', kinds
+          assert kinds.count('step') == 12 and kinds[-1] == 'done', kinds
           "
           curl -fsS "http://localhost:8000/scans/$id" -o saved.json
           python3 -c "

@@ -63,6 +63,7 @@ def test_scan_progress_streams_every_step_then_the_result(fakes, fake_storage):
             "blacklists",
             "sandbox",
             "recon",
+            "family",
             "analysis",
             "save",
         ]
@@ -76,6 +77,8 @@ def test_scan_progress_streams_every_step_then_the_result(fakes, fake_storage):
             ("sandbox", "done"),
             ("recon", "running"),
             ("recon", "done"),
+            ("family", "running"),
+            ("family", "done"),
             ("analysis", "running"),
             ("analysis", "done"),
             ("save", "running"),
