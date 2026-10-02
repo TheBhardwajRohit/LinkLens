@@ -59,11 +59,19 @@ def test_scan_progress_streams_every_step_then_the_result(fakes, fake_storage):
         started = client.post("/scans", json={"url": "paypa1.com/signin?email=someone@example.com"})
         assert started.status_code == 202
         scan_id = started.json()["id"]
-        assert [s["id"] for s in started.json()["steps"]] == ["sandbox", "recon", "analysis", "save"]
+        assert [s["id"] for s in started.json()["steps"]] == [
+            "blacklists",
+            "sandbox",
+            "recon",
+            "analysis",
+            "save",
+        ]
 
         got = events(client, scan_id)
         steps = [(d["step"], d["status"]) for k, d in got if k == "step"]
         assert steps == [
+            ("blacklists", "running"),
+            ("blacklists", "done"),
             ("sandbox", "running"),
             ("sandbox", "done"),
             ("recon", "running"),
@@ -81,6 +89,43 @@ def test_scan_progress_streams_every_step_then_the_result(fakes, fake_storage):
         assert kind == "done"
         assert result["analysis"]["verdict"] in ("suspicious", "dangerous")
         assert "html" not in result["visit"]
+
+
+def test_blacklists_are_checked_first_and_again_once_the_destination_is_known(fakes, monkeypatch):
+    from app import blacklists
+    from app.blacklists.models import Blacklists, SourceResult
+
+    seen = []
+
+    async def fake_check(urls, settings, **kwargs):
+        seen.append(urls)
+        hit = SourceResult(
+            id="safe_browsing", name="Google Safe Browsing", status="listed", threats=["phishing"]
+        )
+        return Blacklists(sources=[hit], listed_by=[hit.name], checked=urls)
+
+    async def redirecting_visit(sandbox_url, url):
+        visit = json.loads(json.dumps(VISIT))
+        visit["final_url"] = "https://landing.example/login"
+        visit["hops"].append({"url": "https://landing.example/login", "kind": "server", "status": 200})
+        return visit
+
+    monkeypatch.setattr(blacklists, "check", fake_check)
+    monkeypatch.setattr(sandbox_client, "visit", redirecting_visit)
+    with TestClient(app) as client:
+        scan_id = client.post("/scans", json={"url": "paypa1.com/signin?email=someone@example.com"}).json()[
+            "id"
+        ]
+        got = events(client, scan_id)
+    first = next(d for k, d in got if k == "step" and d["step"] == "blacklists" and d["status"] == "done")
+    assert first["data"]["listed_by"] == ["Google Safe Browsing"]
+    # Personal data is removed before any link goes to an outside service.
+    assert seen[0] == ["https://paypa1.com/signin?email=REDACTED"]
+    assert seen[1] == ["https://paypa1.com/signin?email=REDACTED", "https://landing.example/login"]
+    result = got[-1][1]
+    assert result["analysis"]["verdict"] == "dangerous"
+    assert result["analysis"]["listed_by"] == ["Google Safe Browsing"]
+    assert result["blacklists"]["sources"][0]["status"] == "listed"
 
 
 def test_reopened_results_have_personal_data_removed(fakes, fake_storage):

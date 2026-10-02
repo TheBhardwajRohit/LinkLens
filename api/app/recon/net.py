@@ -43,7 +43,7 @@ async def get_json(
 
 
 class TTLCache:
-    """A tiny in-memory cache, so repeat scans don't hammer free services. Phase 4 moves this to the DB."""
+    """A tiny in-memory cache, so repeat scans don't hammer free services."""
 
     def __init__(self, ttl_s: float, max_items: int = 1000):
         self._ttl = ttl_s

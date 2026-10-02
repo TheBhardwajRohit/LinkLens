@@ -11,9 +11,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import __version__, checks, jobs, pipeline, sandbox_client, storage
+from app import __version__, cache, checks, jobs, pipeline, sandbox_client, storage
 from app.analysis.toplist import keep_fresh as keep_toplist_fresh
 from app.analysis.toplist import toplist
+from app.blacklists.lists import keep_fresh as keep_lists_fresh
+from app.blacklists.lists import known as known_lists
 from app.config import Settings, get_settings
 from app.ratelimit import limiter
 from app.recon.geoip import geo
@@ -32,11 +34,15 @@ async def lifespan(_: FastAPI):
         for attempt in range(5):
             try:
                 await storage.init(settings.database_url)
+                cache.configure(settings.database_url)
+                await cache.sweep()
                 break
             except Exception as err:
                 log.warning("database not ready (%s), retrying", type(err).__name__)
                 await asyncio.sleep(2 * (attempt + 1))
         tasks.append(asyncio.create_task(keep_toplist_fresh()))
+        if settings.known_lists:
+            tasks.append(asyncio.create_task(keep_lists_fresh()))
         if settings.configured_keys()["maxmind"]:
             key = settings.maxmind_license_key.get_secret_value()
             tasks.append(asyncio.create_task(keep_geoip_fresh(settings.maxmind_account_id, key)))
@@ -103,6 +109,7 @@ def health(settings: SettingsDep) -> dict:
         "checks": results,
         "geoip": geo.status(),
         "toplist": toplist.list_id or ("loading" if settings.startup_tasks else "off"),
+        "phishing_lists": known_lists.status() if settings.known_lists else "off",
         "keys": settings.configured_keys(),
     }
 
@@ -112,9 +119,7 @@ async def scan_now(req: ScanRequest, request: Request, settings: SettingsDep) ->
     """Run a whole scan and return the result in one reply (used by CI and scripts)."""
     url = _start_checks(req, request, settings)
     try:
-        return await pipeline.run_scan(
-            url, sandbox_url=settings.sandbox_url, database_url=settings.database_url
-        )
+        return await pipeline.run_scan(url, settings=settings)
     except (sandbox_client.SandboxBusy, sandbox_client.SandboxUnavailable) as err:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, _sandbox_error(err)) from err
 
@@ -131,13 +136,7 @@ async def start_scan(req: ScanRequest, request: Request, settings: SettingsDep) 
 
     async def run() -> None:
         try:
-            result = await pipeline.run_scan(
-                url,
-                sandbox_url=settings.sandbox_url,
-                database_url=settings.database_url,
-                scan_id=scan_id,
-                progress=progress,
-            )
+            result = await pipeline.run_scan(url, settings=settings, scan_id=scan_id, progress=progress)
             job.result = result
             await job.push("done", result, final=True)
         except Exception as err:

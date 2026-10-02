@@ -190,6 +190,7 @@ class LinkFeatures(BaseModel):
     digit_ratio: float = 0.0
     hyphens: int = 0
     entropy: float = 0.0
+    random_name: bool = False  # the name looks machine-made, like xk7qz9vbt2mw
     has_at: bool = False
     double_slash_path: bool = False
     abused_tld: bool = False
@@ -205,6 +206,22 @@ def shannon_entropy(text: str) -> float:
         return 0.0
     counts = Counter(text)
     return -sum(c / len(text) * math.log2(c / len(text)) for c in counts.values())
+
+
+def looks_random(label: str) -> bool:
+    """Does a name look machine-made? Judged word by word, so readable names joined by hyphens
+    (sbi-kyc-update) are not called random just for being long."""
+    for token in re.split(r"[-_.]+", label.lower()):
+        if len(token) < 10:
+            continue
+        letters = [c for c in token if c.isalpha()]
+        vowels = sum(c in "aeiou" for c in letters)
+        switches = sum(a.isdigit() != b.isdigit() for a, b in zip(token, token[1:], strict=False))
+        longest_run = max((len(run) for run in re.findall(r"[bcdfghjklmnpqrstvwxz]+", token)), default=0)
+        few_vowels = bool(letters) and vowels / len(letters) < 0.2
+        if shannon_entropy(token) >= 3.0 and (few_vowels or switches >= 3 or longest_run >= 6):
+            return True
+    return False
 
 
 def _decode_host(host: str) -> str:
@@ -305,6 +322,7 @@ def analyze_link(url: str) -> LinkFeatures:
     features.digit_ratio = round(sum(c.isdigit() for c in host) / max(len(host), 1), 2)
     features.hyphens = label.count("-")
     features.entropy = round(shannon_entropy(label), 2)
+    features.random_name = looks_random(label)
     features.abused_tld = (pub.suffix or "").split(".")[-1] in ABUSED_TLDS
     features.shortener = features.registered_domain in SHORTENERS
     features.tranco_rank = toplist.rank(features.site)

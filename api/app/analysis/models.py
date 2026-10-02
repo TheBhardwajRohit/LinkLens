@@ -11,7 +11,7 @@ Verdict = Literal["safe", "suspicious", "dangerous"]
 class Reason(BaseModel):
     text: str  # plain words, e.g. "The domain is only 3 days old"
     points: int  # positive raises the risk, negative lowers it
-    area: Literal["link", "page", "domain", "certificate", "server", "behavior", "reputation"]
+    area: Literal["link", "page", "domain", "certificate", "server", "behavior", "reputation", "blacklist"]
 
 
 class ScamType(BaseModel):
@@ -29,6 +29,7 @@ class Analysis(BaseModel):
     reasons: list[Reason] = []  # raise the risk, strongest first
     good_signs: list[Reason] = []  # lower the risk
     partial: bool = False  # true when the page itself couldn't be checked
+    listed_by: list[str] = []  # blacklists that list this link
     link: LinkFeatures
     final_link: LinkFeatures | None = None
     page: PageFeatures

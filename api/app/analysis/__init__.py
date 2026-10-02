@@ -3,14 +3,21 @@
 from app.analysis import score as rules
 from app.analysis.content import analyze_page
 from app.analysis.lexical import analyze_link
-from app.analysis.models import Analysis
-from app.analysis.scamtype import classify, impersonated_brands
+from app.analysis.models import Analysis, ScamType
+from app.analysis.scamtype import LABELS, classify, impersonated_brands
 from app.analysis.toplist import toplist
 
 NOT_CAPTURED = ("blocked", "unreachable", "download", "crashed", "error")
 
 
-def analyze(visit: dict, recon: dict, requested_url: str) -> Analysis:
+def _lists_malware(blacklists: dict | None) -> bool:
+    return any(
+        s.get("status") == "listed" and "malware" in (s.get("threats") or [])
+        for s in (blacklists or {}).get("sources") or []
+    )
+
+
+def analyze(visit: dict, recon: dict, requested_url: str, blacklists: dict | None = None) -> Analysis:
     link = analyze_link(requested_url)
     final_url = visit.get("final_url") or requested_url
     final = analyze_link(final_url) if final_url != requested_url else link
@@ -30,6 +37,7 @@ def analyze(visit: dict, recon: dict, requested_url: str) -> Analysis:
         reasons += [r for r in rules.link_reasons(final, requested=False) if r.text not in seen]
     reasons += rules.page_reasons(page, names, visit.get("final_url"), official)
     reasons += rules.behavior_reasons(visit)
+    reasons += rules.blacklist_reasons(blacklists)
     domain_risks, good = rules.domain_reasons(recon)
     reasons += domain_risks
     good += rules.reputation_reasons(final, names)
@@ -43,15 +51,19 @@ def analyze(visit: dict, recon: dict, requested_url: str) -> Analysis:
     verdict = rules.verdict_for(total)
     partial = visit.get("stopped") in NOT_CAPTURED or not page.captured
     scam = classify(final, page, impersonated, downloads) if verdict != "safe" else None
+    listed_by = list((blacklists or {}).get("listed_by") or [])
+    if scam is None and verdict != "safe" and _lists_malware(blacklists):
+        scam = ScamType(id="malware", label=LABELS["malware"], evidence=["a blacklist lists it as malware"])
 
     return Analysis(
         score=total,
         verdict=verdict,
-        summary=rules.summarize(verdict, scam, final, visit, partial),
+        summary=rules.summarize(verdict, scam, final, visit, partial, listed_by),
         scam_type=scam,
         reasons=reasons,
         good_signs=good,
         partial=partial,
+        listed_by=listed_by,
         link=link,
         final_link=final if final is not link else None,
         page=page,

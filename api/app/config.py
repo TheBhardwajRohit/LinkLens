@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     scan_rate_limit_per_hour: int = 20
     # Database setup and list downloads at startup. Tests turn this off.
     startup_tasks: bool = True
+    # Download the free Phishing.Database lists and check links against them locally.
+    known_lists: bool = True
+    # Ask urlscan.io whether a site was scanned before (works without a key; only the site name is sent).
+    urlscan_search: bool = True
 
     # Optional keys. SecretStr keeps values out of logs and error messages.
     google_safe_browsing_api_key: SecretStr = SecretStr("")

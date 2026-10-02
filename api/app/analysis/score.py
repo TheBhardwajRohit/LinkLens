@@ -85,8 +85,7 @@ def link_reasons(link: LinkFeatures, requested: bool) -> list[Reason]:
         add(f"It uses the .{(link.suffix or '').split('.')[-1]} ending, which scammers use often.", 8)
     if link.subdomain_depth >= 3:
         add("The address has many layers of subdomains.", 8)
-    label = (link.registered_domain or "").split(".")[0]
-    if link.entropy >= 3.6 and len(label) >= 12:
+    if link.random_name:
         add("The name looks randomly generated.", 8)
     if link.hyphens >= 2:
         add("The name has several hyphens, like many scam domains.", 5)
@@ -249,6 +248,45 @@ def domain_reasons(recon: dict) -> tuple[list[Reason], list[Reason]]:
     return risks, good
 
 
+def blacklist_reasons(blacklists: dict | None) -> list[Reason]:
+    """What known lists say. These are the only reasons that rest on someone else's verdict, so the
+    wording names the source and stays careful ("lists it as suspected ...")."""
+    r: list[Reason] = []
+    add = lambda text, pts: r.append(Reason(text=text, points=pts, area="blacklist"))  # noqa: E731
+    for src in (blacklists or {}).get("sources") or []:
+        status, detail = src.get("status"), src.get("detail") or {}
+        threats = " and ".join(src.get("threats") or []) or "a threat"
+        match src.get("id"):
+            case "safe_browsing" if status == "listed":
+                add(f"Google Safe Browsing lists this link as suspected {threats}.", 70)
+            case "phishing_database" if status == "listed":
+                if detail.get("match") == "link":
+                    add("This exact link is on the Phishing.Database list of active phishing links.", 60)
+                elif detail.get("popular"):
+                    add("This popular site is on a phishing list, likely because of one page on it.", 15)
+                else:
+                    add("This site is on the Phishing.Database list of active phishing domains.", 45)
+            case "virustotal" if status == "listed":
+                bad, total = detail.get("malicious", 0), detail.get("vendors", 0)
+                add(
+                    f"{bad} of {total} security vendors on VirusTotal flag this link.", 60 if bad >= 5 else 35
+                )
+            case "virustotal" if status == "info":
+                add("One or two security vendors on VirusTotal flag this link.", 10)
+            case "urlhaus" if status == "listed":
+                live = detail.get("url_status") == "online" or detail.get("online")
+                add(
+                    "URLhaus lists this link as a malware download"
+                    + (" that is live right now." if live else "."),
+                    70 if live else 45,
+                )
+            case "urlhaus" if status == "info":
+                add("URLhaus has seen malware links on this host before.", 15)
+            case "urlscan" if status == "listed":
+                add("Earlier scans of this site on urlscan.io were judged malicious.", 30)
+    return r
+
+
 def reputation_reasons(final: LinkFeatures, impersonated: list[str]) -> list[Reason]:
     good: list[Reason] = []
     if final.official_brand and not final.lookalike:
@@ -300,10 +338,18 @@ GENERIC_BY_TYPE = {
 
 
 def summarize(
-    verdict: Verdict, scam: ScamType | None, final: LinkFeatures, visit: dict, partial: bool
+    verdict: Verdict,
+    scam: ScamType | None,
+    final: LinkFeatures,
+    visit: dict,
+    partial: bool,
+    listed_by: list[str] | None = None,
 ) -> str:
     if visit.get("stopped") == "blocked":
         return "This link leads to a private address, which real websites never do. Don't trust it."
+    if listed_by and verdict != "safe" and not scam:
+        names = " and ".join(listed_by[:2])
+        return f"{names} {'lists' if len(listed_by) == 1 else 'list'} this link as unsafe. Don't open it."
     if verdict != "safe" and scam:
         if scam.brand and scam.id in PHRASE_BY_TYPE:
             article = "an" if PHRASE_BY_TYPE[scam.id][0] in "aeiou" else "a"

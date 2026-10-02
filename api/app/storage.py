@@ -7,6 +7,7 @@ from typing import Any
 
 import psycopg
 
+from app import cache
 from app.redact import redact
 
 log = logging.getLogger("linklens.storage")
@@ -32,6 +33,7 @@ CREATE INDEX IF NOT EXISTS scans_domain_idx ON scans (registered_domain);
 async def init(database_url: str) -> None:
     async with await psycopg.AsyncConnection.connect(database_url, connect_timeout=5) as conn:
         await conn.execute(SCHEMA)
+        await conn.execute(cache.SCHEMA)
 
 
 async def save(database_url: str, result: dict[str, Any]) -> None:
