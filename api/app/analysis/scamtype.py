@@ -18,6 +18,8 @@ LABELS = {
     "government": "Government impersonation",
 }
 MIN_EVIDENCE = 3
+MIN_MENTIONS = 3
+MAX_OTHER_BRANDS = 3
 
 FIELD_WORDS = {
     "password": "a password or PIN",
@@ -41,16 +43,20 @@ def impersonated_brands(
 ) -> list[Brand]:
     """Brands the link or page pretends to be, while not being that brand's real site.
 
-    A plain mention isn't enough (real sites mention other brands all the time). It counts when the
-    link imitates the brand, the page's title claims it, or the page names it while asking for
-    passwords, card numbers, or similar."""
+    A plain mention isn't enough: real sites name other brands all the time ("Sign in with Google",
+    a Facebook link in the footer). It counts when the link imitates the brand, the page's title
+    claims it, or the page asks for passwords or card numbers while being mostly about that one
+    brand (it is the brand named most, at least three times, and few other brands appear)."""
     by_name = {b.name: b for b in brands()}
     found: list[Brand] = []
     if link.lookalike and link.lookalike.brand in by_name:
         found.append(by_name[link.lookalike.brand])
     candidates = list(page.brand_in_title)
-    if page.asks_for:
-        candidates += page.brands_mentioned
+    about_one_brand = (
+        page.top_brand_mentions >= MIN_MENTIONS and len(page.brands_mentioned) <= MAX_OTHER_BRANDS
+    )
+    if page.asks_for and page.top_brand and about_one_brand:
+        candidates.append(page.top_brand)
     for name in candidates:
         brand = by_name.get(name)
         if brand and brand not in found and not brand.is_official(page_host, page_domain):

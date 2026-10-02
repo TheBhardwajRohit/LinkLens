@@ -153,6 +153,8 @@ class PageFeatures(BaseModel):
     mailto_form: bool = False
     brands_mentioned: list[str] = []
     brand_in_title: list[str] = []
+    top_brand: str | None = None  # the brand named most often, and how often
+    top_brand_mentions: int = 0
     wallets: list[str] = []
     phrases: dict[str, list[str]] = {}
     iframes: int = 0
@@ -261,8 +263,11 @@ def analyze_page(html: str | None, page_url: str | None) -> PageFeatures:
     mentioned = []
     in_title = []
     for brand in brands():
-        if brand.mentioned_in(words):
+        times = brand.mentioned_in(words)
+        if times:
             mentioned.append(brand.name)
+            if times > f.top_brand_mentions:
+                f.top_brand, f.top_brand_mentions = brand.name, times
             if f.title and brand.mentioned_in(f.title):
                 in_title.append(brand.name)
     f.brands_mentioned = mentioned

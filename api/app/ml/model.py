@@ -83,17 +83,17 @@ def model_points(probability: float) -> int:
     chosen from the test-set results in docs/MODEL_REPORT.md: the higher the model's probability,
     the more often it is right, so the more it counts."""
     if probability >= 0.95:
-        return 30
+        return 50
     if probability >= 0.8:
-        return 22
+        return 40
     if probability >= 0.6:
-        return 12
+        return 25
     if probability >= 0.4:
-        return 5
+        return 10
     if probability <= 0.05:
-        return -12
+        return -20
     if probability <= 0.15:
-        return -6
+        return -10
     return 0
 
 

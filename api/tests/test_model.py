@@ -87,7 +87,15 @@ def test_values_are_rounded_like_the_training_data():
 
 
 def test_points_grow_with_the_models_confidence():
-    assert [m.model_points(p) for p in (0.99, 0.85, 0.7, 0.45, 0.3, 0.1, 0.02)] == [30, 22, 12, 5, 0, -6, -12]
+    assert [m.model_points(p) for p in (0.99, 0.85, 0.7, 0.45, 0.3, 0.1, 0.02)] == [
+        50,
+        40,
+        25,
+        10,
+        0,
+        -10,
+        -20,
+    ]
 
 
 def test_the_models_opinion_becomes_a_reason():
@@ -104,7 +112,7 @@ def test_the_models_opinion_becomes_a_reason():
         ],
     )
     risks, good = model_reasons(sure, trusted=False)
-    assert good == [] and risks[0].points == 30 and risks[0].area == "model"
+    assert good == [] and risks[0].points == 50 and risks[0].area == "model"
     assert risks[0].text == (
         "The page-reading model rates this page 97% likely to be a scam page, mostly because of asking for a "
         "one-time password and showing a brand's name on a site that isn't the brand's."
@@ -112,7 +120,7 @@ def test_the_models_opinion_becomes_a_reason():
     # A brand's real site is never marked down by the model.
     assert model_reasons(sure, trusted=True) == ([], [])
     risks, good = model_reasons(m.Prediction(probability=0.03), trusted=False)
-    assert risks == [] and good[0].points == -12
+    assert risks == [] and good[0].points == -20
     assert good[0].text == "The page-reading model sees little that looks like a scam page (3%)."
     assert model_reasons(m.Prediction(probability=0.3), trusted=False) == ([], [])
     assert model_reasons(None, trusted=False) == ([], [])
