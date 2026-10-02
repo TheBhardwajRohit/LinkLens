@@ -3,13 +3,14 @@ import type { Ref } from "react";
 import type { Scan } from "../lib/api";
 import { formatDate } from "../lib/format";
 import BlacklistReport from "./BlacklistReport";
+import { FamilyCard, SiblingTabs } from "./FamilyReport";
 import Guard from "./Guard";
 import { ComingSoon, ResultActions, VerdictCard, WhyFlagged } from "./Verdict";
-import VisitReport from "./VisitReport";
+import { VisitDetails, VisitSummary } from "./VisitReport";
 
-// Report order follows the plan: verdict, screenshot, who's behind it, link trail, reasons,
-// blacklist results, later-phase features, then actions. Each part is guarded, so an old or
-// incomplete saved scan can't blank the whole page.
+// Report order follows the plan: verdict, screenshot, family, siblings, who's behind it, link
+// trail, reasons, blacklist results, later-phase features, then actions. Each part is guarded,
+// so an old or incomplete saved scan can't blank the whole page.
 export default function ScanResults({
   scan,
   reopened,
@@ -39,8 +40,17 @@ export default function ScanResults({
           <Guard name="verdict">
             <VerdictCard analysis={scan.analysis} />
           </Guard>
+          <Guard name="page preview">
+            <VisitSummary visit={scan.visit} />
+          </Guard>
+          <Guard name="scam family">
+            <FamilyCard family={scan.family} />
+          </Guard>
+          <Guard name="sibling sites">
+            <SiblingTabs siblings={scan.siblings} family={scan.family} />
+          </Guard>
           <Guard name="page details">
-            <VisitReport visit={scan.visit} recon={scan.recon} />
+            <VisitDetails visit={scan.visit} recon={scan.recon} />
           </Guard>
           <Guard name="reasons">
             <WhyFlagged analysis={scan.analysis} />

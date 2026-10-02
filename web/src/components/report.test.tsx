@@ -2,8 +2,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import type { Blacklists, Recon } from "../lib/api";
+import type { Blacklists, FamilyResult, Recon, Siblings } from "../lib/api";
 import BlacklistReport from "./BlacklistReport";
+import { FamilyCard, SiblingTabs } from "./FamilyReport";
 import ReconReport from "./ReconReport";
 
 const EMPTY_RECON = {
@@ -62,5 +63,46 @@ describe("BlacklistReport", () => {
 
   it("draws nothing for scans saved before blacklist checks existed", () => {
     expect(renderToStaticMarkup(<BlacklistReport blacklists={undefined} />)).toBe("");
+  });
+});
+
+describe("FamilyCard and SiblingTabs", () => {
+  const family: FamilyResult = {
+    status: "matched",
+    note: "Looks 96% like the family.",
+    family: { id: 12, label: "fake SBI banking page", brand: "SBI", scam_type: "banking", size: 43, sites: 30, first_seen: "2026-09-03T00:00:00+00:00", last_seen: "2026-09-20T00:00:00+00:00", sample_page: null, percent: 96 },
+    similar: [],
+    scam_matches: 4,
+    copied_site: null,
+    library_size: 56000,
+  };
+  const empty = { status: "none" as const, note: null, items: [], total: 0 };
+  const siblings: Siblings = {
+    same_server: { status: "ok", note: null, total: 1, items: [{ name: "evil-twin.example.net", why: "same IP address", known_scam: true, source: "library" }] },
+    same_owner: empty,
+    same_design: empty,
+    lookalikes: { ...empty, note: "None of 80 similar names exist." },
+  };
+
+  it("names the family like the plan says", () => {
+    const html = renderToStaticMarkup(<FamilyCard family={family} />);
+    expect(html).toContain("Family #12: fake SBI banking page");
+    expect(html).toContain("43 known pages on 30 sites");
+    expect(html).toContain("first seen 3 Sept 2026");
+    expect(html).toContain("96%");
+  });
+
+  it("says so plainly when nothing matches", () => {
+    const none = { ...family, status: "none" as const, family: null, note: "Nothing among 500 known pages looks like this one." };
+    expect(renderToStaticMarkup(<FamilyCard family={none} />)).toContain("Nothing among 500 known pages");
+    expect(renderToStaticMarkup(<FamilyCard family={undefined} />)).toBe("");
+  });
+
+  it("shows sibling names defanged, never as links", () => {
+    const html = renderToStaticMarkup(<SiblingTabs siblings={siblings} family={family} />);
+    expect(html).toContain("evil-twin[.]example[.]net");
+    expect(html).not.toContain("<a ");
+    expect(html).toContain("known scam");
+    expect(html).toContain("Lookalike names");
   });
 });

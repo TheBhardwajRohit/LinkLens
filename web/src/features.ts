@@ -17,8 +17,8 @@ export type Feature = { title: string; text: string; icon: LucideIcon; status: "
 
 export const FEATURES: Feature[] = [
   { title: "Instant Verdict", text: "Safe, Suspicious, or Dangerous, with a score out of 100", icon: Gauge, status: "live" },
-  { title: "Family Finder", text: "Which scam group or scam template this link belongs to", icon: Fingerprint, status: "soon" },
-  { title: "Sibling Hunter", text: "Other websites run by the same people", icon: Users, status: "soon" },
+  { title: "Family Finder", text: "Which scam group or scam template this link belongs to", icon: Fingerprint, status: "live" },
+  { title: "Sibling Hunter", text: "Other websites run by the same people", icon: Users, status: "live" },
   { title: "Scam Type", text: "Financial fraud, fake login, crypto scam, fake prize, and more", icon: Tags, status: "live" },
   { title: "Server Tracker", text: "Server location, hosting company, and who registered it", icon: Server, status: "live" },
   { title: "Link Trail", text: "Every jump the link makes before the final page", icon: Route, status: "live" },

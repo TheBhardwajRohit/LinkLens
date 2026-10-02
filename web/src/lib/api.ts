@@ -141,7 +141,7 @@ export type Verdict = "safe" | "suspicious" | "dangerous";
 export type Reason = {
   text: string;
   points: number;
-  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist";
+  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist" | "family";
 };
 
 export type BlacklistStatus =
@@ -191,8 +191,51 @@ export type Scan = {
   blacklists?: Blacklists; // missing on scans saved before blacklist checks existed
   analysis: Analysis;
   fingerprints?: Fingerprints;
+  family?: FamilyResult;
+  siblings?: Siblings;
   saved: boolean;
 };
+
+export type SimilarPage = {
+  page_id: number;
+  url: string;
+  site: string | null;
+  label: "phish" | "benign" | "unknown";
+  brand: string | null;
+  title: string | null;
+  seen_at: string | null;
+  percent: number;
+  alike: string;
+  has_thumb: boolean;
+  family_id: number | null;
+};
+
+export type Family = {
+  id: number;
+  label: string;
+  brand: string | null;
+  scam_type: string | null;
+  size: number;
+  sites: number;
+  first_seen: string | null;
+  last_seen: string | null;
+  sample_page: number | null;
+  percent: number;
+};
+
+export type FamilyResult = {
+  status: "matched" | "similar" | "copy" | "none" | "skipped" | "unavailable";
+  note: string | null;
+  family: Family | null;
+  similar: SimilarPage[];
+  scam_matches: number;
+  copied_site: string | null;
+  library_size: number;
+};
+
+export type Sibling = { name: string; why: string; known_scam: boolean; source: string };
+export type Tab = { status: "ok" | "none" | "skipped" | "unavailable"; note: string | null; items: Sibling[]; total: number };
+export type Siblings = { same_server: Tab; same_owner: Tab; same_design: Tab; lookalikes: Tab };
 
 /** Short codes that stay almost the same when a page is copied with small changes. */
 export type Fingerprints = {
@@ -206,13 +249,14 @@ export type Fingerprints = {
   words: number;
 };
 
-export type StepId = "blacklists" | "sandbox" | "recon" | "analysis" | "save";
+export type StepId = "blacklists" | "sandbox" | "recon" | "family" | "analysis" | "save";
 export type StepStatus = "pending" | "running" | "done" | "failed";
 export type Step = { id: StepId; label: string; status: StepStatus };
 
 /** Partial data that arrives while a scan runs, so the graph can grow step by step. */
 export type Preview = {
   listedBy?: string[]; // blacklists that already list the link (the quick first answer)
+  family?: string | null; // the scam family the page matched, once known
   visit?: Pick<Visit, "requested_url" | "final_url" | "hops" | "contacted_domains" | "blocked" | "stopped">;
   server?: ServerInfo | null;
   registration?: Registration | null;

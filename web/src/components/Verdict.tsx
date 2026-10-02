@@ -133,8 +133,6 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
 }
 
 const LATER = [
-  ["Family Finder", "which scam kit or group this belongs to"],
-  ["Sibling Hunter", "other sites run by the same people"],
   ["Network Map", "a clickable map of every connection"],
   ["Download Report", "the whole report as a PDF"],
 ];

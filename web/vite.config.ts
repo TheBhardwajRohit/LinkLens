@@ -11,12 +11,15 @@ function contentSecurityPolicy(): Plugin {
     apply: "build",
     transformIndexHtml(html) {
       const api = process.env.VITE_API_URL ?? "http://localhost:8000";
-      const connect = ["'self'", api && api !== "none" ? new URL(api).origin : ""].filter(Boolean).join(" ");
+      const apiOrigin = api && api !== "none" ? new URL(api).origin : "";
+      const connect = ["'self'", apiOrigin].filter(Boolean).join(" ");
+      // Thumbnails of known pages are small JPEGs served by our own API.
+      const images = ["'self'", "data:", apiOrigin].filter(Boolean).join(" ");
       const policy = [
         "default-src 'self'",
         "script-src 'self'",
         "style-src 'self'",
-        "img-src 'self' data:",
+        `img-src ${images}`,
         "font-src 'self'",
         `connect-src ${connect}`,
         "object-src 'none'",

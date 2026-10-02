@@ -93,6 +93,7 @@ export function useScan(): ScanControl {
               preview.server = (data.server as Preview["server"]) ?? null;
               preview.registration = (data.registration as Preview["registration"]) ?? null;
             }
+            if (step === "family") preview.family = (data.family as string | null) ?? null;
             if (step === "analysis") preview.verdict = data as Preview["verdict"];
           }
           return { ...s, steps, preview };

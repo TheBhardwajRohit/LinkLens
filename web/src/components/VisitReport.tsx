@@ -69,7 +69,8 @@ function HopRow({ hop, index }: { hop: Hop; index: number }) {
   );
 }
 
-export default function VisitReport({ visit, recon }: { visit: Visit; recon?: Recon }) {
+/** The top of the report: what happened in the sandbox, the screenshot, and the final address. */
+export function VisitSummary({ visit }: { visit: Visit }) {
   const outcome = OUTCOME[visit.stopped ?? "ok"] ?? OUTCOME.error;
   const Icon = outcome.icon;
 
@@ -118,6 +119,14 @@ export default function VisitReport({ visit, recon }: { visit: Visit; recon?: Re
         </Section>
       )}
 
+    </div>
+  );
+}
+
+/** The details: who is behind it, the link trail, and what the page contacted. */
+export function VisitDetails({ visit, recon }: { visit: Visit; recon?: Recon }) {
+  return (
+    <div className="space-y-6">
       {recon && <ReconReport recon={recon} finalUrl={visit.final_url ?? visit.requested_url} />}
 
       {visit.hops.length > 0 && (
