@@ -54,6 +54,22 @@ CREATE TABLE IF NOT EXISTS api_keys (
 """
 
 
+# Full screenshots are kept for 90 days. After that only the small thumbnail in the page library
+# and the fingerprints remain, as the plan says (it also keeps the free database small).
+SCREENSHOT_DAYS = 90
+PRUNE = f"""
+UPDATE scans SET screenshot = NULL
+WHERE screenshot IS NOT NULL AND created_at < now() - interval '{SCREENSHOT_DAYS} days'
+"""
+
+
+async def prune(database_url: str) -> int:
+    """Drop screenshots older than 90 days. Returns how many were dropped."""
+    async with await psycopg.AsyncConnection.connect(database_url, connect_timeout=5) as conn:
+        cur = await conn.execute(PRUNE)
+        return cur.rowcount
+
+
 async def init(database_url: str) -> None:
     async with await psycopg.AsyncConnection.connect(database_url, connect_timeout=5) as conn:
         await conn.execute(SCHEMA)

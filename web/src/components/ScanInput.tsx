@@ -173,8 +173,8 @@ export default function ScanInput({
         {state.kind === "offline" && (
           <p className="flex items-start gap-2 text-slate-300">
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
-            The scanner isn't online right now. LinkLens is still being built, and scanning only runs on a local
-            machine for now.
+            The scanner isn't online right now. Scanning runs on a local install until a public scan server is set
+            up.
           </p>
         )}
       </div>

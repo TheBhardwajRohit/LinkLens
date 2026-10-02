@@ -7,14 +7,22 @@ Data jobs: plain Python scripts that fill the page library. They reuse the API's
 |---|---|---|---|
 | Dataset load | `seed_phreshphish.py` | By hand (workflow "Load dataset", or Docker) | Streams rows of the PhreshPhish research dataset, fingerprints each page, stores the fingerprints and writes the feature file the model is trained from. The HTML is thrown away. |
 | Feed ingestion | `ingest.py` | Hourly on GitHub Actions (workflow "Feed ingestion") | Picks new links from free scam feeds, opens each in the sandbox, stores fingerprints and who is behind the page. |
-| Family grouping | `cluster.py` (phase 7) | Nightly | Groups stored pages into scam families. |
-| Model training | `train.py` (phase 9) | By hand | Trains and checks the scoring model. |
+| Family grouping | `cluster.py` | Nightly on GitHub Actions (workflow "Family grouping") | Links pages whose fingerprints agree and groups them into scam families, named after the brand they target. |
+| Model training | `train.py` | By hand, in Docker | Trains the page-reading model from the feature files, checks it on the test split, and writes `api/app/ml/model.json` and `docs/MODEL_REPORT.md`. |
 
 ## Run one locally (Docker)
 
 ```bash
 docker compose --profile jobs build jobs
 docker compose run --rm jobs python -m jobs.seed_phreshphish --split train --limit 2000
+```
+
+Group the families and train the model:
+
+```bash
+docker compose run --rm jobs python -m jobs.cluster
+docker compose run --rm -v "$PWD/api/app/ml:/out/ml" -v "$PWD/docs:/out/docs" jobs \
+  python -m jobs.train --out-model /out/ml/model.json --out-report /out/docs/MODEL_REPORT.md
 ```
 
 The jobs container sees the local database, the Tranco list, and an `ml_data` volume for feature

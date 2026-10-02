@@ -22,7 +22,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from app import pages
+from app import pages, storage
 from app.analysis.brands import display_brand
 from app.similarity import MIN_TAGS, Prints, boilerplate, compare, unsigned
 from jobs.common import connect, now, say
@@ -329,6 +329,7 @@ def main() -> None:
     if not args.dry_run:
         save(conn, found)
         pages.record_run(conn, "cluster", started, ok=True, fetched=len(library), added=len(found), note=note)
+        conn.execute(storage.PRUNE)  # nightly housekeeping: screenshots older than 90 days
         say(f"Saved in {(now() - started).total_seconds():.0f} s.")
     conn.close()
 

@@ -51,8 +51,9 @@ export default function Features() {
       <div className="max-w-2xl">
         <h2 className="font-display text-3xl font-medium tracking-tight text-cream sm:text-5xl">What LinkLens tells you</h2>
         <p className="mt-4 text-slate-400">
-          {live} of these checks work today. The rest arrive as the project grows, and each card switches to Live when
-          its check ships.
+          {live === FEATURES.length
+            ? "Every one of these checks runs on each scan. Results are likely, not certain, and the report says why."
+            : `${live} of these checks work today. The rest arrive as the project grows, and each card switches to Live when its check ships.`}
         </p>
       </div>
       <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">

@@ -48,6 +48,7 @@ async def lifespan(_: FastAPI):
                 await storage.init(settings.database_url)
                 cache.configure(settings.database_url)
                 await cache.sweep()
+                await storage.prune(settings.database_url)
                 break
             except Exception as err:
                 log.warning("database not ready (%s), retrying", type(err).__name__)
