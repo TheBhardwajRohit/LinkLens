@@ -162,7 +162,13 @@ export const BUBBLE_TONE: Record<BubbleTone, string> = {
 
 /** The graph for a scan that's still running: it grows as each step's data arrives. */
 export function modelFromPreview(url: string, id: string, preview: Preview): GraphModel {
-  if (!preview.visit) return searchingModel(url, `searching-${id}`);
+  if (!preview.visit) {
+    const listed = preview.listedBy ?? [];
+    const searching = searchingModel(url, `searching-${id}${listed.length ? "-listed" : ""}`);
+    if (listed.length === 0) return searching;
+    // The quick answer: a blacklist already knows this link, before the sandbox has even opened it.
+    return { ...searching, bubbles: [{ node: searching.chain[0], text: `Already listed by ${listed[0]}`, tone: "red" }] };
+  }
   const recon = preview.server !== undefined ? { server: preview.server ?? null, registration: preview.registration ?? null } : undefined;
   const stage = preview.verdict ? "scored" : recon ? "recon" : "visit";
   return { ...modelFromVisit(preview.visit, `${id}-${stage}`, recon, preview.verdict), mode: "result" };
@@ -175,7 +181,7 @@ export function searchingModel(url: string, key: string): GraphModel {
     nodes: [{ id: host, kind: "origin" }],
     links: [],
     chain: [host],
-    bubbles: [{ node: host, text: "Opening it in the sandbox...", tone: "blue" }],
+    bubbles: [{ node: host, text: "Checking it safely...", tone: "blue" }],
     mode: "searching",
   };
 }

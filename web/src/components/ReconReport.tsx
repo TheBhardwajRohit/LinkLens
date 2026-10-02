@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import type { Recon } from "../lib/api";
 import { daysSince, formatAge, formatDate, isRedacted, NEW_DOMAIN_DAYS } from "../lib/format";
+import Guard from "./Guard";
 import { CopyButton, Section } from "./ReportParts";
 
 const defangName = (name: string) => name.replaceAll(".", "[.]");
@@ -126,15 +127,15 @@ function DomainCard({ recon }: { recon: Recon }) {
           )}
         </Row>
       )}
-      {r.nameservers.length > 0 && (
+      {(r.nameservers ?? []).length > 0 && (
         <Row label="Name servers">
           <Names names={r.nameservers} limit={3} />
         </Row>
       )}
-      {r.flags.some((f) => /hold|suspend|inactive|redemption|pending delete/i.test(f)) && (
+      {(r.flags ?? []).some((f) => /hold|suspend|inactive|redemption|pending delete/i.test(f)) && (
         <Warn>Registry status: {r.flags.filter((f) => /hold|suspend|inactive|redemption|pending/i.test(f)).join(", ")}</Warn>
       )}
-      {recon.chain_domains.length > 0 && (
+      {(recon.chain_domains ?? []).length > 0 && (
         <Row label="Other domains in the link trail">
           <ul className="space-y-0.5">
             {recon.chain_domains.map((d) => (
@@ -172,12 +173,12 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
           {c.not_before && c.not_after && (
             <Row label="Valid">
               {formatDate(c.not_before)} to {formatDate(c.not_after)}
-              {c.days_left !== null && (
+              {c.days_left != null && (
                 <span className="text-slate-500"> ({c.days_left < 0 ? "expired" : `${c.days_left} days left`})</span>
               )}
             </Row>
           )}
-          {c.names.length > 0 && (
+          {(c.names ?? []).length > 0 && (
             <Row label={`Names on it (${c.names.length})`}>
               <Names names={c.names} />
             </Row>
@@ -195,7 +196,7 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
           )}
         </Row>
       )}
-      {h && h.other_domains.length > 0 && (
+      {h && (h.other_domains ?? []).length > 0 && (
         <Row label="Shares certificates with">
           <Names names={h.other_domains} />
         </Row>
@@ -289,13 +290,23 @@ export default function ReconReport({ recon, finalUrl }: { recon: Recon; finalUr
   return (
     <Section title="Who's behind it">
       <div className="grid gap-3 md:grid-cols-3">
-        <ServerCard recon={recon} />
-        <DomainCard recon={recon} />
-        <CertificateCard recon={recon} finalUrl={finalUrl} />
+        <Guard name="server">
+          <ServerCard recon={recon} />
+        </Guard>
+        <Guard name="domain">
+          <DomainCard recon={recon} />
+        </Guard>
+        <Guard name="certificate">
+          <CertificateCard recon={recon} finalUrl={finalUrl} />
+        </Guard>
       </div>
       <div className="mt-3 space-y-2">
-        <DnsDetails recon={recon} />
-        <TechDetails recon={recon} />
+        <Guard name="DNS records">
+          <DnsDetails recon={recon} />
+        </Guard>
+        <Guard name="server software">
+          <TechDetails recon={recon} />
+        </Guard>
       </div>
     </Section>
   );

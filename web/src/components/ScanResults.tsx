@@ -2,11 +2,14 @@ import type { Ref } from "react";
 
 import type { Scan } from "../lib/api";
 import { formatDate } from "../lib/format";
+import BlacklistReport from "./BlacklistReport";
+import Guard from "./Guard";
 import { ComingSoon, ResultActions, VerdictCard, WhyFlagged } from "./Verdict";
 import VisitReport from "./VisitReport";
 
 // Report order follows the plan: verdict, screenshot, who's behind it, link trail, reasons,
-// later-phase features, then actions.
+// blacklist results, later-phase features, then actions. Each part is guarded, so an old or
+// incomplete saved scan can't blank the whole page.
 export default function ScanResults({
   scan,
   reopened,
@@ -32,10 +35,19 @@ export default function ScanResults({
           </div>
           <ResultActions id={scan.id} saved={scan.saved} onScanAnother={onScanAnother} />
         </div>
-        <div className="space-y-6">
-          <VerdictCard analysis={scan.analysis} />
-          <VisitReport visit={scan.visit} recon={scan.recon} />
-          <WhyFlagged analysis={scan.analysis} />
+        <div className="space-y-6" key={scan.id}>
+          <Guard name="verdict">
+            <VerdictCard analysis={scan.analysis} />
+          </Guard>
+          <Guard name="page details">
+            <VisitReport visit={scan.visit} recon={scan.recon} />
+          </Guard>
+          <Guard name="reasons">
+            <WhyFlagged analysis={scan.analysis} />
+          </Guard>
+          <Guard name="blacklist results">
+            <BlacklistReport blacklists={scan.blacklists} />
+          </Guard>
           <ComingSoon />
         </div>
       </div>

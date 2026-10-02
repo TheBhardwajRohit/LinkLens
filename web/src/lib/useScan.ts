@@ -86,8 +86,10 @@ export function useScan(): ScanControl {
           const steps = s.steps.map((x) => (x.id === step ? { ...x, status } : x));
           const preview = { ...s.preview };
           if (status === "done" && data) {
+            if (step === "blacklists" && Array.isArray(data.listed_by)) preview.listedBy = data.listed_by as string[];
             if (step === "sandbox") preview.visit = data as Preview["visit"];
             if (step === "recon") {
+              if (Array.isArray(data.listed_by)) preview.listedBy = data.listed_by as string[];
               preview.server = (data.server as Preview["server"]) ?? null;
               preview.registration = (data.registration as Preview["registration"]) ?? null;
             }

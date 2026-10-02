@@ -1,7 +1,7 @@
 // The verdict: a colored badge, the score, one plain sentence, and the reasons behind it.
 // Colors mean verdicts here and nowhere else: green safe, amber suspicious, red dangerous.
 
-import { Check, Copy, Info, RotateCcw, ShieldAlert, ShieldCheck, ShieldX, Tag, type LucideIcon } from "lucide-react";
+import { Check, Copy, Info, ListX, RotateCcw, ShieldAlert, ShieldCheck, ShieldX, Tag, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import type { Analysis, Reason, Verdict } from "../lib/api";
@@ -52,6 +52,12 @@ export function VerdictCard({ analysis }: { analysis: Analysis }) {
               <Tag className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
               {analysis.scam_type.label}
               {analysis.scam_type.brand && <span className="text-slate-400"> · {analysis.scam_type.brand}</span>}
+            </p>
+          )}
+          {(analysis.listed_by ?? []).length > 0 && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-rose-200">
+              <ListX className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Listed by {(analysis.listed_by ?? []).join(", ")}
             </p>
           )}
         </div>
@@ -129,7 +135,6 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
 const LATER = [
   ["Family Finder", "which scam kit or group this belongs to"],
   ["Sibling Hunter", "other sites run by the same people"],
-  ["Blacklist checks", "what Google Safe Browsing and others say"],
   ["Network Map", "a clickable map of every connection"],
   ["Download Report", "the whole report as a PDF"],
 ];

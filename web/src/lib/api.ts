@@ -141,8 +141,32 @@ export type Verdict = "safe" | "suspicious" | "dangerous";
 export type Reason = {
   text: string;
   points: number;
-  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation";
+  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist";
 };
+
+export type BlacklistStatus =
+  | "listed"
+  | "clean"
+  | "unknown"
+  | "info"
+  | "not_configured"
+  | "quota"
+  | "timeout"
+  | "error"
+  | "skipped";
+
+export type SourceResult = {
+  id: string;
+  name: string;
+  status: BlacklistStatus;
+  note: string | null;
+  threats: string[];
+  matched: string[];
+  cached: boolean;
+  reference: string | null;
+};
+
+export type Blacklists = { sources: SourceResult[]; listed_by: string[]; checked: string[]; duration_ms: number };
 
 export type ScamType = { id: string; label: string; brand: string | null; evidence: string[] };
 
@@ -154,6 +178,7 @@ export type Analysis = {
   reasons: Reason[];
   good_signs: Reason[];
   partial: boolean;
+  listed_by?: string[];
   tranco_list: string | null;
 };
 
@@ -163,16 +188,18 @@ export type Scan = {
   created_at: string;
   visit: Visit;
   recon: Recon;
+  blacklists?: Blacklists; // missing on scans saved before blacklist checks existed
   analysis: Analysis;
   saved: boolean;
 };
 
-export type StepId = "sandbox" | "recon" | "analysis" | "save";
+export type StepId = "blacklists" | "sandbox" | "recon" | "analysis" | "save";
 export type StepStatus = "pending" | "running" | "done" | "failed";
 export type Step = { id: StepId; label: string; status: StepStatus };
 
 /** Partial data that arrives while a scan runs, so the graph can grow step by step. */
 export type Preview = {
+  listedBy?: string[]; // blacklists that already list the link (the quick first answer)
   visit?: Pick<Visit, "requested_url" | "final_url" | "hops" | "contacted_domains" | "blocked" | "stopped">;
   server?: ServerInfo | null;
   registration?: Registration | null;
