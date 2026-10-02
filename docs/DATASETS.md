@@ -39,6 +39,12 @@ The goal: fill the database with known scam pages on day one, so Family Finder h
 - **Filter to fit the free database (500 MB).** Load phishing rows first, newest first, and skip near-duplicates (same TLSH). Rough guess: 0.5 to 1 KB per stored page, so about 300k pages fit in 150 to 300 MB. We'll measure the real size in phase 6.
 - **Credit the authors.** CC BY 4.0 requires attribution, so the README and the site's About page will list every dataset we use.
 
+## What is loaded so far
+
+- **2026-10-02, local database:** PhreshPhish, the first 40,000 rows of `train` and the first 16,000 rows of `test` (about 44% phishing). The test rows are kept apart for checking the model in phase 9.
+- **Supabase:** nothing yet. Run the "Load dataset" workflow once the `DATABASE_URL` secret exists.
+- Phishpedia and the Zenodo screenshot sets are not loaded. Screenshot matching (pHash) currently learns only from pages LinkLens visits itself (scans and feed runs).
+
 ## Honest note
 
 Old scam pages teach the system what families look like, but most live campaigns will use newer kits. PhreshPhish (2025) is the closest to current. The cron feeds close the gap over time.

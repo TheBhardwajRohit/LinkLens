@@ -12,7 +12,7 @@ LinkLens checks a suspicious link safely and tells you:
 
 You never open the page yourself. A locked-down sandbox browser visits it and takes a screenshot.
 
-> **Status:** phase 5 of 10. Scans work on a local install: known blacklists are checked first, the sandbox opens the link, recon finds who's behind it, and LinkLens gives a verdict (Safe, Suspicious, or Likely dangerous), a score out of 100, the scam type, and every reason in plain words. Progress shows live, and every result gets a link to reopen it. See [PROGRESS.md](PROGRESS.md).
+> **Status:** phase 8 of 10. Scans work on a local install: known blacklists are checked first, the sandbox opens the link, recon finds who's behind it, the page is compared with 55,000 known pages to find its scam family and sibling sites, and LinkLens gives a verdict (Safe, Suspicious, or Likely dangerous), a score out of 100, the scam type, and every reason in plain words. Progress shows live, and every result gets a link to reopen it. See [PROGRESS.md](PROGRESS.md).
 >
 > **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only; the scanner runs locally for now)
 
@@ -23,7 +23,7 @@ You never open the page yourself. A locked-down sandbox browser visits it and ta
 | `web/` | The website (Vite, React, TypeScript, Tailwind) | GitHub Pages |
 | `api/` | Runs scans and serves results (Python, FastAPI) | Docker |
 | `sandbox/` | The only part that visits target links (Playwright, from phase 2) | Docker, isolated network |
-| `jobs/` | Scheduled data collection and family grouping | GitHub Actions |
+| `jobs/` | Data jobs: dataset loading, feed ingestion, family grouping, model training ([jobs/README.md](jobs/README.md)) | GitHub Actions, or Docker |
 | Database | Scans, fingerprints, families | Postgres (local in dev, Supabase later) |
 
 Why each choice was made: [docs/TECH_DECISIONS.md](docs/TECH_DECISIONS.md).
@@ -99,7 +99,9 @@ LinkLens handles live scam links, so a few rules never bend:
 - Certificate history: [crt.sh](https://crt.sh/) and [Cert Spotter](https://sslmate.com/certspotter/).
 - Blacklists: [Google Safe Browsing](https://developers.google.com/safe-browsing/v4/advisory) (advisory provided by Google), [Phishing.Database](https://github.com/Phishing-Database/Phishing.Database) (MIT license), [urlscan.io](https://urlscan.io/) search. VirusTotal and URLhaus switch on when you add a free key.
 - Site popularity: the [Tranco list](https://tranco-list.eu/) (Le Pochat et al., NDSS 2019). The list ID used is shown on each report.
-- Research datasets are credited here once they're loaded (phase 6).
+- Page library and model training data: [PhreshPhish](https://huggingface.co/datasets/phreshphish/phreshphish) (Dalton et al., 2025, CC BY 4.0). Only fingerprints and feature numbers are kept, never the pages.
+- Link-graph method: SiNMULI (Gayen, Mondal, Jana, [arXiv:2608.19190](https://arxiv.org/abs/2608.19190)).
+- Server map: [Leaflet](https://leafletjs.com/) with map data from [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Network map: [Cytoscape.js](https://js.cytoscape.org/).
 
 To get server locations locally, put your free MaxMind account ID and license key in `.env`. The API downloads the GeoLite2 databases into a Docker volume and refreshes them weekly. Without a key, everything else still works.
 

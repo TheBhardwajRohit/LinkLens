@@ -106,6 +106,40 @@ Each phase ends in a working state. Phases 0 to 4 each started after Rohit said 
 - [x] Tests: 156 API, 53 website, 90 sandbox
 - [x] Live check: Google's official test address (`malware.testing.google.test`) comes back "Likely dangerous, listed by Google Safe Browsing"; github.com stays Safe
 
+## Phase 6 checklist
+
+- [x] Fingerprints for every scanned page: TLSH of the HTML, exact and similarity hashes of the tag structure, a similarity hash of the words, pHash of the screenshot, and the favicon hash
+- [x] Sandbox captures the site icon in a second tab, through the same proxy and SSRF guard (95 sandbox tests)
+- [x] Page library (`pages` table): fingerprints, a few facts for finding siblings, a small thumbnail. Raw HTML is never stored
+- [x] Dataset loader: streams PhreshPhish straight from Hugging Face, keeps fingerprints and feature numbers, throws the HTML away. Loaded locally: 39,522 training pages (17,807 scam, 21,715 honest) and 15,558 test pages (7,043 scam, 8,515 honest)
+- [x] Feed ingestion as three GitHub Actions jobs (plan, visit with no secrets, store). Checked with a manual dry run on GitHub: 6 feed links visited in the runner, 1 still live, nothing stored
+- [x] Hourly schedule in place but switched off until a shared database exists (`INGEST_ENABLED` variable)
+- [x] `GET /stats` and the "What LinkLens knows" section on the site (the data health view)
+- [x] Found on the way: the dataset's files hold thousands of pages in one block, which ran the first loader out of memory three times. The loader now reads them directly in small batches (peak about 3 GB instead of over 7 GB)
+- [x] Decision changed: no keep-alive for scheduled workflows (GitHub took down the best-known one for breaking its terms)
+- [ ] Not done: loading into Supabase (needs the account), Phishpedia and Zenodo screenshot sets (not needed yet)
+
+## Phase 7 checklist
+
+- [x] One rule for "same design", used everywhere: at least two kinds of fingerprint must agree, and one of them must be about what the page says or shows (builder platforms like Wix give unrelated pages the same code)
+- [x] Family grouping job (`jobs/cluster.py`, nightly workflow `cluster.yml`): 531 families holding 6,673 of 55,084 pages, in about 12 seconds
+- [x] Checked against the dataset's own brand labels: 92% of a family's branded pages share the family's brand (weighted by size). Examples: "fake Meta login page" (286 pages on 248 sites), "fake Booking page", "fake USPS page", "fake MetaMask page"
+- [x] Standard notices (suspended, parked, not found) and groups aimed at many different brands are kept out of families
+- [x] Family Finder in the scan: 200 real scam pages were looked up with their own site left out; 186 (93%) landed in their own family, none in a wrong one. Of 300 honest pages, none matched a scam family (2 got a weaker "similar" or "copy" note). A lookup takes about 20 ms
+- [x] Sibling Hunter with 4 tabs: same server, same owner, same design, lookalike names (checked in DNS, never visited)
+- [x] Report: family card ("Family #12: fake SBI login page, 43 pages on 30 sites, first seen 3 Sept"), sibling tabs, thumbnails from our own screenshots
+- [x] Family and sibling matches add to the score, except for a brand's real site or a very popular site
+
+## Phase 8 checklist
+
+- [x] Link graph after the SiNMULI paper (read on arXiv): sites as nodes, links as edges signed by the site they start at, the balance rule for unknown signs in triangles, then the 51% vote over incoming links
+- [x] Built only around the scanned site (who it links to, who links to it, links among those), from the page library
+- [x] Abstains when links are few or disagree, and says so. Live check: github.com is called honest because 67 of 118 known sites linking to it are honest
+- [x] Being linked from scam sites, or linking to them, adds to the score; being linked from honest sites is a good sign
+- [x] Network map (Cytoscape.js): red for known scams, green for known honest sites, grey for unknown; drag, zoom, click; the same content as a plain list underneath
+- [x] Server map (Leaflet + OpenStreetMap), loaded only after a click because the tiles come from a third party
+- [x] Tests: 225 API, 14 jobs, 95 sandbox, 58 website
+
 ## Phases
 
 | # | What | Done when | Status |
@@ -116,9 +150,9 @@ Each phase ends in a working state. Phases 0 to 4 each started after Rohit said 
 | 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Done |
 | 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Done |
 | 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Done |
-| 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Not started |
-| 7 | Nightly family clustering, Family Finder, 4 sibling tabs | A scanned page matches a family when a similar page exists | Not started |
-| 8 | SiNMULI graph module + network map | Local signed graph built, signs inferred, unknown neighbors labeled, map renders | Not started |
+| 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Done locally. The schedule waits for a shared database |
+| 7 | Nightly family clustering, Family Finder, 4 sibling tabs | A scanned page matches a family when a similar page exists | Done |
+| 8 | SiNMULI graph module + network map | Local signed graph built, signs inferred, unknown neighbors labeled, map renders | Done |
 | 9 | ML scoring (LightGBM) combined with rules; evaluation on a held-out set | Precision/recall report written to `docs/`; score uses the model | Not started |
 | 10 | Extras: PDF report, trends dashboard, feedback button, bulk scan, API keys for our API, rate limiting, deploy scan server to a free host | Each feature works and is documented | Not started |
 
@@ -133,3 +167,6 @@ Each phase ends in a working state. Phases 0 to 4 each started after Rohit said 
 - **2026-09-25:** Phase 3 built. Recon adds about 3 seconds to a scan.
 - **2026-09-25:** Phase 4 built. Scans give a verdict, a score, a scam type, and plain reasons; progress streams live; results are saved and reopen from a link.
 - **2026-10-02:** Mentor presentation made (kept out of git). Phase 5 built: blacklist checks with a quick first answer.
+- **2026-10-03:** Phase 6 built: fingerprints, the page library, the PhreshPhish loader (55,080 pages loaded locally), and feed ingestion on GitHub Actions (dry run passed).
+- **2026-10-03:** Phase 7 built: 531 scam families found, Family Finder and Sibling Hunter in the scan and the report.
+- **2026-10-03:** Phase 8 built: link-graph inference after SiNMULI, the network map, and the server map.
