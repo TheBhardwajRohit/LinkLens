@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from app import blacklists, family, pages, recon, sandbox_client, siblings, storage
+from app import blacklists, family, graph, pages, recon, sandbox_client, siblings, storage
 from app.analysis import analyze
 from app.analysis.lexical import analyze_link
 from app.config import Settings
@@ -19,7 +19,7 @@ STEPS = [
     ("blacklists", "Checking known scam lists"),
     ("sandbox", "Opening the link in the sandbox"),
     ("recon", "Looking up who's behind it"),
-    ("family", "Looking for its family and siblings"),
+    ("family", "Looking for its family, siblings, and links"),
     ("analysis", "Reading the page and scoring it"),
     ("save", "Saving the result"),
 ]
@@ -89,6 +89,8 @@ async def run_scan(
         urlscan=settings.urlscan_search,
         urlscan_key=settings.urlscan_api_key.get_secret_value(),
     )
+    # The link graph: who links to this site, whom it links to, and what that says about it.
+    net = await graph.find(settings.database_url, own_site, prints.out_domains)
     await progress(
         "family",
         "done",
@@ -97,7 +99,13 @@ async def run_scan(
 
     await progress("analysis", "running", None)
     verdict = analyze(
-        visit, found.model_dump(), url, listed.model_dump(), kin.model_dump(), others.model_dump()
+        visit,
+        found.model_dump(),
+        url,
+        listed.model_dump(),
+        kin.model_dump(),
+        others.model_dump(),
+        net.model_dump(),
     )
     await progress("analysis", "done", {"score": verdict.score, "verdict": verdict.verdict})
 
@@ -114,6 +122,7 @@ async def run_scan(
         "fingerprints": prints.model_dump(),
         "family": kin.model_dump(),
         "siblings": others.model_dump(),
+        "graph": net.model_dump(),
         "saved": False,
     }
 

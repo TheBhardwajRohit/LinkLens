@@ -328,6 +328,37 @@ def family_reasons(family: dict | None, siblings: dict | None, trusted: bool) ->
     return r
 
 
+def graph_reasons(graph: dict | None, trusted: bool) -> tuple[list[Reason], list[Reason]]:
+    """What the link graph says (who links to the site, and whom it links to). Returns the warning
+    signs and the good signs."""
+    risks: list[Reason] = []
+    good: list[Reason] = []
+    if not graph or trusted:
+        return risks, good
+    positive, negative = graph.get("positive_in", 0), graph.get("negative_in", 0)
+    known = positive + negative
+    if graph.get("status") == "labelled" and graph.get("label") == "malicious":
+        risks.append(
+            Reason(
+                text=f"{negative} of {known} known sites that link to it are scam sites.",
+                points=20 if negative >= 2 else 10,
+                area="graph",
+            )
+        )
+    elif graph.get("status") == "labelled" and graph.get("label") == "benign" and positive >= 3:
+        good.append(Reason(text=f"{positive} known honest sites link to it.", points=-10, area="graph"))
+    scam_out = graph.get("scam_links_out", 0)
+    if scam_out:
+        risks.append(
+            Reason(
+                text=f"It links to {scam_out} known scam {'site' if scam_out == 1 else 'sites'}.",
+                points=15,
+                area="graph",
+            )
+        )
+    return risks, good
+
+
 def reputation_reasons(final: LinkFeatures, impersonated: list[str]) -> list[Reason]:
     good: list[Reason] = []
     if final.official_brand and not final.lookalike:

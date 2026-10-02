@@ -66,6 +66,7 @@ CREATE INDEX IF NOT EXISTS pages_asn_idx ON pages (asn) WHERE asn IS NOT NULL;
 CREATE INDEX IF NOT EXISTS pages_ns_idx ON pages (ns_key) WHERE ns_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS pages_family_idx ON pages (family_id) WHERE family_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS pages_added_idx ON pages (added_at DESC);
+CREATE INDEX IF NOT EXISTS pages_out_idx ON pages USING GIN (out_domains);  -- who links to a site
 
 CREATE TABLE IF NOT EXISTS families (
     id BIGINT PRIMARY KEY,

@@ -5,7 +5,7 @@ os.environ["STARTUP_TASKS"] = "false"
 
 import pytest  # noqa: E402
 
-from app import blacklists, cache, family, pages, siblings, storage  # noqa: E402
+from app import blacklists, cache, family, graph, pages, siblings, storage  # noqa: E402
 from app.blacklists import virustotal  # noqa: E402
 from app.blacklists.models import Blacklists  # noqa: E402
 from app.ratelimit import limiter  # noqa: E402
@@ -66,5 +66,9 @@ def empty_library(monkeypatch, request):
     async def no_siblings(database_url, recon, kin, own_site, **kwargs):
         return siblings.Siblings()
 
+    async def no_library_links(database_url, site, out_links):
+        return [], {}, {}
+
     monkeypatch.setattr(family, "find", no_family)
     monkeypatch.setattr(siblings, "find", no_siblings)
+    monkeypatch.setattr(graph, "_from_library", no_library_links)

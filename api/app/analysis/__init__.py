@@ -24,13 +24,14 @@ def analyze(
     blacklists: dict | None = None,
     family: dict | None = None,
     siblings: dict | None = None,
+    graph: dict | None = None,
 ) -> Analysis:
     """Read the link and the page, then judge them."""
     link = analyze_link(requested_url)
     final_url = visit.get("final_url") or requested_url
     final = analyze_link(final_url) if final_url != requested_url else link
     page = analyze_page(visit.get("html"), visit.get("final_url"))
-    return judge(link, final, page, visit, recon, blacklists, family, siblings)
+    return judge(link, final, page, visit, recon, blacklists, family, siblings, graph)
 
 
 def judge(
@@ -42,6 +43,7 @@ def judge(
     blacklists: dict | None = None,
     family: dict | None = None,
     siblings: dict | None = None,
+    graph: dict | None = None,
 ) -> Analysis:
     """Score what was already read. Split from `analyze` so the data jobs can score a dataset page
     without parsing it twice."""
@@ -64,6 +66,9 @@ def judge(
     reasons += rules.family_reasons(family, siblings, trusted)
     domain_risks, good = rules.domain_reasons(recon)
     reasons += domain_risks
+    graph_risks, graph_good = rules.graph_reasons(graph, trusted)
+    reasons += graph_risks
+    good += graph_good
     good += rules.reputation_reasons(final, names)
 
     reasons.sort(key=lambda r: -r.points)
