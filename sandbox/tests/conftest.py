@@ -43,6 +43,10 @@ PAGES = {
         "<input name=user value=x><input type=password name=pass value=y>"
         "<button>Sign in</button></form><script>setTimeout(() => {}, 10)</script>"
     ),
+    # A page that names its own icon, one that relies on /favicon.ico, and icons that must be refused.
+    "/icon": '<title>Icon</title><link rel="shortcut icon" href="/static/logo.png"><h1>Has an icon</h1>',
+    "/icon-private": '<title>Icon</title><link rel="icon" href="http://10.0.0.1/favicon.ico"><h1>x</h1>',
+    "/icon-data": '<title>Icon</title><link rel="icon" href="data:image/png;base64,aGVsbG8="><h1>x</h1>',
     "/captcha": '<title>Just a moment</title><div class="g-recaptcha" data-sitekey="x"></div>',
     "/popup": "<title>Popup</title><script>window.open('/plain')</script>",
     "/alert": "<title>Alert</title><script>alert('hi'); location.href = '/plain'</script>",
@@ -51,6 +55,8 @@ PAGES = {
         "<form id=f action=/plain method=get><input name=q value=1></form><script>f.submit()</script>"
     ),
 }
+
+ICON = b"not-a-real-image-just-bytes-to-hash"
 
 REDIRECTS = {
     "/r302": (302, "/r301"),
@@ -66,6 +72,7 @@ REDIRECTS = {
 class FixtureServer:
     def __init__(self):
         self.posts: list[str] = []
+        self.icon_requests: list[str] = []
         server = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -113,6 +120,13 @@ class FixtureServer:
                             "Content-Type": "application/octet-stream",
                             "Content-Disposition": "attachment; filename=invoice.exe",
                         },
+                    )
+                elif path in ("/static/logo.png", "/favicon.ico"):
+                    server.icon_requests.append(path)
+                    self._send(
+                        200,
+                        ICON if path.endswith(".png") else ICON + b"-default",
+                        {"Content-Type": "image/png"},
                     )
                 elif path == "/slow":
                     time.sleep(8)

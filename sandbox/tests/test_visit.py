@@ -4,9 +4,11 @@ import base64
 
 import pytest
 
-from app.visit import Limits, detect_bot_check, find_meta_refresh, visit
+from app.visit import Limits, detect_bot_check, find_favicon, find_meta_refresh, visit
 
 pytestmark = pytest.mark.anyio
+
+ICON = b"not-a-real-image-just-bytes-to-hash"  # the same bytes the fixture server sends
 
 FAST = Limits(nav_timeout_s=10, settle_deadline_s=15, hard_timeout_s=30)
 
@@ -177,3 +179,40 @@ def test_detect_bot_check():
     )
     assert detect_bot_check("", ["https://newassets.hcaptcha.com/captcha/v1/x"]) == "hCaptcha"
     assert detect_bot_check("<h1>hello</h1>", []) is None
+
+
+async def test_declared_site_icon_is_captured(guard, fixture_server):
+    result = await visit(fixture_server.url("/icon"), guard)
+    assert base64.b64decode(result.favicon_b64) == ICON
+    # The icon was loaded by the browser through the proxy, and nothing was posted anywhere.
+    assert "/static/logo.png" in fixture_server.icon_requests
+    assert fixture_server.posts == []
+
+
+async def test_default_favicon_is_used_when_the_page_names_none(guard, fixture_server):
+    result = await visit(fixture_server.url("/plain"), guard)
+    assert base64.b64decode(result.favicon_b64) == ICON + b"-default"
+
+
+async def test_icon_on_a_private_address_is_never_fetched(guard, fixture_server):
+    result = await visit(fixture_server.url("/icon-private"), guard)
+    # The private icon is blocked by the guard; the page's own /favicon.ico is used instead.
+    assert base64.b64decode(result.favicon_b64) == ICON + b"-default"
+    assert any(b.host == "10.0.0.1" for b in result.blocked)
+    assert result.stopped is None
+
+
+async def test_inline_icon_is_read_without_any_request(guard, fixture_server):
+    before = len(fixture_server.icon_requests)
+    result = await visit(fixture_server.url("/icon-data"), guard)
+    assert base64.b64decode(result.favicon_b64) == b"hello"
+    assert len(fixture_server.icon_requests) == before
+
+
+def test_find_favicon_variants():
+    assert find_favicon('<link rel="icon" href="/a.ico">') == "/a.ico"
+    assert find_favicon("<link href='/b.png' rel='shortcut icon'>") == "/b.png"
+    assert find_favicon('<link rel="apple-touch-icon" href=/c.png>') == "/c.png"
+    assert find_favicon('<link rel="stylesheet" href="/site.css">') is None
+    assert find_favicon('<link rel="preload" href="/iconfont.woff">') is None
+    assert find_favicon("<p>no links</p>") is None

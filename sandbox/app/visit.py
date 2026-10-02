@@ -28,6 +28,8 @@ from app.tls import TlsInfo
 
 VIEWPORT = {"width": 1280, "height": 800}
 MAX_HTML_BYTES = 2 * 1024 * 1024
+MAX_FAVICON_BYTES = 200_000
+FAVICON_TIMEOUT_S = 8
 NOT_FOUND = "the domain name could not be found"
 
 CHROMIUM_ARGS = [
@@ -55,6 +57,9 @@ _META_TAG = re.compile(r"<meta\b[^>]*>", re.I)
 _REFRESH = re.compile(r"http-equiv\s*=\s*[\"']?refresh", re.I)
 _CONTENT = re.compile(r"content\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s>]+))", re.I)
 _REFRESH_URL = re.compile(r"^\s*\d*\s*[;,]?\s*(?:url\s*=\s*)?[\"']?([^\"']*)", re.I)
+_LINK_TAG = re.compile(r"<link\b[^>]*>", re.I)
+_REL_ICON = re.compile(r"rel\s*=\s*[\"']?[^\"'>]*\bicon\b", re.I)
+_HREF = re.compile(r"href\s*=\s*(?:\"([^\"]*)\"|'([^']*)'|([^\s>]+))", re.I)
 
 # Why Chromium started a navigation (from its debugging protocol), mapped to our hop kinds.
 _NAV_REASONS = {
@@ -98,6 +103,8 @@ class VisitResult(BaseModel):
     blocked: list[BlockedRequest] = []
     contacted_domains: list[str] = []
     screenshot_jpeg_b64: str | None = None
+    # The site icon's raw bytes, only ever hashed by the API (never opened or shown).
+    favicon_b64: str | None = None
     html: str | None = None
     html_truncated: bool = False
     bot_check: str | None = None
@@ -127,6 +134,17 @@ def find_meta_refresh(html: str) -> str | None:
         value = next(g for g in m.groups() if g is not None)
         target = _REFRESH_URL.match(value)
         return target.group(1).strip() if target else ""
+    return None
+
+
+def find_favicon(html: str) -> str | None:
+    """The address in the page's <link rel="icon"> tag, or None if there isn't one."""
+    for tag in _LINK_TAG.findall(html[:500_000]):
+        if not _REL_ICON.search(tag):
+            continue
+        m = _HREF.search(tag)
+        if m:
+            return next(g for g in m.groups() if g is not None).strip() or None
     return None
 
 
@@ -363,6 +381,8 @@ async def _browse(
             if result.stopped not in ("blocked", "unreachable", "crashed", "download"):
                 await _capture(page, result)
                 result.headers = await rec.final_headers()
+                with contextlib.suppress(TimeoutError, PlaywrightError):
+                    await asyncio.wait_for(_favicon(context, result), FAVICON_TIMEOUT_S)
         finally:
             with contextlib.suppress(Exception):
                 await browser.close()
@@ -392,6 +412,42 @@ async def _capture(page: Page, result: VisitResult) -> None:
     refresh = find_meta_refresh(html)
     if refresh and result.final_url:
         result.pending_refresh = urljoin(result.final_url, refresh)
+
+
+async def _favicon(context: BrowserContext, result: VisitResult) -> None:
+    """Fetch the site icon so the API can hash it. The icon is loaded in a second tab of the same
+    browser, so it goes through the filtering proxy and the SSRF guard like everything else."""
+    if not result.final_url or not result.html:
+        return
+    declared = find_favicon(result.html)
+    if declared and declared.lower().startswith("data:"):
+        head, _, payload = declared.partition(",")
+        if ";base64" in head.lower() and len(payload) <= MAX_FAVICON_BYTES * 4 // 3:
+            with contextlib.suppress(ValueError):
+                result.favicon_b64 = base64.b64encode(base64.b64decode(payload, validate=True)).decode()
+        return
+    candidates = [urljoin(result.final_url, declared)] if declared else []
+    candidates.append(urljoin(result.final_url, "/favicon.ico"))
+    for url in dict.fromkeys(candidates):
+        if not url.startswith(("http://", "https://")):
+            continue
+        tab = await context.new_page()
+        try:
+            response = await tab.goto(url, wait_until="commit", timeout=4000)
+            if response is None or not response.ok:
+                continue
+            kind = (response.headers.get("content-type") or "").lower()
+            if not kind.startswith("image/") and not url.lower().split("?")[0].endswith(".ico"):
+                continue
+            body = await response.body()
+            if 0 < len(body) <= MAX_FAVICON_BYTES:
+                result.favicon_b64 = base64.b64encode(body).decode()
+                return
+        except PlaywrightError:
+            continue
+        finally:
+            with contextlib.suppress(PlaywrightError):
+                await tab.close()
 
 
 def _summarize_network(result: VisitResult, proxy: FilteringProxy) -> None:
