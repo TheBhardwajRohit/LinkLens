@@ -29,7 +29,7 @@ from app.tls import TlsInfo
 VIEWPORT = {"width": 1280, "height": 800}
 MAX_HTML_BYTES = 2 * 1024 * 1024
 MAX_FAVICON_BYTES = 200_000
-FAVICON_TIMEOUT_S = 8
+FAVICON_TIMEOUT_S = 12
 NOT_FOUND = "the domain name could not be found"
 
 CHROMIUM_ARGS = [
@@ -318,7 +318,7 @@ async def _settle(page: Page, rec: _Recorder, deadline: float, max_hops: int) ->
 
 
 async def _browse(
-    url: str, proxy_port: int, proxy: FilteringProxy, result: VisitResult, limits: Limits
+    url: str, proxy_port: int, proxy: FilteringProxy, result: VisitResult, limits: Limits, guard: Guard
 ) -> None:
     started = time.monotonic()
     async with async_playwright() as pw:
@@ -382,7 +382,7 @@ async def _browse(
                 await _capture(page, result)
                 result.headers = await rec.final_headers()
                 with contextlib.suppress(TimeoutError, PlaywrightError):
-                    await asyncio.wait_for(_favicon(context, result), FAVICON_TIMEOUT_S)
+                    await asyncio.wait_for(_favicon(context, result, guard), FAVICON_TIMEOUT_S)
         finally:
             with contextlib.suppress(Exception):
                 await browser.close()
@@ -414,9 +414,10 @@ async def _capture(page: Page, result: VisitResult) -> None:
         result.pending_refresh = urljoin(result.final_url, refresh)
 
 
-async def _favicon(context: BrowserContext, result: VisitResult) -> None:
-    """Fetch the site icon so the API can hash it. The icon is loaded in a second tab of the same
-    browser, so it goes through the filtering proxy and the SSRF guard like everything else."""
+async def _favicon(context: BrowserContext, result: VisitResult, guard: Guard) -> None:
+    """Fetch the site icon so the API can hash it. Each address is checked by the SSRF guard first,
+    so a private one is refused at once. An allowed one is loaded in a second tab of the same
+    browser, which sends it through the filtering proxy (and the guard again) like everything else."""
     if not result.final_url or not result.html:
         return
     declared = find_favicon(result.html)
@@ -430,6 +431,15 @@ async def _favicon(context: BrowserContext, result: VisitResult) -> None:
     candidates.append(urljoin(result.final_url, "/favicon.ico"))
     for url in dict.fromkeys(candidates):
         if not url.startswith(("http://", "https://")):
+            continue
+        parts = urlsplit(url)
+        try:
+            port = parts.port or (443 if parts.scheme == "https" else 80)
+            await guard.check(parts.hostname or "", port)
+        except Blocked as err:
+            result.blocked.append(BlockedRequest(host=parts.hostname or "", port=port, reason=str(err)))
+            continue
+        except ValueError:
             continue
         tab = await context.new_page()
         try:
@@ -455,7 +465,7 @@ def _summarize_network(result: VisitResult, proxy: FilteringProxy) -> None:
     for e in proxy.events:
         if e.allowed and e.ip and e.host not in result.server_ips:
             result.server_ips[e.host] = e.ip
-    seen: set[tuple[str, int]] = set()
+    seen: set[tuple[str, int]] = {(b.host, b.port) for b in result.blocked}
     for e in proxy.events:
         if not e.allowed and (e.host, e.port) not in seen:
             seen.add((e.host, e.port))
@@ -518,7 +528,7 @@ async def visit(url: str, guard: Guard, limits: Limits | None = None) -> VisitRe
     proxy = FilteringProxy(guard)
     proxy_port = await proxy.start()
     try:
-        await asyncio.wait_for(_browse(url, proxy_port, proxy, result, limits), limits.hard_timeout_s)
+        await asyncio.wait_for(_browse(url, proxy_port, proxy, result, limits, guard), limits.hard_timeout_s)
     except TimeoutError:
         result.stopped = "timeout"
     except PlaywrightError:
