@@ -24,6 +24,26 @@ jobs:
           cache-dependency-path: api/requirements-dev.txt
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest -q
+
+  jobs:
+    name: Data job tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: jobs
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: api/requirements-dev.txt
+      # The feed and dataset jobs reuse the API's code, so they need the API's libraries.
+      - run: pip install -r ../api/requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
       - run: pytest -q
 
   sandbox:
@@ -110,6 +130,16 @@ jobs:
           assert by_id['phishing_database']['status'] in ('clean', 'skipped'), by_id['phishing_database']
           assert all(s['note'] for s in b['sources'] if s['status'] != 'skipped'), b
           assert b['listed_by'] == [], b
+          # The page is fingerprinted and joins the page library.
+          f = json.load(open('scan.json'))['fingerprints']
+          assert f['tlsh'] and f['dom_hash'] and f['phash'], f
+          assert 'favicon_b64' not in v, 'the raw icon must never leave the API'
+          "
+          curl -fsS http://localhost:8000/stats | tee stats.json
+          python3 -c "
+          import json
+          s = json.load(open('stats.json'))
+          assert s['pages'] >= 1 and s['by_source']['scan'], s
           "
       - name: Live progress streams every step and the result reopens from the database
         run: |

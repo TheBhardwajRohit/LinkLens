@@ -1,0 +1,58 @@
+name: Load dataset
+
+# Streams a slice of the PhreshPhish research dataset and stores fingerprints in the shared
+# database. Manual only. Needs the DATABASE_URL secret (the Supabase connection string).
+# The dataset is never saved: each page is read, fingerprinted, and thrown away.
+
+on:
+  workflow_dispatch:
+    inputs:
+      split:
+        description: Which part of the dataset
+        type: choice
+        options: [train, test]
+        default: train
+      limit:
+        description: How many rows to read
+        default: "20000"
+      skip:
+        description: Rows to skip first (to continue an earlier load)
+        default: "0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-dataset
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    name: Fingerprint and store
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      PYTHONPATH: api:.
+      FEATURES_DIR: ${{ github.workspace }}/features
+      LISTS_DIR: ${{ github.workspace }}/lists
+      SPLIT: ${{ inputs.split }}
+      LIMIT: ${{ inputs.limit }}
+      SKIP: ${{ inputs.skip }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Stop early when there is no database
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Add the DATABASE_URL secret first (Settings, Secrets and variables, Actions)." && exit 1
+          fi
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: jobs/requirements.txt
+      - run: pip install -r jobs/requirements.txt
+      - name: Download the Tranco list, so popular sites are judged the same way as in a live scan
+        run: python -c "import asyncio; from app.analysis.toplist import toplist; asyncio.run(toplist.refresh())"
+      - run: python -m jobs.seed_phreshphish --split "$SPLIT" --limit "$LIMIT" --skip "$SKIP"

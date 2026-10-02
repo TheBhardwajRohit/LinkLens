@@ -1,0 +1,16 @@
+# Only the jobs image is built from the repo root. It needs api/app and jobs, nothing else.
+.git
+.github
+.claude
+web
+sandbox
+docs
+presentation
+**/.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+api/tests
+.env
+.env.*
