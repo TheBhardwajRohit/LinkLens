@@ -24,6 +24,6 @@ export const FEATURES: Feature[] = [
   { title: "Link Trail", text: "Every jump the link makes before the final page", icon: Route, status: "live" },
   { title: "Safe Preview", text: "A screenshot, so you never open the page yourself", icon: Camera, status: "live" },
   { title: "Why It's Flagged", text: "Plain reasons, not just a number", icon: Flag, status: "live" },
-  { title: "Network Map", text: "A clickable map of the link and its connections", icon: Network, status: "soon" },
+  { title: "Network Map", text: "A clickable map of the link and its connections", icon: Network, status: "live" },
   { title: "Download Report", text: "Everything saved as a PDF", icon: FileDown, status: "soon" },
 ];

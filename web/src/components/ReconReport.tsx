@@ -8,6 +8,7 @@ import type { Recon } from "../lib/api";
 import { daysSince, formatAge, formatDate, isRedacted, NEW_DOMAIN_DAYS } from "../lib/format";
 import Guard from "./Guard";
 import { CopyButton, Section } from "./ReportParts";
+import ServerMap from "./ServerMap";
 
 const defangName = (name: string) => name.replaceAll(".", "[.]");
 
@@ -301,6 +302,9 @@ export default function ReconReport({ recon, finalUrl }: { recon: Recon; finalUr
         </Guard>
       </div>
       <div className="mt-3 space-y-2">
+        <Guard name="server map">
+          <ServerMap server={recon.server} />
+        </Guard>
         <Guard name="DNS records">
           <DnsDetails recon={recon} />
         </Guard>

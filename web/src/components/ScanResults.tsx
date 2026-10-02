@@ -5,11 +5,12 @@ import { formatDate } from "../lib/format";
 import BlacklistReport from "./BlacklistReport";
 import { FamilyCard, SiblingTabs } from "./FamilyReport";
 import Guard from "./Guard";
+import NetworkMap from "./NetworkMap";
 import { ComingSoon, ResultActions, VerdictCard, WhyFlagged } from "./Verdict";
 import { VisitDetails, VisitSummary } from "./VisitReport";
 
-// Report order follows the plan: verdict, screenshot, family, siblings, who's behind it, link
-// trail, reasons, blacklist results, later-phase features, then actions. Each part is guarded,
+// Report order follows the plan: verdict, screenshot, family, siblings, network map, who's
+// behind it (with the server map), link trail, reasons, blacklist results, then actions. Each part is guarded,
 // so an old or incomplete saved scan can't blank the whole page.
 export default function ScanResults({
   scan,
@@ -48,6 +49,9 @@ export default function ScanResults({
           </Guard>
           <Guard name="sibling sites">
             <SiblingTabs siblings={scan.siblings} family={scan.family} />
+          </Guard>
+          <Guard name="network map">
+            <NetworkMap graph={scan.graph} />
           </Guard>
           <Guard name="page details">
             <VisitDetails visit={scan.visit} recon={scan.recon} />

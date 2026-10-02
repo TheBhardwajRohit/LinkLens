@@ -2,9 +2,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import type { Blacklists, FamilyResult, Recon, Siblings } from "../lib/api";
+import type { Blacklists, FamilyResult, GraphResult, Recon, Siblings } from "../lib/api";
 import BlacklistReport from "./BlacklistReport";
 import { FamilyCard, SiblingTabs } from "./FamilyReport";
+import NetworkMap from "./NetworkMap";
 import ReconReport from "./ReconReport";
 
 const EMPTY_RECON = {
@@ -104,5 +105,42 @@ describe("FamilyCard and SiblingTabs", () => {
     expect(html).not.toContain("<a ");
     expect(html).toContain("known scam");
     expect(html).toContain("Lookalike names");
+  });
+});
+
+describe("NetworkMap", () => {
+  const graph: GraphResult = {
+    status: "labelled",
+    label: "malicious",
+    note: "2 of 3 known sites that link here are scam sites.",
+    positive_in: 1,
+    negative_in: 2,
+    unknown_in: 0,
+    links_out: 1,
+    scam_links_out: 1,
+    triads: 1,
+    inferred_edges: 1,
+    nodes: [
+      { id: "new-site.example.com", label: 0, role: "scanned", why: null },
+      { id: "scam-a.example.net", label: -1, role: "both", why: "known scam pages" },
+    ],
+    edges: [{ source: "scam-a.example.net", target: "new-site.example.com", sign: -1, inferred: false }],
+  };
+
+  it("says what the link graph found, in words, and lists the sites defanged", () => {
+    const html = renderToStaticMarkup(<NetworkMap graph={graph} />);
+    expect(html).toContain("2 of 3 known sites that link here are scam sites.");
+    expect(html).toContain("scam-a[.]example[.]net");
+    expect(html).toContain("known scam site");
+    expect(html).toContain("SiNMULI");
+    expect(html).not.toContain('href="http');
+  });
+
+  it("draws no map when there are no links, only the note", () => {
+    const empty = { ...graph, status: "no_links" as const, label: null, note: "No known site links to this one.", nodes: [graph.nodes[0]], edges: [] };
+    const html = renderToStaticMarkup(<NetworkMap graph={empty} />);
+    expect(html).toContain("No known site links to this one.");
+    expect(html).not.toContain("The same map as a list");
+    expect(renderToStaticMarkup(<NetworkMap graph={undefined} />)).toBe("");
   });
 });

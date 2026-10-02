@@ -133,7 +133,6 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
 }
 
 const LATER = [
-  ["Network Map", "a clickable map of every connection"],
   ["Download Report", "the whole report as a PDF"],
 ];
 

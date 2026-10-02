@@ -13,12 +13,15 @@ function contentSecurityPolicy(): Plugin {
       const api = process.env.VITE_API_URL ?? "http://localhost:8000";
       const apiOrigin = api && api !== "none" ? new URL(api).origin : "";
       const connect = ["'self'", apiOrigin].filter(Boolean).join(" ");
-      // Thumbnails of known pages are small JPEGs served by our own API.
-      const images = ["'self'", "data:", apiOrigin].filter(Boolean).join(" ");
+      // Thumbnails of known pages are small JPEGs served by our own API. The server map's tiles
+      // come from OpenStreetMap, and only after the visitor clicks "Show on a map".
+      const images = ["'self'", "data:", apiOrigin, "https://tile.openstreetmap.org"].filter(Boolean).join(" ");
       const policy = [
         "default-src 'self'",
         "script-src 'self'",
-        "style-src 'self'",
+        // The hash allows exactly one inline style: the one-line rule Cytoscape.js (network map) adds,
+        // ".__________cytoscape_container { position: relative; }". Nothing else inline is allowed.
+        "style-src 'self' 'sha256-pgvDUBa4IjFA2yuSJ2cqcyxmNYJMborsd0ORcRv9vw8='",
         `img-src ${images}`,
         "font-src 'self'",
         `connect-src ${connect}`,

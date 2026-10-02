@@ -141,7 +141,7 @@ export type Verdict = "safe" | "suspicious" | "dangerous";
 export type Reason = {
   text: string;
   points: number;
-  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist" | "family";
+  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist" | "family" | "graph";
 };
 
 export type BlacklistStatus =
@@ -193,7 +193,26 @@ export type Scan = {
   fingerprints?: Fingerprints;
   family?: FamilyResult;
   siblings?: Siblings;
+  graph?: GraphResult;
   saved: boolean;
+};
+
+/** A site in the link graph. label: 1 known honest, -1 known scam, 0 unknown. */
+export type GraphNode = { id: string; label: number; role: string; why: string | null };
+export type GraphEdge = { source: string; target: string; sign: number; inferred: boolean };
+export type GraphResult = {
+  status: "labelled" | "abstained" | "no_links" | "skipped" | "unavailable";
+  label: "benign" | "malicious" | null;
+  note: string | null;
+  positive_in: number;
+  negative_in: number;
+  unknown_in: number;
+  links_out: number;
+  scam_links_out: number;
+  triads: number;
+  inferred_edges: number;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
 };
 
 export type SimilarPage = {
