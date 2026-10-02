@@ -125,7 +125,9 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
       )}
       <p className="mt-4 text-xs text-slate-500">
         Each warning sign adds points and each good sign takes some away. The total is capped between 0 and 100.
-        These are simple rules for now, so treat the result as likely, not certain.
+        {analysis.model
+          ? " The points come from fixed rules plus a model trained on known scam pages. Both can be wrong, so treat the result as likely, not certain."
+          : " These are fixed rules, so treat the result as likely, not certain."}
         {analysis.tranco_list && ` Popularity from Tranco list ${analysis.tranco_list}.`}
       </p>
     </Section>

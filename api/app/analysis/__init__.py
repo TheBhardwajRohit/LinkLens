@@ -6,6 +6,9 @@ from app.analysis.lexical import LinkFeatures, analyze_link
 from app.analysis.models import Analysis, ScamType
 from app.analysis.scamtype import LABELS, classify, impersonated_brands
 from app.analysis.toplist import toplist
+from app.fingerprint import Fingerprints
+from app.ml import model as page_model
+from app.ml.features import vector
 
 NOT_CAPTURED = ("blocked", "unreachable", "download", "crashed", "error")
 
@@ -25,13 +28,19 @@ def analyze(
     family: dict | None = None,
     siblings: dict | None = None,
     graph: dict | None = None,
+    prints: Fingerprints | None = None,
 ) -> Analysis:
     """Read the link and the page, then judge them."""
     link = analyze_link(requested_url)
     final_url = visit.get("final_url") or requested_url
     final = analyze_link(final_url) if final_url != requested_url else link
     page = analyze_page(visit.get("html"), visit.get("final_url"))
-    return judge(link, final, page, visit, recon, blacklists, family, siblings, graph)
+    # The trained model reads the same link and page. It only speaks when a page was captured.
+    prediction = None
+    if page.captured:
+        copied = impersonated_brands(final, page, final.host, final.registered_domain)
+        prediction = page_model.predict(vector(final, page, prints, len(copied)))
+    return judge(link, final, page, visit, recon, blacklists, family, siblings, graph, prediction)
 
 
 def judge(
@@ -44,6 +53,7 @@ def judge(
     family: dict | None = None,
     siblings: dict | None = None,
     graph: dict | None = None,
+    prediction: page_model.Prediction | None = None,
 ) -> Analysis:
     """Score what was already read. Split from `analyze` so the data jobs can score a dataset page
     without parsing it twice."""
@@ -69,6 +79,9 @@ def judge(
     graph_risks, graph_good = rules.graph_reasons(graph, trusted)
     reasons += graph_risks
     good += graph_good
+    model_risks, model_good = rules.model_reasons(prediction, trusted)
+    reasons += model_risks
+    good += model_good
     good += rules.reputation_reasons(final, names)
 
     reasons.sort(key=lambda r: -r.points)
@@ -93,6 +106,7 @@ def judge(
         good_signs=good,
         partial=partial,
         listed_by=listed_by,
+        model=prediction,
         link=link,
         final_link=final if final is not link else None,
         page=page,

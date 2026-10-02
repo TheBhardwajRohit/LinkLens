@@ -79,7 +79,9 @@ async def run_scan(
     prints = await asyncio.to_thread(fingerprint_visit, visit)
     where = analyze_link(visit.get("final_url") or url)
     own_site = where.site or where.registered_domain
-    kin = await family.find(settings.database_url, prints, own_ref=scan_id, own_site=own_site)
+    kin = await family.find(
+        settings.database_url, prints, own_ref=scan_id, own_site=own_site, title=visit.get("title")
+    )
     others = await siblings.find(
         settings.database_url,
         found.model_dump(),
@@ -106,6 +108,7 @@ async def run_scan(
         kin.model_dump(),
         others.model_dump(),
         net.model_dump(),
+        prints,
     )
     await progress("analysis", "done", {"score": verdict.score, "verdict": verdict.verdict})
 

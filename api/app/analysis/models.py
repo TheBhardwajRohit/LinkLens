@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from app.analysis.content import PageFeatures
 from app.analysis.lexical import LinkFeatures
+from app.ml.model import Prediction
 
 Verdict = Literal["safe", "suspicious", "dangerous"]
 
@@ -22,6 +23,7 @@ class Reason(BaseModel):
         "blacklist",
         "family",
         "graph",
+        "model",
     ]
 
 
@@ -41,6 +43,7 @@ class Analysis(BaseModel):
     good_signs: list[Reason] = []  # lower the risk
     partial: bool = False  # true when the page itself couldn't be checked
     listed_by: list[str] = []  # blacklists that list this link
+    model: Prediction | None = None  # what the trained page-reading model thinks
     link: LinkFeatures
     final_link: LinkFeatures | None = None
     page: PageFeatures

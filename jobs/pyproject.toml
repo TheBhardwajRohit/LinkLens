@@ -17,3 +17,7 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "jobs"]
+
+[tool.ruff.lint.per-file-ignores]
+# train.py is mostly the report's text; wrapping those lines would make them harder to read.
+"train.py" = ["E501"]

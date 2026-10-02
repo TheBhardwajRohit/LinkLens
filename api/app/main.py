@@ -17,6 +17,7 @@ from app.analysis.toplist import toplist
 from app.blacklists.lists import keep_fresh as keep_lists_fresh
 from app.blacklists.lists import known as known_lists
 from app.config import Settings, get_settings
+from app.ml import model as page_model
 from app.ratelimit import limiter
 from app.recon.geoip import geo
 from app.recon.geoip import keep_fresh as keep_geoip_fresh
@@ -110,8 +111,14 @@ def health(settings: SettingsDep) -> dict:
         "geoip": geo.status(),
         "toplist": toplist.list_id or ("loading" if settings.startup_tasks else "off"),
         "phishing_lists": known_lists.status() if settings.known_lists else "off",
+        "model": _model_status(),
         "keys": settings.configured_keys(),
     }
+
+
+def _model_status() -> dict | str:
+    loaded = page_model.load()
+    return "none" if loaded is None else {"trained": loaded.meta.get("trained"), "trees": len(loaded.trees)}
 
 
 @app.post("/scan")

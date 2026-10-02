@@ -12,6 +12,7 @@ from app.analysis.content import PageFeatures
 from app.analysis.lexical import LinkFeatures
 from app.analysis.models import Reason, ScamType, Verdict
 from app.analysis.scamtype import FIELD_WORDS
+from app.ml.model import Prediction, model_points
 
 SAFE_MAX = 30
 SUSPICIOUS_MAX = 69
@@ -354,6 +355,37 @@ def graph_reasons(graph: dict | None, trusted: bool) -> tuple[list[Reason], list
                 text=f"It links to {scam_out} known scam {'site' if scam_out == 1 else 'sites'}.",
                 points=15,
                 area="graph",
+            )
+        )
+    return risks, good
+
+
+def model_reasons(prediction: Prediction | None, trusted: bool) -> tuple[list[Reason], list[Reason]]:
+    """The trained model's opinion, as one more reason with its main causes named. A brand's real
+    site or a very popular one is never marked down by it (real login pages look like the copies
+    made of them)."""
+    risks: list[Reason] = []
+    good: list[Reason] = []
+    if prediction is None:
+        return risks, good
+    points = model_points(prediction.probability)
+    percent = round(prediction.probability * 100)
+    if points > 0 and not trusted:
+        causes = [f.plain for f in prediction.factors if f.push > 0][:2]
+        because = f", mostly because of {' and '.join(causes)}" if causes else ""
+        risks.append(
+            Reason(
+                text=f"The page-reading model rates this page {percent}% likely to be a scam page{because}.",
+                points=points,
+                area="model",
+            )
+        )
+    elif points < 0:
+        good.append(
+            Reason(
+                text=f"The page-reading model sees little that looks like a scam page ({percent}%).",
+                points=points,
+                area="model",
             )
         )
     return risks, good

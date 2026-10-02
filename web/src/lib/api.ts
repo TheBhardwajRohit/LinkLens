@@ -141,7 +141,7 @@ export type Verdict = "safe" | "suspicious" | "dangerous";
 export type Reason = {
   text: string;
   points: number;
-  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist" | "family" | "graph";
+  area: "link" | "page" | "domain" | "certificate" | "server" | "behavior" | "reputation" | "blacklist" | "family" | "graph" | "model";
 };
 
 export type BlacklistStatus =
@@ -179,6 +179,8 @@ export type Analysis = {
   good_signs: Reason[];
   partial: boolean;
   listed_by?: string[];
+  /** What the trained page-reading model thinks (missing on older scans and when no page was captured). */
+  model?: { probability: number; trained: string | null } | null;
   tranco_list: string | null;
 };
 
