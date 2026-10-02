@@ -12,7 +12,7 @@ LinkLens checks a suspicious link safely and tells you:
 
 You never open the page yourself. A locked-down sandbox browser visits it and takes a screenshot.
 
-> **Status:** phase 4 of 10. Scans work on a local install: the sandbox opens the link, recon finds who's behind it, and LinkLens gives a verdict (Safe, Suspicious, or Likely dangerous), a score out of 100, the scam type, and every reason in plain words. Progress shows live, and every result gets a link to reopen it. See [PROGRESS.md](PROGRESS.md).
+> **Status:** phase 5 of 10. Scans work on a local install: known blacklists are checked first, the sandbox opens the link, recon finds who's behind it, and LinkLens gives a verdict (Safe, Suspicious, or Likely dangerous), a score out of 100, the scam type, and every reason in plain words. Progress shows live, and every result gets a link to reopen it. See [PROGRESS.md](PROGRESS.md).
 >
 > **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only; the scanner runs locally for now)
 
@@ -97,6 +97,7 @@ LinkLens handles live scam links, so a few rules never bend:
 - This product includes GeoLite Data created by MaxMind, available from https://www.maxmind.com.
 - Domain and IP registration data: RDAP servers listed by [IANA](https://data.iana.org/rdap/).
 - Certificate history: [crt.sh](https://crt.sh/) and [Cert Spotter](https://sslmate.com/certspotter/).
+- Blacklists: [Google Safe Browsing](https://developers.google.com/safe-browsing/v4/advisory) (advisory provided by Google), [Phishing.Database](https://github.com/Phishing-Database/Phishing.Database) (MIT license), [urlscan.io](https://urlscan.io/) search. VirusTotal and URLhaus switch on when you add a free key.
 - Site popularity: the [Tranco list](https://tranco-list.eu/) (Le Pochat et al., NDSS 2019). The list ID used is shown on each report.
 - Research datasets are credited here once they're loaded (phase 6).
 

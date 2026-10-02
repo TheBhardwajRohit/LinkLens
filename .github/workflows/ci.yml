@@ -102,6 +102,14 @@ jobs:
           a = json.load(open('scan.json'))['analysis']
           assert a['verdict'] == 'safe', a
           assert json.load(open('scan.json'))['saved'] is True, 'scan was not saved'
+          # CI has no blacklist keys: every source must still end with a plain status.
+          b = json.load(open('scan.json'))['blacklists']
+          by_id = {s['id']: s for s in b['sources']}
+          assert by_id['safe_browsing']['status'] == 'not_configured', by_id['safe_browsing']
+          assert by_id['virustotal']['status'] == 'not_configured' and by_id['urlhaus']['status'] == 'not_configured'
+          assert by_id['phishing_database']['status'] in ('clean', 'skipped'), by_id['phishing_database']
+          assert all(s['note'] for s in b['sources'] if s['status'] != 'skipped'), b
+          assert b['listed_by'] == [], b
           "
       - name: Live progress streams every step and the result reopens from the database
         run: |
@@ -112,7 +120,7 @@ jobs:
           import json
           lines = open('events.txt').read().splitlines()
           kinds = [l[7:] for l in lines if l.startswith('event: ')]
-          assert kinds.count('step') == 8 and kinds[-1] == 'done', kinds
+          assert kinds.count('step') == 10 and kinds[-1] == 'done', kinds
           "
           curl -fsS "http://localhost:8000/scans/$id" -o saved.json
           python3 -c "

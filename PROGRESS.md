@@ -1,6 +1,6 @@
 # Progress
 
-Each phase ends in a working state. The next phase starts only after Rohit says "go".
+Each phase ends in a working state. Phases 0 to 4 each started after Rohit said "go". On 2026-10-02 Rohit said to keep building through the remaining phases without stopping.
 
 ## Setup (2026-09-24)
 
@@ -90,6 +90,22 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - [x] Tests: 122 API (made-up scam pages for every type), 48 website, 90 sandbox
 - [x] Live check: github.com Safe 0/100 (Tranco #29, 18 years old), localtest.me Suspicious 40/100, reopened from its link; CI checks the stream, saving, and redaction
 
+## Phase 5 checklist
+
+- [x] Google Safe Browsing (Lookup API v4): the pasted link, the final page, and every stop in between, in one request; key sent in a header so it can't leak into logs
+- [x] Phishing.Database lists (about 59,000 links and 392,000 domains) downloaded into a Docker volume, refreshed every 6 hours, and checked locally without sending anything out
+- [x] urlscan.io search without a key: whether others have scanned the site before (only the site name is sent)
+- [x] VirusTotal and URLhaus built and tested against stand-ins; they show "not set up" until a free key is added to `.env`
+- [x] LinkLens history: earlier scans of the same domain
+- [x] Every source ends with a plain status: listed, not listed, never seen, not set up, limit reached, no answer
+- [x] Cache in memory and in Postgres (`lookup_cache`); VirusTotal kept inside 4 checks a minute
+- [x] Quick first answer: blacklists run before the sandbox (about 2 seconds), then again for the real destination
+- [x] Listings add to the score with the source named ("Google Safe Browsing lists this link as suspected phishing")
+- [x] Report: "Blacklist results" section with Google's required attribution and notice; "Listed by" line on the verdict card
+- [x] Fixed: readable names like `sbi-kyc-update` were called "randomly generated"; an incomplete saved scan could blank the report page
+- [x] Tests: 156 API, 53 website, 90 sandbox
+- [x] Live check: Google's official test address (`malware.testing.google.test`) comes back "Likely dangerous, listed by Google Safe Browsing"; github.com stays Safe
+
 ## Phases
 
 | # | What | Done when | Status |
@@ -99,7 +115,7 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 | 2 | Safe fetching: SSRF guard, sandbox, redirect chain, screenshot | A scan returns screenshot + redirect chain; private IPs blocked (with tests) | Done |
 | 3 | Recon: RDAP, DNS, GeoIP/ASN, TLS, CT, headers | Recon panel shows real data for a test domain | Done |
 | 4 | Analysis v1: lexical + content features, scam type rules, rule-based score, reasons; live progress; results page v1 | Full scan flow works end to end with plain-language reasons | Done |
-| 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Plan proposed |
+| 5 | Blacklist integrations with caching and quota handling | Each service shows a result or a clear "not configured / quota reached" | Done |
 | 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Not started |
 | 7 | Nightly family clustering, Family Finder, 4 sibling tabs | A scanned page matches a family when a similar page exists | Not started |
 | 8 | SiNMULI graph module + network map | Local signed graph built, signs inferred, unknown neighbors labeled, map renders | Not started |
@@ -116,3 +132,4 @@ Each phase ends in a working state. The next phase starts only after Rohit says 
 - **2026-09-25:** Homepage redesigned (OneText-inspired split hero with a live scan graph). MaxMind key added.
 - **2026-09-25:** Phase 3 built. Recon adds about 3 seconds to a scan.
 - **2026-09-25:** Phase 4 built. Scans give a verdict, a score, a scam type, and plain reasons; progress streams live; results are saved and reopen from a link.
+- **2026-10-02:** Mentor presentation made (kept out of git). Phase 5 built: blacklist checks with a quick first answer.
