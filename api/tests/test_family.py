@@ -336,3 +336,35 @@ def test_a_family_match_shows_up_in_the_verdict():
     got = analyze(visit, {}, "https://plain.example.com/", None, fam, None)
     assert any("known scam family" in r.text for r in got.reasons)
     assert got.verdict != "safe"
+
+
+def test_the_same_site_builder_skeleton_is_not_a_match_without_shared_content():
+    # Two pages made with the same site builder: identical code and structure, different words.
+    fp = html_fingerprints(kit_page("Asha", "k81"))
+    one = Prints(fp.tlsh, "aa", 5, 0, None, None, 80)
+    two = Prints(fp.tlsh, "aa", 5, (1 << 40) - 1, None, None, 80)
+    alike = compare(one, two)
+    assert alike.points >= 3 and set(alike.kinds) == {"code", "structure"}
+    assert not alike.match
+    # The same wording on top of that makes it a match.
+    assert compare(one, one).match
+
+
+def test_standard_notices_and_nearly_empty_pages_are_boilerplate():
+    from app.similarity import boilerplate
+
+    for title in ("Account Suspended", "404 Not Found", "Welcome to nginx!", "Index of /", "Domain for sale"):
+        assert boilerplate(title, 200), title
+    assert boilerplate("My shop", 5)  # almost no words
+    assert not boilerplate("State Bank of India: KYC update", 200)
+    assert not boilerplate(None, 200)
+
+
+async def test_find_does_not_compare_boilerplate_pages(monkeypatch):
+    async def never(database_url, prints_, own_ref):
+        raise AssertionError("the library must not be searched for a boilerplate page")
+
+    monkeypatch.setattr(family, "_candidates", never)
+    fp = html_fingerprints(kit_page("Asha", "k81"))
+    got = await family.find("postgresql://x", fp, title="Account Suspended")
+    assert got.status == "skipped" and "standard notice" in got.note

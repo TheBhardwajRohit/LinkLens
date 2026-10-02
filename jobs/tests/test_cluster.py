@@ -120,6 +120,7 @@ def test_names():
     assert cluster.name("PayPal", None) == "fake PayPal page"
     assert cluster.name(None, "credentials") == "login page with no clear brand"
     assert cluster.name(None, None) == "unnamed scam kit"
+    assert cluster.name(None, None, "Webmail") == 'pages titled "Webmail"'
 
 
 def test_a_brand_must_cover_half_the_scam_pages_to_name_the_family():
@@ -142,3 +143,14 @@ def test_tiny_pages_never_start_a_family():
     groups, _ = cluster.group(lib)
     found, _ = cluster.families(lib, groups)
     assert found == []
+
+
+def test_a_group_aimed_at_many_different_brands_is_not_one_kit():
+    brands = ["SBI", "PayPal", "Netflix", "Amazon", "DHL", "Microsoft", "Apple", "HDFC Bank", "Meta", "USPS"]
+    lib = [
+        page(i, kit("bank", f"victim{i}", f"tok{i}"), f"m{i}.example.com", "phish", brand, "banking")
+        for i, brand in enumerate(brands)
+    ]
+    groups, _ = cluster.group(lib)
+    found, skipped = cluster.families(lib, groups)
+    assert found == [] and skipped == 1

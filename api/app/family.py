@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from app import pages
 from app.fingerprint import Fingerprints
 from app.redact import redact_url
-from app.similarity import Prints, compare, describe, from_hex, unsigned
+from app.similarity import Prints, boilerplate, compare, describe, from_hex, unsigned
 
 log = logging.getLogger("linklens.family")
 
@@ -91,6 +91,7 @@ async def _candidates(database_url: str, fp: Fingerprints, own_ref: str | None) 
                FROM pages
                WHERE (bands && %s::int[] OR dom_hash = %s OR favicon_hash = %s)
                  AND NOT (source = 'scan' AND source_ref = %s)
+               ORDER BY (family_id IS NULL), (label <> 'phish')
                LIMIT %s""",
             (pages.all_bands(fp), fp.dom_hash, fp.favicon_hash, own_ref or "", MAX_CANDIDATES),
         )
@@ -176,10 +177,21 @@ def rank(fp: Fingerprints, rows: list, own_site: str | None) -> list[SimilarPage
 
 
 async def find(
-    database_url: str | None, fp: Fingerprints, *, own_ref: str | None = None, own_site: str | None = None
+    database_url: str | None,
+    fp: Fingerprints,
+    *,
+    own_ref: str | None = None,
+    own_site: str | None = None,
+    title: str | None = None,
 ) -> FamilyResult:
     if not (fp.tlsh or fp.dom_hash or fp.phash):
         return FamilyResult(status="skipped", note="There was no page to compare.")
+    if boilerplate(title, fp.words):
+        return FamilyResult(
+            status="skipped",
+            note="This is a standard notice or a nearly empty page, the kind thousands of unrelated "
+            "sites show, so comparing it would say nothing.",
+        )
     if not database_url:
         return FamilyResult(status="unavailable", note="The page library isn't connected.")
     try:

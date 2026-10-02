@@ -5,6 +5,7 @@ at least two different kinds agree and the points reach the threshold, so one lu
 default icon, say) is never enough. Used by the nightly family grouping and by live scans.
 """
 
+import re
 from typing import NamedTuple
 
 import tlsh
@@ -13,6 +14,22 @@ MATCH_POINTS = 3.0
 MIN_KINDS = 2
 # Pages this small (an error message, an empty shell) look alike by accident.
 MIN_TAGS = 15
+MIN_WORDS = 20
+# Agreement on what the page says or shows. Site builders (Wix, Google Sites, and the like) give
+# thousands of unrelated pages the same code and structure, so those two alone prove nothing:
+# at least one of these must agree as well.
+CONTENT_KINDS = frozenset({"words", "look", "icon"})
+# Standard notices that thousands of unrelated sites show: suspended, parked, blocked, not found.
+BOILERPLATE_TITLE = re.compile(
+    r"suspended|not found|\b40[34]\b|forbidden|access denied|domain (is )?for sale|parked|"
+    r"just a moment|attention required|site can.t be reached|default web ?page|coming soon|"
+    r"account (has been )?(disabled|terminated)|deceptive site|phishing (warning|detected)|"
+    r"under construction|welcome to nginx|apache2? (ubuntu |debian )?default|index of /|"
+    r"website (is )?(expired|unavailable)|bad gateway|service unavailable|default web ?site page|"
+    r"resources and information|deceptive page|\b5\d\d: |web server is down|connection timed out|"
+    r"error code \d|^error$|page not available",
+    re.I,
+)
 
 
 class Prints(NamedTuple):
@@ -34,7 +51,19 @@ class Likeness(NamedTuple):
 
     @property
     def match(self) -> bool:
-        return self.points >= MATCH_POINTS and len(self.kinds) >= MIN_KINDS
+        return (
+            self.points >= MATCH_POINTS
+            and len(self.kinds) >= MIN_KINDS
+            and bool(CONTENT_KINDS.intersection(self.kinds))
+        )
+
+
+def boilerplate(title: str | None, words: int | None = None) -> bool:
+    """Is this a standard notice or a nearly empty page? Such pages are the same on thousands of
+    unrelated sites, so matching them would say nothing about who is behind a site."""
+    if words is not None and words < MIN_WORDS:
+        return True
+    return bool(BOILERPLATE_TITLE.search(title or ""))
 
 
 def unsigned(value: int | None) -> int | None:

@@ -24,12 +24,16 @@ from datetime import datetime
 
 from app import pages
 from app.analysis.brands import display_brand
-from app.similarity import MIN_TAGS, Prints, compare, unsigned
+from app.similarity import MIN_TAGS, Prints, boilerplate, compare, unsigned
 from jobs.common import connect, now, say
 
 MIN_PAGES = 3
 MIN_SITES = 2
 MIN_SCAM_SHARE = 0.6
+# A real kit aims at one brand, maybe two. A big group whose pages aim at many different brands is
+# usually an artefact (dead links that all bounced to the same search engine, a hosting notice).
+MIXED_MIN_BRANDED = 8
+MIXED_MAX_PURITY = 0.3
 # In a big bucket, each page is compared with a few neighbours and a few fixed "anchor" pages
 # instead of with everyone. Near-identical pages still end up linked, without the quadratic cost.
 SMALL_BUCKET = 48
@@ -61,6 +65,8 @@ class Page:
     prints: Prints
     bands: list[int]
     has_thumb: bool = False
+    title: str | None = None
+    words: int | None = None
 
 
 @dataclass
@@ -99,17 +105,28 @@ class Groups:
 def load(conn) -> list[Page]:
     cur = conn.execute(
         """SELECT id, label, site, brand, scam_type, seen_at, tlsh, dom_hash, dom_simhash, text_simhash,
-                  phash, favicon_hash, tags, bands, thumb IS NOT NULL
+                  phash, favicon_hash, tags, bands, thumb IS NOT NULL, title, words
            FROM pages ORDER BY id"""
     )
     out = []
     for row in cur:
-        (pid, label, site, brand, scam, seen, code, dom_hash, dom, text, phash, icon, tags, bands, thumb) = (
-            row
-        )
+        pid, label, site, brand, scam, seen, code, dom_hash, dom, text, phash, icon, tags = row[:13]
+        bands, thumb, title, words = row[13:]
         prints = Prints(code, dom_hash, unsigned(dom), unsigned(text), unsigned(phash), icon, tags)
         out.append(
-            Page(pid, label, site, display_brand(brand), scam, seen, prints, list(bands or []), bool(thumb))
+            Page(
+                id=pid,
+                label=label,
+                site=site,
+                brand=display_brand(brand),
+                scam_type=scam,
+                seen_at=seen,
+                prints=prints,
+                bands=list(bands or []),
+                has_thumb=bool(thumb),
+                title=title,
+                words=words,
+            )
         )
     return out
 
@@ -127,7 +144,8 @@ def buckets(library: list[Page], icons: frozenset[int]) -> list[list[int]]:
     """Lists of page positions that are worth comparing with each other."""
     found: dict[tuple, list[int]] = defaultdict(list)
     for i, p in enumerate(library):
-        if (p.prints.tags or MIN_TAGS) < MIN_TAGS:
+        # Tiny pages and standard notices (suspended, parked, not found) never join a family.
+        if (p.prints.tags or MIN_TAGS) < MIN_TAGS or boilerplate(p.title, p.words):
             continue
         for band in p.bands:
             found[("band", band)].append(i)
@@ -170,7 +188,7 @@ def group(library: list[Page]) -> tuple[Groups, int]:
     return groups, compared
 
 
-def name(brand: str | None, scam_type: str | None) -> str:
+def name(brand: str | None, scam_type: str | None, title: str | None = None) -> str:
     noun = NOUNS.get(scam_type or "")
     if brand and noun:
         return f"fake {brand} {noun}"
@@ -178,6 +196,8 @@ def name(brand: str | None, scam_type: str | None) -> str:
         return f"fake {brand} page"
     if noun:
         return f"{noun} with no clear brand"
+    if title:
+        return f'pages titled "{title[:40]}"'
     return "unnamed scam kit"
 
 
@@ -214,13 +234,17 @@ def families(library: list[Page], groups: Groups) -> tuple[list[Family], int]:
         scam_type = _top([p.scam_type for p in scams], 0.4)
         branded = [p.brand for p in scams if p.brand]
         purity = Counter(branded).most_common(1)[0][1] / len(branded) if branded else 1.0
+        if len(branded) >= MIXED_MIN_BRANDED and purity < MIXED_MAX_PURITY:
+            templates += 1  # aimed at many different brands: not one kit
+            continue
+        title = _top([p.title for p in scams], 0.5)
         oldest = min(group_pages, key=lambda p: p.id)
         with_thumb = [p for p in scams if p.has_thumb]
         sample = max(with_thumb, key=lambda p: p.seen_at) if with_thumb else oldest
         out.append(
             Family(
                 id=oldest.id,
-                label=name(brand, scam_type),
+                label=name(brand, scam_type, title),
                 brand=brand,
                 scam_type=scam_type,
                 size=len(group_pages),

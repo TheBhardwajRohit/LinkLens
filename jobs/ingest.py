@@ -22,7 +22,6 @@ import base64
 import json
 import os
 import random
-import re
 from hashlib import blake2b
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -35,6 +34,7 @@ from app.library import digest_page
 from app.recon.geoip import geo
 from app.recon.net import USER_AGENT
 from app.redact import redact_url
+from app.similarity import BOILERPLATE_TITLE
 from app.urls import UrlError, normalize_url
 from jobs.common import connect, now, say
 
@@ -52,13 +52,6 @@ FEEDS: dict[str, dict[str, str]] = {
 DEFAULT_FEEDS = "phishing_database"
 MAX_LIST_BYTES = 40_000_000
 MAX_PER_RUN = 40
-# Pages that load but aren't the scam any more: suspended, parked, or blocked.
-DEAD_TITLE = re.compile(
-    r"suspended|not found|\b40[34]\b|forbidden|access denied|domain (is )?for sale|parked|"
-    r"just a moment|attention required|site can.t be reached|default web ?page|coming soon|"
-    r"account (has been )?(disabled|terminated)|deceptive site|phishing (warning|detected)",
-    re.I,
-)
 NOT_CAPTURED = ("blocked", "unreachable", "download", "crashed", "error")
 
 
@@ -167,7 +160,8 @@ def looks_dead(record: dict) -> bool:
     prints = record.get("prints") or {}
     if (prints.get("tags") or 0) < 12:
         return True
-    return bool(DEAD_TITLE.search(record.get("title") or ""))
+    # Pages that load but aren't the scam any more: suspended, parked, or blocked.
+    return bool(BOILERPLATE_TITLE.search(record.get("title") or ""))
 
 
 def summarize_visit(job: dict, visit: dict) -> dict:
