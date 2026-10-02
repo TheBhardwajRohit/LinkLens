@@ -2,15 +2,18 @@ import type { Ref } from "react";
 
 import type { Scan } from "../lib/api";
 import { formatDate } from "../lib/format";
+import { defang } from "../lib/url";
 import BlacklistReport from "./BlacklistReport";
 import { FamilyCard, SiblingTabs } from "./FamilyReport";
 import Guard from "./Guard";
 import NetworkMap from "./NetworkMap";
-import { ComingSoon, ResultActions, VerdictCard, WhyFlagged } from "./Verdict";
+import ReportActions from "./ReportActions";
+import { VerdictCard, WhyFlagged } from "./Verdict";
 import { VisitDetails, VisitSummary } from "./VisitReport";
 
 // Report order follows the plan: verdict, screenshot, family, siblings, network map, who's
-// behind it (with the server map), link trail, reasons, blacklist results, then actions. Each part is guarded,
+// behind it (with the server map), link trail, reasons, blacklist results. The actions (copy
+// link, PDF, report a mistake, scan another) sit at the top, next to the title. Each part is guarded,
 // so an old or incomplete saved scan can't blank the whole page.
 export default function ScanResults({
   scan,
@@ -35,8 +38,13 @@ export default function ScanResults({
               </p>
             )}
           </div>
-          <ResultActions id={scan.id} saved={scan.saved} onScanAnother={onScanAnother} />
+          <ReportActions id={scan.id} saved={scan.saved} onScanAnother={onScanAnother} />
         </div>
+        {/* Only on paper or in the PDF: what was scanned and when. */}
+        <p className="mb-4 hidden text-sm text-slate-300 print:block">
+          LinkLens report for <span className="font-mono">{defang(scan.url)}</span>, scanned {formatDate(scan.created_at)}.
+          Results are likely, not certain.
+        </p>
         <div className="space-y-6" key={scan.id}>
           <Guard name="verdict">
             <VerdictCard analysis={scan.analysis} />
@@ -62,7 +70,6 @@ export default function ScanResults({
           <Guard name="blacklist results">
             <BlacklistReport blacklists={scan.blacklists} />
           </Guard>
-          <ComingSoon />
         </div>
       </div>
     </section>

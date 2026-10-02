@@ -134,7 +134,7 @@ export function SiblingTabs({ siblings, family }: { siblings: Siblings | undefin
   const pictures = (family?.similar ?? []).filter((p) => p.has_thumb).slice(0, 6);
   return (
     <Section title="Sibling sites">
-      <div role="tablist" aria-label="Kinds of sibling sites" className="flex flex-wrap gap-1.5">
+      <div role="tablist" aria-label="Kinds of sibling sites" className="flex flex-wrap gap-1.5 print:hidden">
         {TABS.map((t) => {
           const total = siblings[t.key]?.total ?? 0;
           const active = open === t.key;
@@ -159,7 +159,7 @@ export function SiblingTabs({ siblings, family }: { siblings: Siblings | undefin
           );
         })}
       </div>
-      <div role="tabpanel" className="mt-3 rounded-xl border border-white/[0.08] bg-ink/40 p-4">
+      <div role="tabpanel" className="mt-3 rounded-xl border border-white/[0.08] bg-ink/40 p-4 print:hidden">
         <TabBody tab={siblings[open]} what={TABS.find((t) => t.key === open)!.what} />
         {open === "same_design" && pictures.length > 0 && (
           <ul className="mt-3 flex flex-wrap gap-3">
@@ -173,6 +173,15 @@ export function SiblingTabs({ siblings, family }: { siblings: Siblings | undefin
             ))}
           </ul>
         )}
+      </div>
+      {/* On paper there are no tabs to click, so every kind is printed. */}
+      <div className="mt-3 hidden space-y-3 print:block">
+        {TABS.map((t) => (
+          <div key={t.key} className="rounded-xl border border-white/[0.08] bg-ink/40 p-4">
+            <p className="text-sm font-semibold text-cream">{t.label}</p>
+            <TabBody tab={siblings[t.key]} what={t.what} />
+          </div>
+        ))}
       </div>
       <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
         <Users className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />

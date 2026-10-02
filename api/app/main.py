@@ -11,14 +11,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import __version__, cache, checks, family, jobs, pages, pipeline, sandbox_client, storage
+from app import (
+    __version__,
+    access,
+    cache,
+    checks,
+    extras,
+    family,
+    jobs,
+    pages,
+    pipeline,
+    sandbox_client,
+    storage,
+)
 from app.analysis.toplist import keep_fresh as keep_toplist_fresh
 from app.analysis.toplist import toplist
 from app.blacklists.lists import keep_fresh as keep_lists_fresh
 from app.blacklists.lists import known as known_lists
 from app.config import Settings, get_settings
 from app.ml import model as page_model
-from app.ratelimit import limiter
 from app.recon.geoip import geo
 from app.recon.geoip import keep_fresh as keep_geoip_fresh
 from app.redact import redact
@@ -60,8 +71,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origin_list(),
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
+app.include_router(extras.router)
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
@@ -70,27 +82,13 @@ class ScanRequest(BaseModel):
     url: str = Field(max_length=4096)
 
 
-def _start_checks(req: ScanRequest, request: Request, settings: Settings) -> str:
-    """Rate limit, then clean up the link. Raises a plain-words HTTP error if either fails."""
-    client = request.client.host if request.client else "unknown"
-    wait = limiter.check(client, settings.scan_rate_limit_per_hour)
-    if wait is not None:
-        raise HTTPException(
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            f"Too many scans from your network. Try again in {wait} minute{'s' if wait != 1 else ''}.",
-        )
+async def _start_checks(req: ScanRequest, request: Request, settings: Settings) -> str:
+    """Rate limit (or API key), then clean up the link. Raises a plain-words HTTP error if either fails."""
+    await access.allow_scan(request, settings)
     try:
         return normalize_url(req.url)
     except UrlError as err:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(err)) from err
-
-
-def _sandbox_error(err: Exception) -> str:
-    if isinstance(err, sandbox_client.SandboxBusy):
-        return "The sandbox is busy with another link. Try again in a minute."
-    if isinstance(err, sandbox_client.SandboxUnavailable):
-        return "The sandbox isn't running, so the link can't be opened right now."
-    return "Something went wrong during the scan. Please try again."
 
 
 @app.get("/")
@@ -124,34 +122,20 @@ def _model_status() -> dict | str:
 @app.post("/scan")
 async def scan_now(req: ScanRequest, request: Request, settings: SettingsDep) -> dict:
     """Run a whole scan and return the result in one reply (used by CI and scripts)."""
-    url = _start_checks(req, request, settings)
+    url = await _start_checks(req, request, settings)
     try:
         return await pipeline.run_scan(url, settings=settings)
     except (sandbox_client.SandboxBusy, sandbox_client.SandboxUnavailable) as err:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, _sandbox_error(err)) from err
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, pipeline.sandbox_error(err)) from err
 
 
 @app.post("/scans", status_code=status.HTTP_202_ACCEPTED)
 async def start_scan(req: ScanRequest, request: Request, settings: SettingsDep) -> dict:
     """Start a scan and return its id at once. Follow it at /scans/{id}/events."""
-    url = _start_checks(req, request, settings)
+    url = await _start_checks(req, request, settings)
     scan_id = str(uuid.uuid4())
     job = jobs.create(scan_id)
-
-    async def progress(step: str, state: str, data: dict | None) -> None:
-        await job.push("step", {"step": step, "status": state, "data": data})
-
-    async def run() -> None:
-        try:
-            result = await pipeline.run_scan(url, settings=settings, scan_id=scan_id, progress=progress)
-            job.result = result
-            await job.push("done", result, final=True)
-        except Exception as err:
-            if not isinstance(err, (sandbox_client.SandboxBusy, sandbox_client.SandboxUnavailable)):
-                log.exception("scan failed")
-            await job.push("error", {"message": _sandbox_error(err)}, final=True)
-
-    job.task = asyncio.create_task(run())
+    job.task = asyncio.create_task(pipeline.run_job(scan_id, url, settings))
     return {"id": scan_id, "url": url, "steps": [{"id": s, "label": label} for s, label in pipeline.STEPS]}
 
 

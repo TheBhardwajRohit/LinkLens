@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     sandbox_url: str = "http://localhost:8100"
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
     scan_rate_limit_per_hour: int = 20
+    # When true, scans need an X-API-Key header (keys are made with `python -m app.access create`).
+    require_api_key: bool = False
+    # Set to true only behind a proxy you trust (a cloud host): the caller's address is then read
+    # from the X-Forwarded-For header the proxy adds.
+    trust_forwarded_for: bool = False
     # Database setup and list downloads at startup. Tests turn this off.
     startup_tasks: bool = True
     # Download the free Phishing.Database lists and check links against them locally.

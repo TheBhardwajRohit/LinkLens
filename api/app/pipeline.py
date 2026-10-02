@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from app import blacklists, family, graph, pages, recon, sandbox_client, siblings, storage
+from app import blacklists, family, graph, jobs, pages, recon, sandbox_client, siblings, storage
 from app.analysis import analyze
 from app.analysis.lexical import analyze_link
 from app.config import Settings
@@ -142,6 +142,33 @@ async def run_scan(
                 "save", "failed", {"note": "The result couldn't be saved, so its link won't work later."}
             )
     return result
+
+
+def sandbox_error(err: Exception) -> str:
+    if isinstance(err, sandbox_client.SandboxBusy):
+        return "The sandbox is busy with another link. Try again in a minute."
+    if isinstance(err, sandbox_client.SandboxUnavailable):
+        return "The sandbox isn't running, so the link can't be opened right now."
+    return "Something went wrong during the scan. Please try again."
+
+
+async def run_job(scan_id: str, url: str, settings: Settings) -> None:
+    """Run one scan as a background job, reporting each step to whoever follows the job."""
+    job = jobs.get(scan_id)
+    if job is None:
+        return
+
+    async def progress(step: str, state: str, data: dict | None) -> None:
+        await job.push("step", {"step": step, "status": state, "data": data})
+
+    try:
+        result = await run_scan(url, settings=settings, scan_id=scan_id, progress=progress)
+        job.result = result
+        await job.push("done", result, final=True)
+    except Exception as err:
+        if not isinstance(err, (sandbox_client.SandboxBusy, sandbox_client.SandboxUnavailable)):
+            log.exception("scan failed")
+        await job.push("error", {"message": sandbox_error(err)}, final=True)
 
 
 def _label(analysis: dict) -> str:

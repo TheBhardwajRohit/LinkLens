@@ -33,8 +33,9 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /LinkLens/
-          # No public scanner yet, so the live site makes no API calls and shows "scanner offline".
-          VITE_API_URL: none
+          # Until the repository variable VITE_API_URL names a public scan server (docs/DEPLOY.md),
+          # the live site makes no API calls and shows "scanner offline".
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'none' }}
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

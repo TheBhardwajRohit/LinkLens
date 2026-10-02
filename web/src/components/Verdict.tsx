@@ -1,11 +1,9 @@
 // The verdict: a colored badge, the score, one plain sentence, and the reasons behind it.
 // Colors mean verdicts here and nowhere else: green safe, amber suspicious, red dangerous.
 
-import { Check, Copy, Info, ListX, RotateCcw, ShieldAlert, ShieldCheck, ShieldX, Tag, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { Info, ListX, ShieldAlert, ShieldCheck, ShieldX, Tag, type LucideIcon } from "lucide-react";
 
 import type { Analysis, Reason, Verdict } from "../lib/api";
-import { resultLink } from "../lib/useScan";
 import { Section } from "./ReportParts";
 
 const LOOK: Record<Verdict, { label: string; icon: LucideIcon; badge: string; ring: string; bar: string; text: string }> = {
@@ -131,58 +129,5 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
         {analysis.tranco_list && ` Popularity from Tranco list ${analysis.tranco_list}.`}
       </p>
     </Section>
-  );
-}
-
-const LATER = [
-  ["Download Report", "the whole report as a PDF"],
-];
-
-export function ComingSoon() {
-  return (
-    <Section title="Coming in later phases">
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {LATER.map(([name, what]) => (
-          <li key={name} className="rounded-lg border border-dashed border-white/10 px-3 py-2 text-sm">
-            <span className="text-slate-300">{name}</span>
-            <span className="text-slate-500">: {what}</span>
-          </li>
-        ))}
-      </ul>
-    </Section>
-  );
-}
-
-export function ResultActions({ id, saved, onScanAnother }: { id: string; saved: boolean; onScanAnother: () => void }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="flex flex-wrap gap-2">
-      {saved && (
-        <button
-          type="button"
-          onClick={() => {
-            navigator.clipboard
-              ?.writeText(resultLink(id))
-              .then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1800);
-              })
-              .catch(() => {});
-          }}
-          className="inline-flex items-center gap-2 rounded-lg bg-white/[0.06] px-3.5 py-2 text-sm text-slate-100 ring-1 ring-white/10 transition hover:bg-white/10"
-        >
-          {copied ? <Check className="h-4 w-4 text-emerald-300" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
-          {copied ? "Link copied" : "Copy link to this result"}
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={onScanAnother}
-        className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm text-slate-300 ring-1 ring-white/10 transition hover:text-white hover:ring-white/30"
-      >
-        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-        Scan another link
-      </button>
-    </div>
   );
 }

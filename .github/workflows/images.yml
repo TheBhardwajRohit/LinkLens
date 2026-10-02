@@ -1,0 +1,42 @@
+name: Publish images
+
+# Builds the scan server's two containers (API and sandbox) and publishes them to the GitHub
+# Container Registry, so a cloud host can pull them. Runs by hand, or when a version tag is pushed.
+# See docs/DEPLOY.md.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Build and push ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: api
+            context: ./api
+            target: ""
+          - name: sandbox
+            context: ./sandbox
+            target: runtime
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/linklens-${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Sign in to the GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build
+        run: |
+          image=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          target="${{ matrix.target }}"
+          docker build ${target:+--target "$target"} -t "$image:latest" -t "$image:${GITHUB_SHA::12}" "${{ matrix.context }}"
+          echo "image=$image" >> "$GITHUB_ENV"
+      - name: Push
+        run: docker push --all-tags "$image"

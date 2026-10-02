@@ -122,3 +122,32 @@ body {
     font-size: 0.74rem;
   }
 }
+
+/* Printing, or "Save as PDF": only the scan report, with its dark look kept as it is on screen. */
+@media print {
+  @page {
+    margin: 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-bg,
+  body > #root > header,
+  body > #root > footer,
+  main > :not(#report) {
+    display: none !important;
+  }
+
+  #report {
+    max-width: none;
+    padding: 0;
+  }
+
+  #report section,
+  #report li {
+    break-inside: avoid;
+  }
+}

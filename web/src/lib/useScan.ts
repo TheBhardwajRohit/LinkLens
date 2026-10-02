@@ -17,6 +17,8 @@ export type ScanControl = {
   state: ScanState;
   online: boolean | null;
   submit: (raw: string) => Promise<void>;
+  /** Show a finished scan by its id (used by bulk scans). */
+  open: (id: string) => Promise<void>;
   clearError: () => void;
 };
 
@@ -109,9 +111,20 @@ export function useScan(): ScanControl {
     });
   }, []);
 
+  const open = useCallback(async (id: string) => {
+    stop.current();
+    setState({ kind: "loading" });
+    const r = await getScan(id);
+    if (r.kind === "found") {
+      setState({ kind: "done", scan: r.scan, refanged: false, reopened: true });
+      if (r.scan.saved) window.history.pushState(null, "", resultLink(r.scan.id));
+    } else if (r.kind === "missing") setState({ kind: "unavailable", error: r.error });
+    else setState({ kind: "offline" });
+  }, []);
+
   const clearError = useCallback(() => {
     setState((s) => (s.kind === "invalid" || s.kind === "rejected" ? { kind: "idle" } : s));
   }, []);
 
-  return { state, online, submit, clearError };
+  return { state, online, submit, open, clearError };
 }

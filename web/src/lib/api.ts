@@ -412,6 +412,72 @@ export async function getStats(signal?: AbortSignal): Promise<Stats | null> {
   }
 }
 
+export type FeedbackKind = "false_alarm" | "missed_scam" | "other";
+
+export async function sendFeedback(id: string, kind: FeedbackKind, note: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!API_URL) return { ok: false, error: "The scanner isn't online right now." };
+  try {
+    const resp = await fetch(`${API_URL}/scans/${encodeURIComponent(id)}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, note }),
+    });
+    if (resp.status === 201) return { ok: true };
+    return { ok: false, error: (await detail(resp)) ?? "The report couldn't be saved." };
+  } catch {
+    return { ok: false, error: "The scanner couldn't be reached." };
+  }
+}
+
+export type BulkEntry = { url: string; id: string | null; error: string | null };
+
+export type ScanStatus = { state: "running" | "done" | "failed" | "unknown"; verdict?: Verdict; score?: number };
+
+/** How a scan is doing, without downloading its whole result. */
+export async function getScanStatus(id: string): Promise<ScanStatus> {
+  if (!API_URL) return { state: "unknown" };
+  try {
+    const resp = await fetch(`${API_URL}/scans/${encodeURIComponent(id)}/status`);
+    return resp.ok ? ((await resp.json()) as ScanStatus) : { state: "unknown" };
+  } catch {
+    return { state: "unknown" };
+  }
+}
+
+export async function startBulk(urls: string[]): Promise<{ ok: true; scans: BulkEntry[] } | { ok: false; error: string }> {
+  if (!API_URL) return { ok: false, error: "The scanner isn't online right now." };
+  try {
+    const resp = await fetch(`${API_URL}/scans/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls }),
+    });
+    if (resp.status === 202) return { ok: true, scans: ((await resp.json()) as { scans: BulkEntry[] }).scans };
+    return { ok: false, error: (await detail(resp)) ?? "The links couldn't be scanned." };
+  } catch {
+    return { ok: false, error: "The scanner couldn't be reached." };
+  }
+}
+
+export type Trends = {
+  days: { date: string; safe: number; suspicious: number; dangerous: number }[];
+  scam_types: { id: string; label: string; count: number }[];
+  brands: { brand: string; pages: number }[];
+  families: { id: number; label: string; size: number; sites: number; last_seen: string | null }[];
+  feedback: Record<string, number>;
+  window_days: number;
+};
+
+export async function getTrends(signal?: AbortSignal): Promise<Trends | null> {
+  if (!API_URL) return null;
+  try {
+    const resp = await fetch(`${API_URL}/trends`, { signal });
+    return resp.ok ? ((await resp.json()) as Trends) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function detail(resp: Response): Promise<string | null> {
   const body = (await resp.json().catch(() => null)) as { detail?: unknown } | null;
   return typeof body?.detail === "string" ? body.detail : null;

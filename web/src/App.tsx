@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 
+import BulkScan from "./components/BulkScan";
 import DataHealth from "./components/DataHealth";
 import Features from "./components/Features";
 import Footer from "./components/Footer";
@@ -8,6 +9,7 @@ import NavBar from "./components/NavBar";
 import ProofStrip from "./components/ProofStrip";
 import ScanInput from "./components/ScanInput";
 import ScanResults from "./components/ScanResults";
+import Trends from "./components/Trends";
 import { EXAMPLE_MODEL, modelFromPreview, modelFromVisit, searchingModel, type GraphModel } from "./graph/model";
 import { prefersReducedMotion } from "./lib/device";
 import { useScan } from "./lib/useScan";
@@ -52,6 +54,12 @@ export default function App() {
             inputRef={inputRef}
             onShowReport={() => reportRef.current?.scrollIntoView({ behavior: behavior() })}
           />
+          <BulkScan
+            online={scan.online}
+            onOpen={(id) => {
+              scan.open(id).then(() => reportRef.current?.scrollIntoView({ behavior: behavior() }));
+            }}
+          />
         </Hero>
         <ProofStrip />
         {scan.state.kind === "done" && (
@@ -64,6 +72,7 @@ export default function App() {
         )}
         <Features />
         <DataHealth online={scan.online} />
+        <Trends online={scan.online} />
       </main>
       <Footer />
     </>

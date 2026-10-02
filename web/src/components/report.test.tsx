@@ -4,9 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import type { Blacklists, FamilyResult, GraphResult, Recon, Siblings } from "../lib/api";
 import BlacklistReport from "./BlacklistReport";
+import BulkScan from "./BulkScan";
 import { FamilyCard, SiblingTabs } from "./FamilyReport";
 import NetworkMap from "./NetworkMap";
 import ReconReport from "./ReconReport";
+import ReportActions from "./ReportActions";
+import Trends from "./Trends";
 
 const EMPTY_RECON = {
   host: "example.com",
@@ -142,5 +145,23 @@ describe("NetworkMap", () => {
     expect(html).toContain("No known site links to this one.");
     expect(html).not.toContain("The same map as a list");
     expect(renderToStaticMarkup(<NetworkMap graph={undefined} />)).toBe("");
+  });
+});
+
+describe("ReportActions, BulkScan, and Trends", () => {
+  it("offers the PDF download, the mistake report, and another scan", () => {
+    const html = renderToStaticMarkup(<ReportActions id="abc" saved onScanAnother={() => {}} />);
+    expect(html).toContain("Download report (PDF)");
+    expect(html).toContain("Report a mistake");
+    expect(html).toContain("Copy link to this result");
+    expect(html).toContain("print:hidden");
+    // An unsaved scan has no link to copy.
+    expect(renderToStaticMarkup(<ReportActions id="abc" saved={false} onScanAnother={() => {}} />)).not.toContain("Copy link");
+  });
+
+  it("stays out of the way when no scanner is online", () => {
+    expect(renderToStaticMarkup(<BulkScan online={false} onOpen={() => {}} />)).toBe("");
+    expect(renderToStaticMarkup(<Trends online={false} />)).toBe("");
+    expect(renderToStaticMarkup(<BulkScan online onOpen={() => {}} />)).toContain("Scan several links at once");
   });
 });
