@@ -140,6 +140,35 @@ Each phase ends in a working state. Phases 0 to 4 each started after Rohit said 
 - [x] Server map (Leaflet + OpenStreetMap), loaded only after a click because the tiles come from a third party
 - [x] Tests: 225 API, 14 jobs, 95 sandbox, 58 website
 
+## Phase 9 checklist
+
+- [x] Feature list for the model: 78 numbers read from the link and the page. Popularity, the query string, and "is on free hosting" are left out on purpose
+- [x] Training job (`jobs/train.py`): LightGBM, 200 trees, trained on 33,593 pages; the newest 15% of the training pages decide when to stop
+- [x] Checked on 15,558 pages the model never saw (the dataset's own, later test split): ROC AUC 0.9743. At the 50% cut-off it catches 75.9% of the scam pages, 97.5% of what it flags really is a scam, and it wrongly flags 1.6% of honest pages
+- [x] Found and fixed: the first model had learned shortcuts from the way the dataset was collected (a query string, a bare site address, a small page, and free hosting each "meant" scam). On 63 real honest pages it called all 63 likely scams once a newsletter tag was added to the link. Now the model never sees the query string or free hosting, honest pages count for more in training where they are rare, and the model cannot raise a verdict alone
+- [x] The model's limit: it counts in full only when the plain rules already scored 8 or more, not counting the points for free hosting. Alone it adds at most 20 points and never lifts a page out of Safe. On a free hosting service it never adds more than 20, backed or not (it has seen 65 honest pages hosted that way against 5,448 scam pages). It never marks down a brand's real site or a top-10,000 site, and it says nothing on a bot-check screen
+- [x] Real-site check (`jobs/honest_check.py`): 126 well-known honest pages from outside the dataset (small sites, login pages, pages on free hosting, Indian government services), scanned through the local scan server. Rated 60% or more likely scam by the model alone: 13. Above Safe in a scan: 1 (without the limits: 5). The training job repeats this check every time
+- [x] What the limit costs, measured: on the dataset, rules plus model mark 41.2% of scam pages Suspicious or worse and 1.0% of honest pages (rules alone: 6.1% and 1.6%). Without the limit it would be 63.1%, but a dataset has no domain age, certificate, blacklist, or family for the rules to use; a live scan does
+- [x] Four rule fixes the real-site check led to: a site on a free hosting service is no longer judged by that service's domain age, certificate, or owner record (github.io is 13 years old whoever made the page); scam phrases such as "immediately" or "virus" no longer score on pages of 600 words or more, where the training data shows they are ordinary language; 16 brands' verified GitHub organisations are recognised as theirs (google.github.io is not a Google lookalike); and the headline no longer says "no warning signs" above a list that has some
+- [x] Report written to `docs/MODEL_REPORT.md` (data, what the dataset gets wrong, results by cut-off and by page size, rules against rules plus model, the real-site check, what the model leans on, honest limits)
+- [x] The model ships as plain JSON and runs in about 40 lines of Python in the API. The training job fails if that runner and LightGBM disagree, and a test fails if the model and the feature list drift apart
+- [x] Each prediction names the features that pushed it most, in plain words, and becomes one reason in the score
+- [x] A false-alarm rule fixed on the way: "shows a brand's name but isn't the brand's site" fired on honest sites with a Facebook link or a "Sign in with Google" button; it now needs the page to be mostly about that one brand
+- [x] A scoring gap closed on the way: good signs could pull a blacklisted link down to Safe. An exact listing (Google Safe Browsing, the exact link on Phishing.Database, 5 or more VirusTotal vendors, a live URLhaus entry) is now always Likely dangerous, and a weaker listing is never Safe
+
+## Phase 10 checklist
+
+- [x] Download report: a print layout of the report; the browser's print window saves it as a PDF (5 pages for a typical scan)
+- [x] Report a mistake: a short form stored with the scan; email addresses are removed from the note; 10 an hour per network
+- [x] Bulk scan: up to 10 links, run one after another, each with its verdict and a link to its report
+- [x] Trends: scans per day by verdict, kinds of scam, the brands copied most, the biggest families (`GET /trends`)
+- [x] API keys for scripts (`python -m app.access create "name"`): shown once, stored only as hashes, each with its own hourly limit; the scanner can be closed to callers without a key
+- [x] Rate limits that work behind a cloud host's proxy (`TRUST_FORWARDED_FOR`)
+- [x] Screenshots older than 90 days are dropped; the thumbnail and fingerprints stay
+- [x] Workflow that publishes the two containers, and a step-by-step guide for putting everything online for free (`docs/DEPLOY.md`)
+- [ ] Not done, needs Rohit's accounts: creating the Supabase project, switching on the hourly jobs, and deploying the scan server to Azure. The guide's Azure commands follow Microsoft's docs but have not been run on a real subscription
+- [x] Tests: 255 API, 24 jobs, 95 sandbox, 61 website. CI green on GitHub
+
 ## Phases
 
 | # | What | Done when | Status |
@@ -153,8 +182,8 @@ Each phase ends in a working state. Phases 0 to 4 each started after Rohit said 
 | 6 | Data: dataset loaders, fingerprinting, cron feed ingestion (GitHub Actions) | Datasets loaded; feeds ingest on schedule; admin view shows ingestion health | Done locally. The schedule waits for a shared database |
 | 7 | Nightly family clustering, Family Finder, 4 sibling tabs | A scanned page matches a family when a similar page exists | Done |
 | 8 | SiNMULI graph module + network map | Local signed graph built, signs inferred, unknown neighbors labeled, map renders | Done |
-| 9 | ML scoring (LightGBM) combined with rules; evaluation on a held-out set | Precision/recall report written to `docs/`; score uses the model | Not started |
-| 10 | Extras: PDF report, trends dashboard, feedback button, bulk scan, API keys for our API, rate limiting, deploy scan server to a free host | Each feature works and is documented | Not started |
+| 9 | ML scoring (LightGBM) combined with rules; evaluation on a held-out set | Precision/recall report written to `docs/`; score uses the model | Done |
+| 10 | Extras: PDF report, trends dashboard, feedback button, bulk scan, API keys for our API, rate limiting, deploy scan server to a free host | Each feature works and is documented | Done, except the deployment itself (guide written, needs Rohit's accounts) |
 
 ## Log
 
@@ -170,3 +199,5 @@ Each phase ends in a working state. Phases 0 to 4 each started after Rohit said 
 - **2026-10-03:** Phase 6 built: fingerprints, the page library, the PhreshPhish loader (55,080 pages loaded locally), and feed ingestion on GitHub Actions (dry run passed).
 - **2026-10-03:** Phase 7 built: 531 scam families found, Family Finder and Sibling Hunter in the scan and the report.
 - **2026-10-03:** Phase 8 built: link-graph inference after SiNMULI, the network map, and the server map.
+- **2026-10-03:** Phase 9 built: the page-reading model (97.5% precision, 75.9% recall on 15,558 unseen pages) is one more reason in every score. A check on real honest pages showed the first version had learned shortcuts from the dataset; the features, the training weights, and the scoring were changed so the model cannot raise a verdict alone. The same check led to four rule fixes (free-hosted sites, scam phrases on long pages, brands' own GitHub pages, the headline wording).
+- **2026-10-03:** Phase 10 built: PDF report, mistake reports, bulk scan, trends, API keys, and the deployment guide. All ten phases are built. What remains needs accounts only Rohit can create (see `docs/DEPLOY.md`).

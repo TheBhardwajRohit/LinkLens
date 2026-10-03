@@ -48,3 +48,5 @@ The goal: fill the database with known scam pages on day one, so Family Finder h
 ## Honest note
 
 Old scam pages teach the system what families look like, but most live campaigns will use newer kits. PhreshPhish (2025) is the closest to current. The cron feeds close the gap over time.
+
+A dataset also has habits of its own. In the PhreshPhish rows we loaded, the honest pages are mostly large inner pages of popular sites. Almost none has a query string in its link, sits on a free hosting service, or is a small page at a bare site address, while many scam pages do. A model trained on that learns "small", "bare address", "query string", and "free hosting" as signs of a scam, which is false on the open web. [MODEL_REPORT.md](MODEL_REPORT.md) shows the numbers and what was done about it. The lesson for any new dataset: before training on it, compare its honest pages with real honest pages from outside it (`jobs/honest_check.py`).

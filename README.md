@@ -12,9 +12,21 @@ LinkLens checks a suspicious link safely and tells you:
 
 You never open the page yourself. A locked-down sandbox browser visits it and takes a screenshot.
 
-> **Status:** phase 8 of 10. Scans work on a local install: known blacklists are checked first, the sandbox opens the link, recon finds who's behind it, the page is compared with 55,000 known pages to find its scam family and sibling sites, and LinkLens gives a verdict (Safe, Suspicious, or Likely dangerous), a score out of 100, the scam type, and every reason in plain words. Progress shows live, and every result gets a link to reopen it. See [PROGRESS.md](PROGRESS.md).
+> **Status:** all ten planned phases are built. Scans run on a local install (`docker compose up`). Putting the scanner online needs three free accounts that are not created yet; the steps are in [docs/DEPLOY.md](docs/DEPLOY.md). See [PROGRESS.md](PROGRESS.md) for what was checked and how.
 >
-> **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only; the scanner runs locally for now)
+> **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only, until a public scan server exists)
+
+## What a scan does
+
+1. Checks known blacklists first (Google Safe Browsing, the Phishing.Database lists, and more), for an answer in about two seconds.
+2. Opens the link in a locked-down sandbox browser and follows every redirect.
+3. Looks up who is behind it: domain age, registrar, server location, hosting network, certificate.
+4. Fingerprints the page and compares it with about 55,000 known pages to find its scam family and sibling sites.
+5. Places the site in a link graph (who links to it, whom it links to) and reads what the neighbours say about it.
+6. Scores it with plain rules, plus a trained model as one more opinion (97.5% precision and 75.9% recall on 15,558 pages it had never seen). The model is never trusted alone: [docs/MODEL_REPORT.md](docs/MODEL_REPORT.md) explains why and shows the numbers.
+7. Shows a verdict, the scam type, every reason in plain words, a network map, and a report you can save as a PDF.
+
+Results are likely, not certain, and the report always says why.
 
 ## How it's put together
 
@@ -22,7 +34,7 @@ You never open the page yourself. A locked-down sandbox browser visits it and ta
 |---|---|---|
 | `web/` | The website (Vite, React, TypeScript, Tailwind) | GitHub Pages |
 | `api/` | Runs scans and serves results (Python, FastAPI) | Docker |
-| `sandbox/` | The only part that visits target links (Playwright, from phase 2) | Docker, isolated network |
+| `sandbox/` | The only part that visits target links (Playwright + Chromium) | Docker, isolated network |
 | `jobs/` | Data jobs: dataset loading, feed ingestion, family grouping, model training ([jobs/README.md](jobs/README.md)) | GitHub Actions, or Docker |
 | Database | Scans, fingerprints, families | Postgres (local in dev, Supabase later) |
 
@@ -91,6 +103,9 @@ LinkLens handles live scam links, so a few rules never bend:
 - [docs/PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md): the full original plan
 - [docs/DATASETS.md](docs/DATASETS.md): research datasets we plan to use
 - [docs/TECH_DECISIONS.md](docs/TECH_DECISIONS.md): every stack choice and why
+- [docs/MODEL_REPORT.md](docs/MODEL_REPORT.md): how the scoring model was trained, how well it does, and where it is weak
+- [docs/DEPLOY.md](docs/DEPLOY.md): putting LinkLens online for free, step by step
+- [jobs/README.md](jobs/README.md): the data jobs (dataset loading, feed ingestion, family grouping, training, the real-site check)
 
 ## Credits
 
