@@ -181,6 +181,9 @@ export type Analysis = {
   listed_by?: string[];
   /** What the trained page-reading model thinks (missing on older scans and when no page was captured). */
   model?: { probability: number; trained: string | null } | null;
+  /** The link as it was read. Only what the report shows is typed here. */
+  link?: { free_hosting?: string | null };
+  final_link?: { free_hosting?: string | null } | null;
   tranco_list: string | null;
 };
 

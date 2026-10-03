@@ -356,3 +356,21 @@ def test_readable_names_are_not_called_random(name):
 @pytest.mark.parametrize("name", ["xk7qz9vbt2mw", "a8f3k2m9x1q7z5", "qwrtzpsdfghjk"])
 def test_machine_made_names_are_called_random(name):
     assert looks_random(name) is True
+
+
+def test_good_signs_never_make_a_listed_link_safe():
+    """An old domain and a calm model take points off, but a link Google lists stays Dangerous."""
+    visit = {"final_url": "https://plain.example/", "hops": [], "html": "<p>hello</p>"}
+    old = {"registration": {"status": "ok", "age_days": 5000, "flags": []}}
+    found = listed("safe_browsing", "Google Safe Browsing", threats=["phishing"])
+    got = analyze(visit, old, "https://plain.example/", found)
+    assert got.verdict == "dangerous" and got.score == 70
+    assert any("existed for 13 years" in g.text for g in got.good_signs)
+
+    # A weaker listing (the whole site on a list) is never Safe, but isn't forced to Dangerous.
+    site = listed("phishing_database", "Phishing.Database", detail={"match": "domain"})
+    got = analyze(visit, old, "https://plain.example/", site)
+    assert got.verdict == "suspicious"
+    # A popular site listed because of one page stays a small warning.
+    popular = listed("phishing_database", "Phishing.Database", detail={"match": "domain", "popular": True})
+    assert analyze(visit, old, "https://plain.example/", popular).verdict == "safe"

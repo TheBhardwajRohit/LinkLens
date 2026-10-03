@@ -1,8 +1,10 @@
-"""Rule-based score (phase 9 adds a machine-learning model on top).
+"""The score: plain rules first, then the trained model's opinion on top.
 
 Every rule that fires becomes a reason in plain words, with its points. Positive points raise
 the risk; good signs (an old domain, a very popular site, a brand's real site) lower it.
 The total is clamped to 0..100: 0 to 30 is Safe, 31 to 69 Suspicious, 70 to 100 Dangerous.
+
+The model is one more reason, but it is not trusted on its own: see `model_say`.
 """
 
 from datetime import UTC, datetime
@@ -16,6 +18,25 @@ from app.ml.model import Prediction, model_points
 
 SAFE_MAX = 30
 SUSPICIOUS_MAX = 69
+
+# The model's opinion counts in full only when the rules found warning signs of their own (at
+# least BACKING_MIN points). Alone it may add no more than MODEL_ALONE_MAX, and never enough to
+# lift a page out of Safe. Why: the training data has very few small, simple honest pages, so the
+# model alone takes pages like that for scam pages (measured in docs/MODEL_REPORT.md).
+BACKING_MIN = 8
+MODEL_ALONE_MAX = 20
+
+# A listing worth this many points is an exact link on a trusted list. That is the one thing
+# treated as confirmed, so the verdict is Dangerous whatever the good signs say. A weaker listing
+# (the whole site on a list, a few security vendors) is never Safe.
+STRONG_LISTING = 60
+LISTING = 30
+
+# Phrases like "immediately", "virus", or "congratulations" mean something on a short page. On a
+# long one they are ordinary language: in the training data, pages of 600 words or more that
+# contain such a phrase are honest 3 to 30 times as often as they are scams (measured 2026-10-03).
+# So the phrase rules only look at pages shorter than this.
+LONG_PAGE_WORDS = 600
 
 LOOKALIKE_POINTS = {"homograph": 45, "typo": 35, "subdomain": 30, "combo": 25}
 FIELD_POINTS = {
@@ -78,10 +99,9 @@ def link_reasons(link: LinkFeatures, requested: bool) -> list[Reason]:
     if link.unicode_host and not (link.lookalike and link.lookalike.kind == "homograph"):
         add(f'The name uses special characters: it really reads "{link.unicode_host}".', 10)
     if link.free_hosting:
-        add(
-            f"The page sits on a free hosting service ({link.free_hosting}), where anyone can make a site.",
-            10,
-        )
+        # Honest and scam sites share these services, so this sign is no backing for the model.
+        text = f"The page sits on a free hosting service ({link.free_hosting}), where anyone can make a site."
+        r.append(Reason(text=text, points=10, area="link", backs_model=False))
     if link.abused_tld and not link.tranco_rank:
         add(f"It uses the .{(link.suffix or '').split('.')[-1]} ending, which scammers use often.", 8)
     if link.subdomain_depth >= 3:
@@ -136,8 +156,10 @@ def page_reasons(
         add("Its form emails what you type to someone.", 10)
     if page.wallets:
         add(f"It shows crypto wallet addresses ({', '.join(page.wallets)}).", 10)
+    # On a long page these phrases are ordinary language, so they score nothing (see LONG_PAGE_WORDS).
+    phrases = {} if page.words >= LONG_PAGE_WORDS else page.phrases
     for key, (pts, text) in PHRASE_REASONS.items():
-        found = page.phrases.get(key)
+        found = phrases.get(key)
         if found and not (official and key in ("urgency", "government")):
             add(f'{text} ("{found[0]}").', pts)
     if page.executable_links:
@@ -179,10 +201,14 @@ def behavior_reasons(visit: dict) -> list[Reason]:
     return r
 
 
-def domain_reasons(recon: dict) -> tuple[list[Reason], list[Reason]]:
+def domain_reasons(recon: dict, shared_host: bool = False) -> tuple[list[Reason], list[Reason]]:
+    """Warning signs and good signs from the domain's record and certificate. `shared_host` marks a
+    site on a free hosting service: the domain then belongs to the service (github.io is 13 years
+    old whoever made the page), so its age, registry record, and certificate history say nothing
+    about the site and are left out."""
     risks: list[Reason] = []
     good: list[Reason] = []
-    reg = recon.get("registration") or {}
+    reg = {} if shared_host else recon.get("registration") or {}
     age = reg.get("age_days")
     if reg.get("status") == "ok" and age is not None:
         if age < 7:
@@ -236,7 +262,7 @@ def domain_reasons(recon: dict) -> tuple[list[Reason], list[Reason]]:
                 area="certificate",
             )
         )
-    history = recon.get("cert_history") or {}
+    history = {} if shared_host else recon.get("cert_history") or {}
     first = _days_since(history.get("first_seen"))
     if history.get("source") == "crt.sh" and first is not None and first < 7:
         risks.append(
@@ -360,26 +386,53 @@ def graph_reasons(graph: dict | None, trusted: bool) -> tuple[list[Reason], list
     return risks, good
 
 
-def model_reasons(prediction: Prediction | None, trusted: bool) -> tuple[list[Reason], list[Reason]]:
-    """The trained model's opinion, as one more reason with its main causes named. A brand's real
-    site or a very popular one is never marked down by it (real login pages look like the copies
-    made of them)."""
+def model_say(
+    probability: float, rule_score: int, backing: int, trusted: bool, shared_host: bool = False
+) -> int:
+    """Points the model adds to (or takes off) the score the rules gave. The scan uses this and so
+    does the training job's report, so the report measures what a scan would really do.
+
+    - A brand's real site or a very popular one is never marked down by the model: real login
+      pages look like the copies made of them.
+    - When the rules found little, the model may add at most MODEL_ALONE_MAX, and never so much
+      that the page leaves Safe. `rule_score` is what the rules alone scored; `backing` is the same
+      without the signs that honest and scam sites share (free hosting).
+    - On a free hosting service (`shared_host`) the model never adds more than MODEL_ALONE_MAX,
+      backed or not: the training data has 65 honest pages hosted that way against 5,448 scam
+      pages, so there the model cannot tell the two apart.
+    """
+    points = model_points(probability)
+    if points > 0 and trusted:
+        return 0
+    if points > 0 and backing < BACKING_MIN:
+        return max(0, min(points, MODEL_ALONE_MAX, SAFE_MAX - rule_score))
+    if points > 0 and shared_host:
+        return min(points, MODEL_ALONE_MAX)
+    return points
+
+
+def model_reasons(
+    prediction: Prediction | None, rule_score: int, backing: int, trusted: bool, shared_host: bool = False
+) -> tuple[list[Reason], list[Reason]]:
+    """The trained model's opinion, as one more reason with its main causes named. `rule_score` and
+    `backing` are what the rules alone found and `trusted` marks a brand's real site or a very
+    popular one; see `model_say` for what they change."""
     risks: list[Reason] = []
     good: list[Reason] = []
     if prediction is None:
         return risks, good
-    points = model_points(prediction.probability)
+    points = model_say(prediction.probability, rule_score, backing, trusted, shared_host)
     percent = round(prediction.probability * 100)
-    if points > 0 and not trusted:
+    if points > 0:
         causes = [f.plain for f in prediction.factors if f.push > 0][:2]
         because = f", mostly because of {' and '.join(causes)}" if causes else ""
-        risks.append(
-            Reason(
-                text=f"The page-reading model rates this page {percent}% likely to be a scam page{because}.",
-                points=points,
-                area="model",
-            )
-        )
+        text = f"The page-reading model rates this page {percent}% likely to be a scam page{because}."
+        if points < model_points(prediction.probability):
+            if backing < BACKING_MIN:
+                text += " The other checks found little to back that up, so it counts for less."
+            else:
+                text += " It has seen few honest pages on free hosting services, so here it counts for less."
+        risks.append(Reason(text=text, points=points, area="model"))
     elif points < 0:
         good.append(
             Reason(
@@ -448,7 +501,10 @@ def summarize(
     visit: dict,
     partial: bool,
     listed_by: list[str] | None = None,
+    small_signs: bool = False,
 ) -> str:
+    """One sentence for the top of the report. `small_signs` says a Safe page still has warning
+    signs listed below, so the sentence doesn't claim there are none."""
     if visit.get("stopped") == "blocked":
         return "This link leads to a private address, which real websites never do. Don't trust it."
     if listed_by and verdict != "safe" and not scam:
@@ -468,10 +524,13 @@ def summarize(
         return "Some warning signs. Be careful with this link." + (
             " The page itself couldn't be checked." if partial else ""
         )
+    found = "Only small warning signs found" if small_signs else "No warning signs found"
     if final.official_brand:
-        return f"This looks like the real website of {final.official_brand}. No warning signs found."
+        return f"This looks like the real website of {final.official_brand}. {found}."
     if final.tranco_rank:
-        return "A well-known site with no warning signs found."
+        return f"A well-known site with {'only small' if small_signs else 'no'} warning signs found."
     if partial:
+        if small_signs:
+            return "Only small warning signs found, but the page itself couldn't be checked."
         return "No warning signs in the link, but the page itself couldn't be checked."
-    return "No warning signs found. That doesn't guarantee it's safe, so stay careful."
+    return f"{found}. That doesn't guarantee it's safe, so stay careful."

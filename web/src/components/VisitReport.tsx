@@ -124,10 +124,10 @@ export function VisitSummary({ visit }: { visit: Visit }) {
 }
 
 /** The details: who is behind it, the link trail, and what the page contacted. */
-export function VisitDetails({ visit, recon }: { visit: Visit; recon?: Recon }) {
+export function VisitDetails({ visit, recon, sharedHost }: { visit: Visit; recon?: Recon; sharedHost?: string | null }) {
   return (
     <div className="space-y-6">
-      {recon && <ReconReport recon={recon} finalUrl={visit.final_url ?? visit.requested_url} />}
+      {recon && <ReconReport recon={recon} finalUrl={visit.final_url ?? visit.requested_url} sharedHost={sharedHost} />}
 
       {visit.hops.length > 0 && (
         <Section title={`Link trail (${visit.hops.length} ${visit.hops.length === 1 ? "step" : "steps"})`}>

@@ -126,14 +126,20 @@ async def _urlscan_neighbours(ip: str, key: str) -> list[str] | None:
 
 
 async def same_server(
-    database_url: str | None, recon: dict, own_site: str | None, *, urlscan: bool, urlscan_key: str
+    database_url: str | None,
+    recon: dict,
+    own_site: str | None,
+    *,
+    urlscan: bool,
+    urlscan_key: str,
+    free_hosting: bool = False,
 ) -> Tab:
     server = recon.get("server") or {}
     ip, asn = server.get("ip"), server.get("asn")
     if not ip or server.get("status") == "skipped":
         return Tab(status="skipped", note="No public server address was found.")
     tab = Tab()
-    shared = SHARED_NETWORKS.get(asn or 0)
+    shared = SHARED_NETWORKS.get(asn or 0) or ("a free hosting service" if free_hosting else None)
     items: list[Sibling] = []
     if database_url:
         try:
@@ -191,7 +197,16 @@ def _cert_neighbours(recon: dict, own_domain: str | None) -> list[Sibling]:
     ]
 
 
-async def same_owner(database_url: str | None, recon: dict, own_site: str | None) -> Tab:
+async def same_owner(
+    database_url: str | None, recon: dict, own_site: str | None, free_hosting: bool = False
+) -> Tab:
+    if free_hosting:
+        # Every site on github.io shares GitHub's certificate and GitHub's registration.
+        return Tab(
+            status="skipped",
+            note="This site sits on a free hosting service. The certificate and the domain record "
+            "belong to that service, so they say nothing about who made the site.",
+        )
     reg = recon.get("registration") or {}
     own_domain = recon.get("registered_domain")
     if not own_domain:
@@ -388,9 +403,17 @@ async def find(
 
     server, owner, names = await asyncio.gather(
         guarded(
-            same_server(database_url, recon, own_site, urlscan=urlscan, urlscan_key=urlscan_key), "server"
+            same_server(
+                database_url,
+                recon,
+                own_site,
+                urlscan=urlscan,
+                urlscan_key=urlscan_key,
+                free_hosting=free_hosting,
+            ),
+            "server",
         ),
-        guarded(same_owner(database_url, recon, own_site), "owner"),
+        guarded(same_owner(database_url, recon, own_site, free_hosting), "owner"),
         guarded(lookalikes(own_site, free_hosting), "lookalike"),
     )
     return Siblings(

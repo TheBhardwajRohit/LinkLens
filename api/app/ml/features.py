@@ -2,13 +2,29 @@
 
 Only things that can be read from the link and the page itself are used, because that's all the
 training data has (research datasets hold a link and its HTML, not who registered the domain).
-Popularity (Tranco rank) and "this is the brand's real site" are left out on purpose: the benign
-half of the training data is mostly popular sites, so a model given those would just learn
-"unpopular means scam". The rules still use them as good signs.
+
+Three kinds of numbers are left out on purpose, because the training data would teach the wrong
+lesson from them:
+
+- Popularity (Tranco rank) and "this is the brand's real site". The honest half of the training
+  data is mostly popular sites, so a model given those would just learn "unpopular means scam".
+  The rules still use them as good signs.
+- Anything about the query string (the part of a link after "?"), and with it the length of the
+  whole link. Of 21,715 honest links in the training data, one has a query string, so a model
+  given those learns "a query string means scam". The first model did exactly that: on 63 real
+  honest pages, adding a newsletter tag ("?utm_source=...") to the link made it call all 63
+  likely scams (checked 2026-10-03).
+- Whether the site is on a free hosting service. In the training data 65 of 21,715 honest pages
+  are, against 5,448 of 17,807 scam pages, so a model given that learns "free hosting means
+  scam". Of 17 real honest pages on github.io and the like, it rated 8 as likely scams (checked
+  2026-10-03). The rules still add points for free hosting, in the open.
+
+A link with no path counts as "/", so "https://a.example" and "https://a.example/" give the same
+numbers. The sandbox always reports the second form; datasets often hold the first.
 """
 
 import math
-from urllib.parse import parse_qsl, urlsplit
+from urllib.parse import urlsplit
 
 from app.analysis.content import PHRASES, SENSITIVE, PageFeatures
 from app.analysis.lexical import LinkFeatures
@@ -18,12 +34,9 @@ LOOKALIKE_KINDS = ("homograph", "typo", "combo", "subdomain")
 
 NAMES: list[str] = (
     [
-        "url_length",
         "host_length",
         "path_length",
-        "query_length",
         "path_depth",
-        "query_params",
         "host_dots",
         "https",
         "subdomain_depth",
@@ -37,7 +50,6 @@ NAMES: list[str] = (
         "abused_tld",
         "shortener",
         "odd_port",
-        "free_hosting",
         "punycode",
         "url_words",
         "lookalike",
@@ -93,17 +105,14 @@ def vector(
 ) -> list[float]:
     """The numbers for one page, in the order of NAMES."""
     parts = urlsplit(link.url)
-    path = parts.path or ""
+    path = parts.path or "/"
     kind = link.lookalike.kind if link.lookalike else None
     tags = prints.tags if prints else 0
     words = prints.words if prints else 0
     f: dict[str, float] = {
-        "url_length": link.length,
         "host_length": len(link.host),
         "path_length": len(path),
-        "query_length": len(parts.query or ""),
         "path_depth": path.count("/"),
-        "query_params": len(parse_qsl(parts.query or "", keep_blank_values=True)),
         "host_dots": link.host.count("."),
         "https": parts.scheme == "https",
         "subdomain_depth": link.subdomain_depth,
@@ -117,7 +126,6 @@ def vector(
         "abused_tld": link.abused_tld,
         "shortener": link.shortener,
         "odd_port": link.port is not None,
-        "free_hosting": link.free_hosting is not None,
         "punycode": link.unicode_host is not None,
         "url_words": len(link.url_words),
         "lookalike": kind is not None,

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.analysis.content import PageFeatures
 from app.analysis.lexical import LinkFeatures
@@ -25,6 +25,9 @@ class Reason(BaseModel):
         "graph",
         "model",
     ]
+    # False for a sign that honest and scam sites share (being on a free hosting service). It still
+    # adds its points, but it doesn't let the model count in full (see score.model_say).
+    backs_model: bool = Field(default=True, exclude=True)
 
 
 class ScamType(BaseModel):
@@ -37,6 +40,8 @@ class ScamType(BaseModel):
 class Analysis(BaseModel):
     score: int
     verdict: Verdict
+    rule_score: int = 0  # what the rules alone scored, before the model spoke
+    backing: int = 0  # the part of rule_score that lets the model count in full
     summary: str
     scam_type: ScamType | None = None
     reasons: list[Reason] = []  # raise the risk, strongest first

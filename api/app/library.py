@@ -3,7 +3,7 @@ Used by the data jobs, so dataset pages and feed pages are read exactly like sca
 
 from dataclasses import dataclass
 
-from app.analysis import judge
+from app.analysis import is_trusted, judge
 from app.analysis.content import PageFeatures, analyze_page
 from app.analysis.lexical import LinkFeatures, analyze_link
 from app.analysis.models import ScamType
@@ -21,6 +21,8 @@ class Digest:
     scam: ScamType | None
     features: list[float]
     rule_score: int  # what the plain rules say from the link and page alone (no recon, no blacklists)
+    backing: int  # rule_score without the signs honest and scam sites share (see score.model_say)
+    trusted: bool  # a brand's real site or a very popular one: the model never marks these down
 
 
 def digest_page(url: str, html: str | None, downloads: bool = False) -> Digest:
@@ -38,4 +40,6 @@ def digest_page(url: str, html: str | None, downloads: bool = False) -> Digest:
         scam=scam,
         features=vector(link, page, prints, len(brands)),
         rule_score=rules.score,
+        backing=rules.backing,
+        trusted=is_trusted(link),
     )

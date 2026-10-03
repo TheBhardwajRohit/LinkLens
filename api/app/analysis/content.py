@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from pydantic import BaseModel
 
 from app.analysis.brands import brands
+from app.fingerprint import split_words
 
 MAX_HTML = 2_000_000
 _public = tldextract.TLDExtract(suffix_list_urls=(), cache_dir=None)
@@ -157,6 +158,7 @@ class PageFeatures(BaseModel):
     top_brand_mentions: int = 0
     wallets: list[str] = []
     phrases: dict[str, list[str]] = {}
+    words: int = 0  # words of visible text
     iframes: int = 0
     hidden_iframes: int = 0
     right_click_blocked: bool = False
@@ -276,6 +278,7 @@ def analyze_page(html: str | None, page_url: str | None) -> PageFeatures:
         k: sorted({m.group(0).lower() for m in p.finditer(words)})[:5] for k, p in PHRASES_RE.items()
     }
     f.phrases = {k: v for k, v in f.phrases.items() if v}
+    f.words = len(split_words(text))
     f.wallets = sorted({name for name, p in WALLETS.items() if p.search(text)})
     f.phone_numbers = len({m.group(1) for m in PHONE.finditer(text)})
 

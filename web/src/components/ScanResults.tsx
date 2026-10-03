@@ -62,7 +62,11 @@ export default function ScanResults({
             <NetworkMap graph={scan.graph} />
           </Guard>
           <Guard name="page details">
-            <VisitDetails visit={scan.visit} recon={scan.recon} />
+            <VisitDetails
+              visit={scan.visit}
+              recon={scan.recon}
+              sharedHost={(scan.analysis.final_link ?? scan.analysis.link)?.free_hosting ?? null}
+            />
           </Guard>
           <Guard name="reasons">
             <WhyFlagged analysis={scan.analysis} />

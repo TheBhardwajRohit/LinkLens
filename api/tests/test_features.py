@@ -55,3 +55,30 @@ def test_vector_matches_names_for_new_page_counts():
     assert (f["scripts"], f["external_scripts"], f["images"]) == (2, 1, 2)
     assert f["meta_refresh"] == 1 and f["noindex"] == 1
     assert f["hidden_fields"] == 1 and f["password_fields"] == 1
+
+
+def test_the_model_never_sees_the_query_string():
+    html = (PAGES / "benign.html").read_text(encoding="utf-8")
+    plain = digest_page("https://lemon-cakes-example.com/menu", html).features
+    tagged = digest_page(
+        "https://lemon-cakes-example.com/menu?utm_source=newsletter&utm_medium=email&id=4821", html
+    ).features
+    assert plain == tagged
+    assert not any("query" in n or n == "url_length" for n in NAMES)
+
+
+def test_the_model_is_not_told_about_free_hosting():
+    assert "free_hosting" not in NAMES
+    html = (PAGES / "benign.html").read_text(encoding="utf-8")
+    d = digest_page("https://lemoncakes.github.io/menu", html)
+    assert d.link.free_hosting == "github.io"  # the rules still see it
+    assert d.rule_score == 10 and d.backing == 0
+
+
+def test_a_link_with_no_path_counts_as_a_slash():
+    html = (PAGES / "benign.html").read_text(encoding="utf-8")
+    assert digest_page("https://lemon-cakes-example.com", html).features == (
+        digest_page("https://lemon-cakes-example.com/", html).features
+    )
+    f = numbers("benign.html", "https://lemon-cakes-example.com")
+    assert (f["path_length"], f["path_depth"]) == (1, 1)

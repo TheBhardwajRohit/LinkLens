@@ -37,6 +37,15 @@ describe("ReconReport", () => {
     expect(html).toContain("example[.]com");
     expect(html).toContain("Registered only 2 days ago");
   });
+
+  it("says whose record it is when the site sits on a free hosting service", () => {
+    const recon = { ...EMPTY_RECON, registration: { domain: "github.io", status: "ok", age_days: 4956 } } as unknown as Recon;
+    const html = renderToStaticMarkup(<ReconReport recon={recon} finalUrl="https://someone.github.io/" sharedHost="github.io" />);
+    expect(html).toContain("free hosting service (github.io)");
+    expect(html).toContain("belongs to that service");
+    const own = renderToStaticMarkup(<ReconReport recon={recon} finalUrl="https://github.io/" />);
+    expect(own).not.toContain("free hosting service");
+  });
 });
 
 describe("BlacklistReport", () => {

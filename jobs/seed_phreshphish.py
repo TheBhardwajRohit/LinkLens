@@ -24,6 +24,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from itertools import islice
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from app import pages
 from app.analysis.brands import display_brand
@@ -82,6 +83,10 @@ def _work(row: dict) -> dict | None:
         "page": page,
         "features": d.features,
         "rule_score": d.rule_score,
+        "backing": d.backing,
+        "trusted": d.trusted,
+        "free_hosting": d.link.free_hosting is not None,
+        "has_query": bool(urlsplit(url).query),
         "label": int(phish),
         "date": str(row.get("date") or ""),
     }
@@ -141,6 +146,13 @@ def write_features(path: Path, records: list[dict]) -> None:
         "site": [r["page"]["site"] for r in records],
         # What the plain rules score this page from the link and HTML alone, to compare with the model.
         "rule_score": pa.array([r["rule_score"] for r in records], type=pa.int16()),
+        # The rule score without signs that honest and scam sites share (see score.model_say).
+        "backing": pa.array([r["backing"] for r in records], type=pa.int16()),
+        # A brand's real site or a very popular one: a scan never lets the model mark these down.
+        "trusted": pa.array([r["trusted"] for r in records], type=pa.bool_()),
+        # The next two are not model features (see api/app/ml/features.py). Kept so the report can show why.
+        "free_hosting": pa.array([r["free_hosting"] for r in records], type=pa.bool_()),
+        "has_query": pa.array([r["has_query"] for r in records], type=pa.bool_()),
     }
     for i, name in enumerate(NAMES):
         columns[name] = pa.array([r["features"][i] for r in records], type=pa.float32())

@@ -368,3 +368,24 @@ async def test_find_does_not_compare_boilerplate_pages(monkeypatch):
     fp = html_fingerprints(kit_page("Asha", "k81"))
     got = await family.find("postgresql://x", fp, title="Account Suspended")
     assert got.status == "skipped" and "standard notice" in got.note
+
+
+async def test_a_free_hosted_site_has_no_owner_siblings_and_a_shared_server():
+    """Every site on github.io shares GitHub's certificate, registration, and addresses."""
+    from app import siblings as sib
+
+    record = {
+        "registered_domain": "github.io",
+        "registration": {"registrant": "GitHub, Inc.", "registrar": "MarkMonitor", "created": "2013-03-08"},
+        "certificate": {"names": ["*.github.io", "github.io", "*.githubusercontent.com"]},
+        "server": {"ip": "185.199.108.153", "asn": 0, "status": "ok"},
+    }
+    owner = await sib.same_owner(None, record, "someone.github.io", free_hosting=True)
+    assert owner.status == "skipped" and owner.items == []
+    assert "free hosting service" in owner.note
+    # Without the flag the shared certificate would have produced "siblings".
+    assert (await sib.same_owner(None, record, "someone.github.io")).items
+    server = await sib.same_server(
+        None, record, "someone.github.io", urlscan=False, urlscan_key="", free_hosting=True
+    )
+    assert "thousands of unrelated sites" in server.note

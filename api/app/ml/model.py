@@ -20,18 +20,22 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from app.ml.features import NAMES
-
 MODEL_PATH = Path(__file__).parent / "model.json"
+
+
+def feature_names() -> list[str]:
+    """The feature list, imported late: the feature code imports the analysis package, which
+    imports this module, so a top-level import here would go round in a circle."""
+    from app.ml.features import NAMES
+
+    return NAMES
+
 
 # How each feature is described to a person. Features missing here fall back to their name.
 PLAIN = {
-    "url_length": "the length of the link",
     "host_length": "the length of the site name",
     "path_length": "the length of the link's path",
-    "query_length": "the extra data in the link",
     "path_depth": "how deep the link's path goes",
-    "query_params": "the number of values in the link",
     "host_dots": "the number of dots in the site name",
     "https": "whether the link uses HTTPS",
     "subdomain_depth": "the layers of subdomains",
@@ -41,7 +45,6 @@ PLAIN = {
     "random_name": "a machine-made looking name",
     "is_ip": "a bare IP address instead of a name",
     "abused_tld": "a domain ending scammers use often",
-    "free_hosting": "being on a free hosting service",
     "url_words": "scam-style words in the link",
     "lookalike": "a name that imitates a brand",
     "forms": "the forms on the page",
@@ -79,9 +82,10 @@ PLAIN = {
 
 
 def model_points(probability: float) -> int:
-    """How many points the model's opinion adds to (or takes off) the risk score. The steps were
-    chosen from the test-set results in docs/MODEL_REPORT.md: the higher the model's probability,
-    the more often it is right, so the more it counts."""
+    """How many points the model's opinion is worth before any limit. The steps were chosen from the
+    test-set results in docs/MODEL_REPORT.md: the higher the model's probability, the more often it
+    is right, so the more it counts. A scan doesn't add these blindly: `model_say` in
+    app/analysis/score.py limits them when nothing else agrees."""
     if probability >= 0.95:
         return 50
     if probability >= 0.8:
@@ -125,7 +129,7 @@ class TreeModel:
         self.trees: list[dict] = data["trees"]
         self.base: float = data.get("base", 0.0)
         self.meta: dict = data.get("meta", {})
-        if self.features != NAMES:
+        if self.features != feature_names():
             raise ValueError("The model was trained on a different feature list than this code uses.")
 
     def raw(self, x: list[float]) -> tuple[float, list[float]]:
@@ -146,11 +150,12 @@ class TreeModel:
     def predict(self, x: list[float], top: int = 4) -> Prediction:
         total, credit = self.raw(as_float32(x))
         probability = 1.0 / (1.0 + math.exp(-max(min(total, 30.0), -30.0)))
+        names = self.features
         ranked = sorted(range(len(credit)), key=lambda i: -abs(credit[i]))[:top]
         factors = [
             Factor(
-                feature=NAMES[i],
-                plain=PLAIN.get(NAMES[i], NAMES[i].replace("_", " ")),
+                feature=names[i],
+                plain=PLAIN.get(names[i], names[i].replace("_", " ")),
                 push=round(credit[i], 3),
             )
             for i in ranked

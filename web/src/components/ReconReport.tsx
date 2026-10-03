@@ -96,17 +96,23 @@ function ServerCard({ recon }: { recon: Recon }) {
   );
 }
 
-function DomainCard({ recon }: { recon: Recon }) {
+function DomainCard({ recon, sharedHost }: { recon: Recon; sharedHost?: string | null }) {
   const r = recon.registration;
   if (!recon.registered_domain || !r) {
     return <Card icon={Globe} title="Domain"><Note>The link uses a bare IP address, so there's no domain to look up.</Note></Card>;
   }
-  const isNew = r.age_days !== null && r.age_days < NEW_DOMAIN_DAYS;
+  const isNew = !sharedHost && r.age_days !== null && r.age_days < NEW_DOMAIN_DAYS;
   return (
     <Card icon={Globe} title="Domain">
       <Row label="Domain">
         <span className="font-mono text-[13px]">{defangName(r.domain)}</span>
       </Row>
+      {sharedHost && (
+        <Note>
+          This site sits on a free hosting service ({sharedHost}). The record below belongs to that service, not to
+          whoever made the site, so it doesn't count toward the score.
+        </Note>
+      )}
       {r.status !== "ok" && r.note && <Note>{r.note}</Note>}
       {isNew && <Warn>Registered only {formatAge(r.age_days)} ago. Scam sites are often brand new.</Warn>}
       {r.created && (
@@ -287,7 +293,15 @@ function TechDetails({ recon }: { recon: Recon }) {
   );
 }
 
-export default function ReconReport({ recon, finalUrl }: { recon: Recon; finalUrl: string }) {
+export default function ReconReport({
+  recon,
+  finalUrl,
+  sharedHost,
+}: {
+  recon: Recon;
+  finalUrl: string;
+  sharedHost?: string | null;
+}) {
   return (
     <Section title="Who's behind it">
       <div className="grid gap-3 md:grid-cols-3">
@@ -295,7 +309,7 @@ export default function ReconReport({ recon, finalUrl }: { recon: Recon; finalUr
           <ServerCard recon={recon} />
         </Guard>
         <Guard name="domain">
-          <DomainCard recon={recon} />
+          <DomainCard recon={recon} sharedHost={sharedHost} />
         </Guard>
         <Guard name="certificate">
           <CertificateCard recon={recon} finalUrl={finalUrl} />

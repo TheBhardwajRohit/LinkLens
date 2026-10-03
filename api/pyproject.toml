@@ -9,6 +9,7 @@ pythonpath = ["."]
 markers = [
     "real_blacklists: uses the real blacklist code with a fake HTTP transport",
     "real_library: uses the real family and sibling code",
+    "real_model: runs the trained model that ships with the code",
 ]
 
 [tool.ruff]

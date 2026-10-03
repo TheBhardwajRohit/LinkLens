@@ -8,6 +8,7 @@ import pytest  # noqa: E402
 from app import blacklists, cache, family, graph, pages, siblings, storage  # noqa: E402
 from app.blacklists import virustotal  # noqa: E402
 from app.blacklists.models import Blacklists  # noqa: E402
+from app.ml import model as page_model  # noqa: E402
 from app.ratelimit import limiter  # noqa: E402
 
 
@@ -72,3 +73,13 @@ def empty_library(monkeypatch, request):
     monkeypatch.setattr(family, "find", no_family)
     monkeypatch.setattr(siblings, "find", no_siblings)
     monkeypatch.setattr(graph, "_from_library", no_library_links)
+
+
+@pytest.fixture(autouse=True)
+def rules_only(monkeypatch, request):
+    """Scans in tests are judged by the rules alone, so their verdicts don't move when the model is
+    retrained. Tests of the shipped model carry the `real_model` mark; tests of how the model's
+    opinion is used bring a made-up prediction."""
+    if "real_model" in request.keywords:
+        return
+    monkeypatch.setattr(page_model, "predict", lambda x: None)

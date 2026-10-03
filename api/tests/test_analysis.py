@@ -229,3 +229,154 @@ def test_display_brand_tidies_outside_names():
     assert display_brand("paypal") == "PayPal"
     assert display_brand("naver") == "Naver"
     assert display_brand("DHL Express") == "DHL Express"
+
+
+# --- the model's say ---------------------------------------------------------
+
+
+def sure_model(monkeypatch, probability: float = 0.97) -> None:
+    from app.ml import model as page_model
+
+    monkeypatch.setattr(page_model, "predict", lambda x: page_model.Prediction(probability=probability))
+
+
+def test_the_model_alone_never_makes_a_page_suspicious(monkeypatch):
+    sure_model(monkeypatch)
+    url = "https://lemoncakes-example.com/"
+    a = analyze(visit_for(url, page("benign.html")), recon(age_days=400), url)
+    assert a.verdict == "safe" and a.score == 20
+    assert a.reasons[0].area == "model" and "counts for less" in a.reasons[0].text
+    # The headline doesn't claim there is nothing, because a reason is listed right below it.
+    assert a.summary == "Only small warning signs found. That doesn't guarantee it's safe, so stay careful."
+    assert a.model is not None and a.model.probability == 0.97
+
+
+def test_the_model_counts_in_full_once_the_rules_found_something(monkeypatch):
+    sure_model(monkeypatch)
+    url = "https://lemoncakes-example.com/"
+    a = analyze(visit_for(url, page("benign.html")), recon(age_days=3), url)
+    assert a.score == 25 + 50 and a.verdict == "dangerous"
+    assert "counts for less" not in " ".join(r.text for r in a.reasons)
+
+
+def test_good_signs_can_leave_the_model_without_backing(monkeypatch):
+    # A password field (+10) on a 12-year-old domain (-15): the rules alone say 0, so the model's
+    # opinion stays limited. A small honest login page looks just like this.
+    sure_model(monkeypatch)
+    html = "<title>Members</title><form action='/login'><input type='password' name='p'></form>"
+    url = "https://lemoncakes-example.com/login"
+    a = analyze(visit_for(url, html), recon(age_days=4400), url)
+    assert a.verdict == "safe"
+    assert next(r for r in a.reasons if r.area == "model").points == 20
+
+
+def test_the_model_never_marks_down_a_very_popular_site(monkeypatch):
+    sure_model(monkeypatch)
+    url = "https://github.com/"
+    a = analyze(visit_for(url, page("benign.html")), recon(age_days=6900), url)
+    assert a.score == 0 and not any(r.area == "model" for r in a.reasons)
+
+
+def test_a_bot_check_screen_is_not_read_by_the_model(monkeypatch):
+    from app.fingerprint import Fingerprints
+
+    sure_model(monkeypatch)
+    url = "https://lemoncakes-example.com/"
+    html = "<title>Just a moment...</title><p>Verifying you are human. This may take a few seconds.</p>"
+    seen = visit_for(url, html, bot_check="Cloudflare challenge")
+    a = analyze(seen, recon(), url, prints=Fingerprints(tags=6, words=11))
+    assert a.model is None and a.partial
+    assert not any(r.area == "model" for r in a.reasons)
+    assert a.summary == "Only small warning signs found, but the page itself couldn't be checked."
+    assert [r.text for r in a.reasons] == ["The page hides behind a bot check (Cloudflare challenge)."]
+    # A real page that carries a CAPTCHA next to its form is still read.
+    form = html + "<form><input name='email'><input type='password' name='p'></form>"
+    b = analyze(
+        visit_for(url, form, bot_check="reCAPTCHA"), recon(), url, prints=Fingerprints(tags=10, words=11)
+    )
+    assert b.model is not None and not b.partial
+
+
+def test_a_safe_headline_never_denies_warning_signs_listed_below_it():
+    from app.analysis import score
+
+    for url in ("https://github.com/", "https://blogspot.com/", "https://lemoncakes-example.com/"):
+        final = analyze_link(url)
+        for partial in (False, True):
+            calm = score.summarize("safe", None, final, {}, partial)
+            small = score.summarize("safe", None, final, {}, partial, small_signs=True)
+            assert "no warning signs" in calm.lower()
+            assert "no warning signs" not in small.lower() and "small warning signs" in small.lower()
+
+
+# --- free hosting and long pages ---------------------------------------------
+
+
+def test_free_hosting_alone_is_no_backing_for_the_model(monkeypatch):
+    sure_model(monkeypatch)
+    url = "https://lemoncakes.github.io/"
+    a = analyze(visit_for(url, page("benign.html")), recon(), url)
+    assert (a.rule_score, a.backing) == (10, 0)
+    assert a.verdict == "safe" and a.score == 10 + 20
+    assert "counts for less" in next(r.text for r in a.reasons if r.area == "model")
+    # With a sign about the page itself the model is backed, but on free hosting it still adds at
+    # most 20: a login page there can become Suspicious, never Dangerous, on the model's word.
+    login = "<title>Members</title><form action='/in'><input type='password' name='p'></form>"
+    b = analyze(visit_for(url, login), recon(), url)
+    assert (b.rule_score, b.backing) == (20, 10)
+    assert b.score == 20 + 20 and b.verdict == "suspicious"
+    assert "few honest pages on free hosting" in next(r.text for r in b.reasons if r.area == "model")
+    # The same page on a domain of its own: the model counts in full.
+    own = "https://lemoncakes-example.com/"
+    d = analyze(visit_for(own, login), recon(), own)
+    assert (d.rule_score, d.backing) == (10, 10) and d.score == 10 + 50
+    # Free hosting plus a minor sign that is no backing either: still Safe, at the very top of it.
+    frames = (
+        "<title>Lemon cakes</title><p>Fresh every day.</p><iframe src='/x' width='0' height='0'></iframe>"
+    )
+    c = analyze(visit_for(url, frames), recon(), url)
+    assert (c.rule_score, c.backing) == (15, 5)
+    assert c.score == 30 and c.verdict == "safe"
+    # The flag is for the scorer only and never leaves the API.
+    assert "backs_model" not in a.model_dump_json()
+
+
+def test_a_free_hosted_site_is_not_judged_by_the_services_domain():
+    url = "https://lemoncakes.github.io/"
+    old = analyze(visit_for(url, page("benign.html")), recon(age_days=4956), url)
+    assert not any("existed for" in g.text for g in old.good_signs)
+    new = analyze(visit_for(url, page("benign.html")), recon(age_days=2), url)
+    assert not any("days old" in r.text for r in new.reasons)
+    # A site with a domain of its own is still judged by that domain.
+    own = analyze(visit_for("https://lemoncakes-example.com/", page("benign.html")), recon(age_days=2), url)
+    assert any("only 2 days old" in r.text for r in own.reasons)
+    # A bad certificate still counts wherever the site is hosted.
+    bad = analyze(visit_for(url, page("benign.html")), recon(trusted=False), url)
+    assert any("certificate isn't trusted" in r.text for r in bad.reasons)
+
+
+def test_scam_phrases_only_count_on_short_pages():
+    pitch = "<p>Congratulations! You have won a free gift. Claim your prize within 24 hours.</p>"
+    url = "https://lemoncakes-example.com/"
+    short = analyze(visit_for(url, f"<title>Hi</title>{pitch}"), recon(), url)
+    assert any("says you've won" in r.text for r in short.reasons)
+    assert any("pressures you" in r.text for r in short.reasons)
+    # The same sentences inside a long article are ordinary language.
+    filler = "<p>" + " ".join(f"word{i} about baking lemon cakes at home" for i in range(120)) + "</p>"
+    long = analyze(visit_for(url, f"<title>Hi</title>{filler}{pitch}"), recon(), url)
+    assert long.page.words >= 600 and long.page.phrases  # still noticed, just not scored
+    assert not any(r.area == "page" for r in long.reasons)
+
+
+def test_a_brands_verified_github_pages_are_not_lookalikes():
+    for url, brand in (
+        ("https://google.github.io/styleguide/", "Google"),
+        ("https://microsoft.github.io/monaco-editor/", "Microsoft"),
+        ("https://facebook.github.io/zstd/", "Facebook"),
+    ):
+        link = analyze_link(url)
+        assert link.official_brand == brand and link.lookalike is None, url
+    # Any other account that puts a brand's name in front of github.io still is one.
+    fake = analyze_link("https://google-login.github.io/")
+    assert fake.official_brand is None and fake.lookalike and fake.lookalike.brand == "Google"
+    assert analyze_link("https://paypal.github.io/").official_brand is None  # not on the verified list
