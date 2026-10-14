@@ -10,6 +10,12 @@ import { prefersReducedMotion } from "../lib/device";
 
 const COLOR = { honest: "#10b981", scam: "#f43f5e", unknown: "#64748b", scanned: "#3b82f6", text: "#cbd5e1" };
 
+// Name and outline colours that stay readable in both the dark and the light theme.
+function inkFor(): { text: string; edge: string; selected: string } {
+  const light = document.documentElement.dataset.theme === "light";
+  return light ? { text: "#334155", edge: "#ffffff", selected: "#0f172a" } : { text: COLOR.text, edge: "#0b1020", selected: "#ffffff" };
+}
+
 const colorOf = (label: number) => (label > 0 ? COLOR.honest : label < 0 ? COLOR.scam : COLOR.unknown);
 const defang = (name: string) => name.replaceAll(".", "[.]");
 
@@ -35,6 +41,7 @@ export default function NetworkCanvas({
         data: { id: `e${i}`, source: e.source, target: e.target, color: colorOf(e.sign), inferred: e.inferred ? 1 : 0 },
       })),
     ];
+    const ink = inkFor();
     const cy = cytoscape({
       container: holder.current,
       elements,
@@ -49,7 +56,7 @@ export default function NetworkCanvas({
             // Names would pile up on a busy map, so only the scanned site and the dot being pointed
             // at or selected show theirs. The list under the map has every name.
             label: "",
-            color: COLOR.text,
+            color: ink.text,
             "font-size": 9,
             "font-family": "ui-monospace, monospace",
             "text-valign": "bottom",
@@ -59,7 +66,7 @@ export default function NetworkCanvas({
             width: 16,
             height: 16,
             "border-width": 1,
-            "border-color": "#0b1020",
+            "border-color": ink.edge,
           },
         },
         {
@@ -75,7 +82,7 @@ export default function NetworkCanvas({
           },
         },
         { selector: "node.pointed", style: { label: "data(name)", "z-index": 10 } },
-        { selector: "node:selected", style: { label: "data(name)", "border-width": 3, "border-color": "#ffffff", "z-index": 10 } },
+        { selector: "node:selected", style: { label: "data(name)", "border-width": 3, "border-color": ink.selected, "z-index": 10 } },
         {
           selector: "edge",
           style: {

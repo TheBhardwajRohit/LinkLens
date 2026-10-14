@@ -21,9 +21,9 @@ function StepList({ steps, startedAt }: { steps: Step[]; startedAt: number }) {
             {step.status === "failed" && <X className="h-4 w-4 text-amber-300" />}
             {step.status === "pending" && <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />}
           </span>
-          <span className={step.status === "pending" ? "text-slate-500" : "text-slate-200"}>{step.label}</span>
+          <span className={step.status === "pending" ? "text-slate-400" : "text-slate-200"}>{step.label}</span>
           {step.status === "running" && (
-            <span className="font-mono text-xs text-slate-500">
+            <span className="font-mono text-xs text-slate-400">
               <Elapsed since={startedAt} />
             </span>
           )}
@@ -59,6 +59,15 @@ function ScannerPill({ online }: { online: boolean | null }) {
 }
 
 const TRUST = ["Isolated sandbox", "Never downloads files", "Private addresses blocked"];
+
+// Harmless links that show what a report looks like. None of them is a real scam page: the first is
+// a reserved example site, the second is Google's own test address (never a real site), and the
+// third points at this machine, which the sandbox refuses to visit.
+const EXAMPLES = [
+  { label: "A safe site", url: "https://example.com" },
+  { label: "A blacklisted test link", url: "http://malware.testing.google.test/testing/malware/" },
+  { label: "A link to a private address", url: "http://localtest.me" },
+];
 
 export default function ScanInput({
   scan,
@@ -118,7 +127,7 @@ export default function ScanInput({
             }}
             aria-invalid={error ? true : undefined}
             aria-describedby={statusId}
-            className="min-w-0 flex-1 bg-transparent py-3.5 font-mono text-sm text-slate-100 placeholder:font-sans placeholder:text-slate-500 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent py-3.5 font-mono text-sm text-slate-100 placeholder:font-sans placeholder:text-slate-400 focus:outline-none"
           />
         </div>
         <button
@@ -178,6 +187,26 @@ export default function ScanInput({
           </p>
         )}
       </div>
+
+      {online && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-slate-400">Try an example:</span>
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex.url}
+              type="button"
+              disabled={sending}
+              onClick={() => {
+                setValue(ex.url);
+                scan.submit(ex.url);
+              }}
+              className="rounded-full bg-white/[0.05] px-3 py-1 text-slate-200 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-60"
+            >
+              {ex.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <ul className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
         <li>

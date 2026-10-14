@@ -25,7 +25,7 @@ export default function ServerMap({ server }: { server: ServerInfo | null }) {
           <MapPin className="h-4 w-4 text-blue-400" aria-hidden="true" />
           Show {place} on a map
         </button>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-400">
           Map tiles load from OpenStreetMap, which will see your IP address.
         </span>
       </div>
@@ -38,7 +38,7 @@ export default function ServerMap({ server }: { server: ServerInfo | null }) {
           <ServerMapCanvas lat={server.latitude} lon={server.longitude} accuracyKm={server.accuracy_km} />
         </Suspense>
       </Guard>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-400">
         The pin is where MaxMind's data places the server's address
         {server.accuracy_km ? `, give or take ${server.accuracy_km} km` : ""}. It is where the server is, not
         necessarily where the people behind the site are.

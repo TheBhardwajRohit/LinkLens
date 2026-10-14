@@ -4,14 +4,14 @@
 import { useEffect, useState } from "react";
 
 import { getTrends, type Trends as TrendsData } from "../lib/api";
-import { formatDate } from "../lib/format";
+import { formatDate, formatCount } from "../lib/format";
 
-const count = (n: number) => n.toLocaleString("en-IN");
+const count = formatCount;
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
+      <h3 className="text-sm font-semibold tracking-wide text-slate-200">{title}</h3>
       {children}
     </div>
   );
@@ -37,24 +37,57 @@ function Bars({ rows }: { rows: { label: string; value: number }[] }) {
   );
 }
 
-function Days({ days }: { days: TrendsData["days"] }) {
-  const top = Math.max(...days.map((d) => d.safe + d.suspicious + d.dangerous), 1);
-  const total = days.reduce((sum, d) => sum + d.safe + d.suspicious + d.dangerous, 0);
-  const bad = days.reduce((sum, d) => sum + d.dangerous, 0);
+type Day = TrendsData["days"][number];
+
+/** Every day of the window, oldest first, with empty days filled in, so gaps show as gaps. */
+export function fillDays(days: Day[], windowDays: number, today = new Date()): Day[] {
+  const byDate = new Map(days.map((d) => [d.date.slice(0, 10), d]));
+  const out: Day[] = [];
+  for (let back = windowDays - 1; back >= 0; back--) {
+    const t = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - back));
+    const key = t.toISOString().slice(0, 10);
+    out.push(byDate.get(key) ?? { date: key, safe: 0, suspicious: 0, dangerous: 0 });
+  }
+  return out;
+}
+
+function Days({ days, windowDays }: { days: Day[]; windowDays: number }) {
+  const all = fillDays(days, windowDays);
+  const sumOf = (d: Day) => d.safe + d.suspicious + d.dangerous;
+  const top = Math.max(...all.map(sumOf), 1);
+  const total = all.reduce((sum, d) => sum + sumOf(d), 0);
+  const bad = all.reduce((sum, d) => sum + d.dangerous, 0);
+  const active = all.filter((d) => sumOf(d) > 0).length;
+  const middle = all[Math.floor(all.length / 2)];
   return (
     <>
-      <p className="mt-3 text-sm text-slate-300">
-        {count(total)} scans, {count(bad)} judged likely dangerous.
+      <p className="mt-3 text-sm text-slate-200">
+        {count(total)} {total === 1 ? "scan" : "scans"} in the last {windowDays} days, {count(bad)} judged likely dangerous.
+        <span className="text-slate-400">
+          {" "}
+          Scans happened on {active} of those days.
+        </span>
       </p>
       <div
-        className="mt-3 flex h-28 items-end gap-1"
+        className="mt-4 flex h-28 items-end gap-[3px]"
         role="img"
-        aria-label={`Scans per day: ${days.map((d) => `${d.date} ${d.safe + d.suspicious + d.dangerous}`).join(", ")}`}
+        aria-label={`Scans per day: ${all
+          .filter((d) => sumOf(d) > 0)
+          .map((d) => `${formatDate(d.date)} ${sumOf(d)}`)
+          .join(", ")}`}
       >
-        {days.map((d) => {
-          const sum = d.safe + d.suspicious + d.dangerous;
+        {all.map((d) => {
+          const sum = sumOf(d);
+          if (sum === 0) {
+            return <div key={d.date} className="h-0.5 min-w-0 flex-1 rounded-full bg-white/10" title={`${formatDate(d.date)}: no scans`} />;
+          }
           return (
-            <div key={d.date} className="flex min-w-1.5 flex-1 flex-col justify-end overflow-hidden rounded-sm" style={{ height: `${Math.max((sum / top) * 100, 4)}%` }} title={`${formatDate(d.date)}: ${sum} scans`}>
+            <div
+              key={d.date}
+              className="flex min-w-0 flex-1 flex-col justify-end overflow-hidden rounded-sm"
+              style={{ height: `${Math.max((sum / top) * 100, 6)}%` }}
+              title={`${formatDate(d.date)}: ${sum} ${sum === 1 ? "scan" : "scans"}`}
+            >
               <div className="bg-rose-500" style={{ flexGrow: d.dangerous }} />
               <div className="bg-amber-400" style={{ flexGrow: d.suspicious }} />
               <div className="bg-emerald-400" style={{ flexGrow: d.safe }} />
@@ -62,11 +95,16 @@ function Days({ days }: { days: TrendsData["days"] }) {
           );
         })}
       </div>
-      <p className="mt-2 flex flex-wrap gap-x-4 text-xs text-slate-500">
-        <span>{formatDate(days[0].date)} to {formatDate(days[days.length - 1].date)}</span>
+      <div className="mt-2 flex justify-between text-xs text-slate-400" aria-hidden="true">
+        <span>{formatDate(all[0].date)}</span>
+        <span>{formatDate(middle.date)}</span>
+        <span>{formatDate(all[all.length - 1].date)}</span>
+      </div>
+      <p className="mt-3 flex flex-wrap gap-x-4 text-xs">
         <span className="text-emerald-300">safe</span>
         <span className="text-amber-300">suspicious</span>
         <span className="text-rose-300">likely dangerous</span>
+        <span className="text-slate-400">Point at a bar to see its day.</span>
       </p>
     </>
   );
@@ -100,7 +138,7 @@ export default function Trends({ online }: { online: boolean | null }) {
       <div className="mt-10 grid gap-4 lg:grid-cols-2">
         {trends.days.length > 0 && (
           <Panel title="Scans per day">
-            <Days days={trends.days} />
+            <Days days={trends.days} windowDays={trends.window_days} />
           </Panel>
         )}
         {trends.scam_types.length > 0 && (

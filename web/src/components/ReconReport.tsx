@@ -27,7 +27,7 @@ function Card({ icon: Icon, title, children }: { icon: LucideIcon; title: string
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-slate-500">{label}</dt>
+      <dt className="text-xs text-slate-400">{label}</dt>
       <dd className="mt-0.5 break-words text-slate-200">{children}</dd>
     </div>
   );
@@ -51,7 +51,7 @@ function Names({ names, limit = 4 }: { names: string[]; limit?: number }) {
   return (
     <span className="font-mono text-[13px]">
       {shown.map(defangName).join(", ")}
-      {names.length > limit && <span className="font-sans text-slate-500"> and {names.length - limit} more</span>}
+      {names.length > limit && <span className="font-sans text-slate-400"> and {names.length - limit} more</span>}
     </span>
   );
 }
@@ -66,7 +66,7 @@ function ServerCard({ recon }: { recon: Recon }) {
       {place && (
         <Row label="Location">
           {place}
-          {s.accuracy_km ? <span className="text-slate-500"> (roughly, within {s.accuracy_km} km)</span> : null}
+          {s.accuracy_km ? <span className="text-slate-400"> (roughly, within {s.accuracy_km} km)</span> : null}
         </Row>
       )}
       {s.ip && (
@@ -80,7 +80,7 @@ function ServerCard({ recon }: { recon: Recon }) {
       {(s.as_org || s.asn) && (
         <Row label="Hosting network">
           {s.as_org ?? "Unknown"}
-          {s.asn ? <span className="text-slate-500"> (AS{s.asn})</span> : null}
+          {s.asn ? <span className="text-slate-400"> (AS{s.asn})</span> : null}
         </Row>
       )}
       {s.network_name && <Row label="Network name">{s.network_name}</Row>}
@@ -118,7 +118,7 @@ function DomainCard({ recon, sharedHost }: { recon: Recon; sharedHost?: string |
       {r.created && (
         <Row label="Registered">
           {formatDate(r.created)}
-          {r.age_days !== null && !isNew && <span className="text-slate-500"> ({formatAge(r.age_days)} ago)</span>}
+          {r.age_days !== null && !isNew && <span className="text-slate-400"> ({formatAge(r.age_days)} ago)</span>}
         </Row>
       )}
       {r.expires && <Row label="Expires">{formatDate(r.expires)}</Row>}
@@ -148,13 +148,13 @@ function DomainCard({ recon, sharedHost }: { recon: Recon; sharedHost?: string |
             {recon.chain_domains.map((d) => (
               <li key={d.domain}>
                 <span className="font-mono text-[13px]">{defangName(d.domain)}</span>
-                <span className="text-slate-500"> {d.age_days !== null ? `(${formatAge(d.age_days)} old)` : "(age unknown)"}</span>
+                <span className="text-slate-400"> {d.age_days !== null ? `(${formatAge(d.age_days)} old)` : "(age unknown)"}</span>
               </li>
             ))}
           </ul>
         </Row>
       )}
-      {r.source && <p className="text-xs text-slate-500">From {r.source === "rdap" ? "RDAP" : "WHOIS"}</p>}
+      {r.source && <p className="text-xs text-slate-400">From {r.source === "rdap" ? "RDAP" : "WHOIS"}</p>}
     </Card>
   );
 }
@@ -181,7 +181,7 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
             <Row label="Valid">
               {formatDate(c.not_before)} to {formatDate(c.not_after)}
               {c.days_left != null && (
-                <span className="text-slate-500"> ({c.days_left < 0 ? "expired" : `${c.days_left} days left`})</span>
+                <span className="text-slate-400"> ({c.days_left < 0 ? "expired" : `${c.days_left} days left`})</span>
               )}
             </Row>
           )}
@@ -198,7 +198,7 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
           {h.first_seen && (
             <>
               , first on {formatDate(h.first_seen)}
-              <span className="text-slate-500"> ({formatAge(daysSince(h.first_seen))} ago)</span>
+              <span className="text-slate-400"> ({formatAge(daysSince(h.first_seen))} ago)</span>
             </>
           )}
         </Row>
@@ -208,7 +208,7 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
           <Names names={h.other_domains} />
         </Row>
       )}
-      {h && h.note && <p className="text-xs text-slate-500">{h.note}</p>}
+      {h && h.note && <p className="text-xs text-slate-400">{h.note}</p>}
     </Card>
   );
 }
@@ -231,8 +231,8 @@ function DnsDetails({ recon }: { recon: Recon }) {
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-[10rem_1fr]">
         {rows.map(([label, values]) => (
           <div key={label} className="contents">
-            <dt className="text-slate-500">{label}</dt>
-            <dd className="whitespace-pre-line break-all font-mono text-[13px] text-slate-300">{values.length ? values.join("\n") : <span className="font-sans text-slate-600">none</span>}</dd>
+            <dt className="text-slate-400">{label}</dt>
+            <dd className="whitespace-pre-line break-all font-mono text-[13px] text-slate-300">{values.length ? values.join("\n") : <span className="font-sans text-slate-400">none</span>}</dd>
           </div>
         ))}
       </dl>
@@ -249,7 +249,7 @@ function TechDetails({ recon }: { recon: Recon }) {
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-[10rem_1fr]">
         {h.tech.length > 0 && (
           <div className="contents">
-            <dt className="text-slate-500">Built with</dt>
+            <dt className="text-slate-400">Built with</dt>
             <dd className="flex flex-wrap gap-1.5">
               {h.tech.map((t) => (
                 <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-slate-200 ring-1 ring-white/10">
@@ -261,18 +261,18 @@ function TechDetails({ recon }: { recon: Recon }) {
         )}
         {h.server && (
           <div className="contents">
-            <dt className="text-slate-500">Server header</dt>
+            <dt className="text-slate-400">Server header</dt>
             <dd className="break-all font-mono text-[13px] text-slate-300">{h.server}</dd>
           </div>
         )}
         {h.powered_by && (
           <div className="contents">
-            <dt className="text-slate-500">Powered by</dt>
+            <dt className="text-slate-400">Powered by</dt>
             <dd className="break-all font-mono text-[13px] text-slate-300">{h.powered_by}</dd>
           </div>
         )}
         <div className="contents">
-          <dt className="text-slate-500">Security headers</dt>
+          <dt className="text-slate-400">Security headers</dt>
           <dd>
             <ul className="grid gap-1 sm:grid-cols-2">
               {Object.entries(h.security_headers).map(([name, present]) => (
@@ -280,7 +280,7 @@ function TechDetails({ recon }: { recon: Recon }) {
                   {present ? (
                     <Check className="h-3.5 w-3.5 text-blue-400" aria-label="present" />
                   ) : (
-                    <X className="h-3.5 w-3.5 text-slate-500" aria-label="missing" />
+                    <X className="h-3.5 w-3.5 text-slate-400" aria-label="missing" />
                   )}
                   {name}
                 </li>

@@ -36,6 +36,7 @@ export default function App() {
     return next;
   }, [scan.state]);
 
+  const showingReport = scan.state.kind === "done";
   const behavior = () => (prefersReducedMotion() ? "auto" : "smooth") as ScrollBehavior;
 
   function focusInput() {
@@ -70,9 +71,11 @@ export default function App() {
             onScanAnother={focusInput}
           />
         )}
-        <Features />
+        {/* With a report on screen, the feature list moves to the end so the report isn't followed by a pitch. */}
+        {!showingReport && <Features />}
         <DataHealth online={scan.online} />
         <Trends online={scan.online} />
+        {showingReport && <Features />}
       </main>
       <Footer />
     </>

@@ -29,7 +29,7 @@ function FeatureCard({ feature, index, reduce }: { feature: Feature; index: numb
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1 ${
+          className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ring-1 ${
             live ? "bg-blue-500/15 text-blue-200 ring-blue-400/30" : "bg-white/5 text-slate-400 ring-white/10"
           }`}
         >

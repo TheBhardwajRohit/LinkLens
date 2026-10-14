@@ -64,7 +64,7 @@ export default function GraphPanel({ model }: { model: GraphModel }) {
         </div>
       )}
       {model.mode === "example" && (
-        <span className="absolute bottom-3 left-3 rounded-full border border-white/15 bg-ink/60 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-300 backdrop-blur sm:bottom-6 sm:left-6">
+        <span className="absolute bottom-3 left-3 rounded-full border border-white/15 bg-ink/60 px-2.5 py-1 text-xs font-medium uppercase tracking-wider text-slate-300 backdrop-blur sm:bottom-6 sm:left-6">
           Example scan
         </span>
       )}

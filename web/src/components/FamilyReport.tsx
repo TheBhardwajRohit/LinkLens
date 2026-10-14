@@ -6,11 +6,11 @@ import { Fingerprint, Info, Users } from "lucide-react";
 import { useState } from "react";
 
 import { API_URL, type Family, type FamilyResult, type Sibling, type Siblings, type Tab } from "../lib/api";
-import { formatDate } from "../lib/format";
+import { formatDate, formatCount } from "../lib/format";
 import { Section } from "./ReportParts";
 
 const defangName = (name: string) => name.replaceAll(".", "[.]");
-const count = (n: number) => n.toLocaleString("en-IN");
+const count = formatCount;
 
 function Thumb({ pageId, alt }: { pageId: number; alt: string }) {
   const [failed, setFailed] = useState(false);
@@ -65,7 +65,7 @@ export function FamilyCard({ family }: { family: FamilyResult | undefined }) {
           </p>
         )}
       </div>
-      <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
+      <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-400">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         Families are found by comparing page fingerprints (code, structure, wording, look, and icon). A match means
         "built from the same kit", which is likely, not proven.
@@ -87,9 +87,9 @@ function SiblingRow({ item }: { item: Sibling }) {
     <li className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-sm">
       <span className="break-all font-mono text-[13px] text-slate-200">{defangName(item.name)}</span>
       {item.known_scam && (
-        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-[11px] font-semibold text-rose-300">known scam</span>
+        <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-xs font-semibold text-rose-300">known scam</span>
       )}
-      <span className="text-slate-500">{item.why}</span>
+      <span className="text-slate-400">{item.why}</span>
     </li>
   );
 }
@@ -100,14 +100,14 @@ function TabBody({ tab, what }: { tab: Tab; what: string }) {
   const sameWhy = tab.items.length > 3 && tab.items.every((i) => i.why === tab.items[0].why);
   return (
     <div>
-      <p className="text-xs text-slate-500">{what}</p>
+      <p className="text-xs text-slate-400">{what}</p>
       {tab.note && <p className="mt-2 text-sm text-slate-400">{tab.note}</p>}
       {tab.items.length > 0 && sameWhy && (
         <ul className="mt-3 columns-2 gap-6 sm:columns-3">
           {tab.items.map((item) => (
             <li key={item.name} className="break-all py-0.5 font-mono text-[13px] text-slate-200">
               {defangName(item.name)}
-              {item.known_scam && <span className="ml-1.5 font-sans text-[11px] font-semibold text-rose-300">known scam</span>}
+              {item.known_scam && <span className="ml-1.5 font-sans text-xs font-semibold text-rose-300">known scam</span>}
             </li>
           ))}
         </ul>
@@ -120,7 +120,7 @@ function TabBody({ tab, what }: { tab: Tab; what: string }) {
         </ul>
       )}
       {tab.total > tab.items.length && (
-        <p className="mt-2 text-xs text-slate-500">and {count(tab.total - tab.items.length)} more.</p>
+        <p className="mt-2 text-xs text-slate-400">and {count(tab.total - tab.items.length)} more.</p>
       )}
       {tab.items.length === 0 && !tab.note && <p className="mt-2 text-sm text-slate-400">Nothing found.</p>}
     </div>
@@ -152,7 +152,7 @@ export function SiblingTabs({ siblings, family }: { siblings: Siblings | undefin
               }`}
             >
               {t.label}
-              <span className={`rounded-full px-1.5 text-xs ${total ? "bg-white/10 text-slate-100" : "text-slate-500"}`}>
+              <span className={`rounded-full px-1.5 text-xs ${total ? "bg-white/10 text-slate-100" : "text-slate-400"}`}>
                 {total}
               </span>
             </button>
@@ -166,7 +166,7 @@ export function SiblingTabs({ siblings, family }: { siblings: Siblings | undefin
             {pictures.map((p) => (
               <li key={p.page_id} className="text-center">
                 <Thumb pageId={p.page_id} alt="A page with the same design" />
-                <p className="mt-1 max-w-[120px] truncate font-mono text-[11px] text-slate-500">
+                <p className="mt-1 max-w-[120px] truncate font-mono text-xs text-slate-400">
                   {defangName(p.site ?? "")}
                 </p>
               </li>
@@ -183,7 +183,7 @@ export function SiblingTabs({ siblings, family }: { siblings: Siblings | undefin
           </div>
         ))}
       </div>
-      <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
+      <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-400">
         <Users className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         Siblings are leads, not proof. Sharing a server or a name pattern happens to honest sites too.
       </p>

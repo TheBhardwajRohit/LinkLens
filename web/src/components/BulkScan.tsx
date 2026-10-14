@@ -80,7 +80,7 @@ export default function BulkScan({ online, onOpen }: { online: boolean | null; o
             onChange={(e) => setText(e.target.value)}
             rows={4}
             spellCheck={false}
-            className="mt-1 block w-full rounded-xl border border-white/15 bg-white/[0.045] px-3 py-2 font-mono text-[13px] text-slate-100 placeholder:font-sans placeholder:text-slate-500 focus:border-blue-400/60 focus:outline-none"
+            className="mt-1 block w-full rounded-xl border border-white/15 bg-white/[0.045] px-3 py-2 font-mono text-[13px] text-slate-100 placeholder:font-sans placeholder:text-slate-400 focus:border-blue-400/60 focus:outline-none"
             placeholder={"example.com\nhxxp://another[.]example/login"}
           />
         </label>

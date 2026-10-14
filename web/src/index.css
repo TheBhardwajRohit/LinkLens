@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #070b16;
-  --color-panel: #141821;
-  --color-line: #232b3b;
+  --color-ink: #0b1220;
+  --color-panel: #151d2e;
+  --color-line: #2a3448;
   --color-cream: #f4f1ea;
   --font-sans: "Red Hat Text Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Red Hat Display Variable", "Red Hat Text Variable", ui-sans-serif, system-ui, sans-serif;
@@ -11,6 +11,45 @@
 
 :root {
   color-scheme: dark;
+}
+
+/* Light theme: the same page with the palette turned around. Tailwind's colour utilities read
+   these variables, so every component follows without its own light classes. "white" becomes
+   the dark ink, so faint white overlays and borders turn into faint dark ones. Verdict colours
+   get darker shades so they stay readable on white. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-ink: #f4f6fb;
+  --color-panel: #ffffff;
+  --color-line: #d5dbe6;
+  --color-cream: #0f172a;
+  --color-white: #0f172a;
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #94a3b8;
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
+  --color-rose-200: #9f1239;
+  --color-rose-300: #be123c;
+  --color-blue-100: #1e3a8a;
+  --color-blue-200: #1e40af;
+  --color-blue-300: #1d4ed8;
+  --color-blue-400: #2563eb;
+  --color-cyan-300: #0e7490;
+}
+
+/* Text on solid blue buttons stays white in both themes. */
+:root[data-theme="light"] :is([class*="bg-blue-5"], [class*="bg-blue-6"], [class*="from-blue-"]) {
+  --color-white: #ffffff;
+}
+
+:root[data-theme="light"] .hero-glow {
+  opacity: 0.45;
 }
 
 html,
@@ -21,7 +60,7 @@ body,
 
 body {
   background: var(--color-ink);
-  color: #e2e8f0;
+  color: var(--color-slate-200, #e2e8f0);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }

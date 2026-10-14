@@ -28,3 +28,8 @@ export function isRedacted(value: string | null | undefined): boolean {
 }
 
 export const NEW_DOMAIN_DAYS = 30;
+
+/** Counts in one style everywhere (1,234,567), the same as the numbers in the server's sentences. */
+export function formatCount(n: number): string {
+  return n.toLocaleString("en-US");
+}

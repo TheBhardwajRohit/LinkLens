@@ -46,7 +46,7 @@ export default function NetworkMap({ graph }: { graph: GraphResult | undefined }
           <Network className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
           {graph.note}
         </p>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           {graph.links_out} {graph.links_out === 1 ? "site" : "sites"} linked from this page, {known} known{" "}
           {known === 1 ? "site links" : "sites link"} to it
           {graph.unknown_in > 0 && `, ${graph.unknown_in} unknown`}
@@ -93,7 +93,7 @@ export default function NetworkMap({ graph }: { graph: GraphResult | undefined }
         </div>
       )}
 
-      <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
+      <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-400">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         Built from the pages LinkLens has seen, not the whole web. New domains have few known links, so the graph often
         has nothing to say about them. Method: SiNMULI (Gayen, Mondal, Jana, 2026).

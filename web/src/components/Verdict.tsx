@@ -6,7 +6,10 @@ import { Info, ListX, ShieldAlert, ShieldCheck, ShieldX, Tag, type LucideIcon } 
 import type { Analysis, Reason, Verdict } from "../lib/api";
 import { Section } from "./ReportParts";
 
-const LOOK: Record<Verdict, { label: string; icon: LucideIcon; badge: string; ring: string; bar: string; text: string }> = {
+const LOOK: Record<
+  Verdict,
+  { label: string; icon: LucideIcon; badge: string; ring: string; bar: string; text: string; stroke: string }
+> = {
   safe: {
     label: "Looks safe",
     icon: ShieldCheck,
@@ -14,6 +17,7 @@ const LOOK: Record<Verdict, { label: string; icon: LucideIcon; badge: string; ri
     ring: "border-emerald-400/25 shadow-[0_30px_80px_-40px_rgba(16,185,129,0.6)]",
     bar: "bg-emerald-400",
     text: "text-emerald-300",
+    stroke: "stroke-emerald-400",
   },
   suspicious: {
     label: "Suspicious",
@@ -22,6 +26,7 @@ const LOOK: Record<Verdict, { label: string; icon: LucideIcon; badge: string; ri
     ring: "border-amber-400/30 shadow-[0_30px_80px_-40px_rgba(245,158,11,0.6)]",
     bar: "bg-amber-400",
     text: "text-amber-300",
+    stroke: "stroke-amber-400",
   },
   dangerous: {
     label: "Likely dangerous",
@@ -30,21 +35,52 @@ const LOOK: Record<Verdict, { label: string; icon: LucideIcon; badge: string; ri
     ring: "border-rose-400/35 shadow-[0_30px_80px_-40px_rgba(244,63,94,0.7)]",
     bar: "bg-rose-500",
     text: "text-rose-300",
+    stroke: "stroke-rose-500",
   },
 };
+
+/** A half-circle gauge: the arc fills with the verdict's colour up to the score. */
+function ScoreDial({ score, verdict }: { score: number; verdict: Verdict }) {
+  const look = LOOK[verdict];
+  const filled = Math.min(Math.max(score, 0), 100);
+  return (
+    <div className="relative w-44 shrink-0" role="img" aria-label={`Risk score ${score} out of 100`}>
+      <svg viewBox="0 0 120 68" className="w-full" aria-hidden="true">
+        <path d="M 10 60 A 50 50 0 0 1 110 60" pathLength={100} fill="none" strokeWidth="10" strokeLinecap="round" className="stroke-white/10" />
+        {filled > 0 && (
+          <path
+            d="M 10 60 A 50 50 0 0 1 110 60"
+            pathLength={100}
+            fill="none"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={`${filled} 100`}
+            className={look.stroke}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-x-0 bottom-0 text-center">
+        <p className={`font-display text-4xl font-semibold leading-none ${look.text}`}>{score}</p>
+        <p className="mt-1 text-xs text-slate-400">risk score out of 100</p>
+      </div>
+    </div>
+  );
+}
 
 export function VerdictCard({ analysis }: { analysis: Analysis }) {
   const look = LOOK[analysis.verdict];
   const Icon = look.icon;
+  const top = analysis.reasons.slice(0, 3);
+  const more = analysis.reasons.length - top.length;
   return (
     <div className={`rounded-2xl border bg-ink/50 p-5 sm:p-6 ${look.ring}`}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0 flex-1 basis-60">
           <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ring-1 ${look.badge}`}>
             <Icon className="h-4 w-4" aria-hidden="true" />
             {look.label}
           </span>
-          <p className="mt-3 max-w-xl font-display text-xl font-medium leading-snug text-cream sm:text-2xl">{analysis.summary}</p>
+          <p className="mt-3 font-display text-xl font-medium leading-snug text-cream sm:text-2xl">{analysis.summary}</p>
           {analysis.scam_type && (
             <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1 text-sm text-slate-200 ring-1 ring-white/10">
               <Tag className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
@@ -59,25 +95,30 @@ export function VerdictCard({ analysis }: { analysis: Analysis }) {
             </p>
           )}
         </div>
-        <div className="text-right">
-          <p className={`font-display text-5xl font-semibold leading-none ${look.text}`}>
-            {analysis.score}
-            <span className="text-lg font-medium text-slate-500">/100</span>
-          </p>
-          <p className="mt-1 text-xs text-slate-500">risk score</p>
+        <ScoreDial score={analysis.score} verdict={analysis.verdict} />
+      </div>
+      <p className="mt-3 flex justify-between gap-2 text-xs text-slate-400">
+        <span>0 to 30 safe</span>
+        <span>31 to 69 suspicious</span>
+        <span>70 to 100 likely dangerous</span>
+      </p>
+      {top.length > 0 && (
+        <div className="mt-5 border-t border-white/[0.08] pt-4">
+          <p className="text-sm font-semibold text-slate-200">Main reasons</p>
+          <ul className="mt-1 divide-y divide-white/[0.06]">
+            {top.map((r) => (
+              <ReasonRow key={r.text} reason={r} />
+            ))}
+          </ul>
+          {more > 0 && (
+            <p className="mt-1 text-xs text-slate-400">
+              {more} more {more === 1 ? "sign" : "signs"} under "Why we flagged it".
+            </p>
+          )}
         </div>
-      </div>
-      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/5" role="img" aria-label={`Risk score ${analysis.score} out of 100`}>
-        <div className={`h-full rounded-full ${look.bar}`} style={{ width: `${Math.max(analysis.score, 2)}%` }} />
-      </div>
-      <div className="mt-1.5 flex justify-between text-[11px] text-slate-600">
-        <span>0 safe</span>
-        <span>31 suspicious</span>
-        <span>70 dangerous</span>
-        <span>100</span>
-      </div>
+      )}
       {analysis.partial && (
-        <p className="mt-4 flex items-start gap-2 text-sm text-slate-400">
+        <p className="mt-4 flex items-start gap-2 text-sm text-slate-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           The page itself couldn't be checked, so this is based on the link, the domain, and the server only.
         </p>
@@ -113,7 +154,7 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
       )}
       {analysis.good_signs.length > 0 && (
         <>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Good signs</p>
+          <p className="mt-4 text-sm font-semibold tracking-wide text-slate-200">Good signs</p>
           <ul className="divide-y divide-white/[0.06]">
             {analysis.good_signs.map((r) => (
               <ReasonRow key={r.text} reason={r} />
@@ -121,7 +162,7 @@ export function WhyFlagged({ analysis }: { analysis: Analysis }) {
           </ul>
         </>
       )}
-      <p className="mt-4 text-xs text-slate-500">
+      <p className="mt-4 text-xs text-slate-400">
         Each warning sign adds points and each good sign takes some away. The total is capped between 0 and 100.
         {analysis.model
           ? " The points come from fixed rules plus a model trained on known scam pages. Both can be wrong, so treat the result as likely, not certain."

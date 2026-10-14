@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="border-t border-line/60 px-4 py-8 text-center text-sm text-slate-500">
+    <footer className="border-t border-line/60 px-4 py-8 text-center text-sm text-slate-400">
       <p>LinkLens is a personal, non-commercial project. Results are likely, not certain.</p>
       <p className="mt-2">
         <a
@@ -12,7 +12,7 @@ export default function Footer() {
           Source on GitHub
         </a>
       </p>
-      <p className="mt-4 text-xs text-slate-600">
+      <p className="mt-4 text-xs text-slate-400">
         This product includes GeoLite Data created by MaxMind, available from{" "}
         <a
           href="https://www.maxmind.com"

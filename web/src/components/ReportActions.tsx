@@ -77,11 +77,11 @@ function MistakeForm({ id, onDone }: { id: string; onDone: () => void }) {
           onChange={(e) => setNote(e.target.value)}
           maxLength={500}
           rows={2}
-          className="mt-1 block w-full rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-blue-400/60 focus:outline-none"
+          className="mt-1 block w-full rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-slate-100 placeholder:text-slate-400 focus:border-blue-400/60 focus:outline-none"
           placeholder="For example: this is my own shop's site"
         />
       </label>
-      <p className="mt-1 text-xs text-slate-500">Don't include personal details. Email addresses are removed before saving.</p>
+      <p className="mt-1 text-xs text-slate-400">Don't include personal details. Email addresses are removed before saving.</p>
       {state === "failed" && <p className="mt-2 text-rose-300">{error}</p>}
       <div className="mt-3 flex gap-2">
         <button type="submit" disabled={state === "sending"} className={PRIMARY}>

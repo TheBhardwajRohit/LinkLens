@@ -1,6 +1,28 @@
-import { ArrowRight, ScanSearch } from "lucide-react";
+import { ArrowRight, Moon, ScanSearch, Sun } from "lucide-react";
+import { useState } from "react";
+
+import { applyTheme, storedTheme, type Theme } from "../lib/theme";
 
 const REPO = "https://github.com/TheBhardwajRohit/LinkLens";
+
+function ThemeSwitch() {
+  const [theme, setTheme] = useState<Theme>(storedTheme);
+  const next: Theme = theme === "dark" ? "light" : "dark";
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        applyTheme(next);
+        setTheme(next);
+      }}
+      aria-label={`Switch to the ${next} theme`}
+      title={`Switch to the ${next} theme`}
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 text-slate-200 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
+    >
+      {theme === "dark" ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
+    </button>
+  );
+}
 
 export default function NavBar({ onScanClick }: { onScanClick: () => void }) {
   return (
@@ -34,7 +56,9 @@ export default function NavBar({ onScanClick }: { onScanClick: () => void }) {
             </a>
           </nav>
         </div>
-        <button
+        <div className="flex items-center gap-2">
+          <ThemeSwitch />
+          <button
           type="button"
           onClick={onScanClick}
           className="group inline-flex items-center gap-2 rounded-lg border border-white/70 px-3.5 py-1.5 text-sm font-medium text-white transition hover:bg-white hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
@@ -44,6 +68,7 @@ export default function NavBar({ onScanClick }: { onScanClick: () => void }) {
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </span>
         </button>
+        </div>
       </div>
     </header>
   );

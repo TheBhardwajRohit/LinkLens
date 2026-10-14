@@ -1,7 +1,7 @@
 // Shows what the sandbox saw. Everything here came from a possibly dangerous page, so:
 // the page is shown only as a screenshot (an image), and every address is defanged plain text.
 
-import { CircleAlert, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
+import { ArrowRight, CircleAlert, Lock, LockOpen, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react";
 
 import type { Hop, HopKind, Recon, Visit } from "../lib/api";
 import { defang } from "../lib/url";
@@ -69,6 +69,44 @@ function HopRow({ hop, index }: { hop: Hop; index: number }) {
   );
 }
 
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+}
+
+/** The link trail as one line: pasted link, each jump, and where it ends. Names are defanged text. */
+function Journey({ hops }: { hops: Hop[] }) {
+  return (
+    <ol className="mb-4 flex flex-wrap items-center gap-x-1.5 gap-y-2" aria-label="Where the link goes, step by step">
+      {hops.map((hop, i) => {
+        const last = i === hops.length - 1;
+        return (
+          <li key={`${i}-${hop.url}`} className="flex items-center gap-1.5">
+            <span
+              className={`rounded-lg px-2.5 py-1.5 text-xs ring-1 ${
+                hop.blocked
+                  ? "bg-rose-500/10 text-rose-300 ring-rose-400/30"
+                  : last
+                    ? "bg-blue-500/10 text-slate-100 ring-blue-400/30"
+                    : "bg-white/[0.04] text-slate-200 ring-white/10"
+              }`}
+            >
+              <span className="block text-[0.75rem] text-slate-400">
+                {i === 0 ? "You paste" : hop.blocked ? "Blocked" : last ? "Lands on" : HOP_LABEL[hop.kind] ?? hop.kind}
+              </span>
+              <span className="font-mono">{hostOf(hop.url).replaceAll(".", "[.]")}</span>
+            </span>
+            {!last && <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /** The top of the report: what happened in the sandbox, the screenshot, and the final address. */
 export function VisitSummary({ visit }: { visit: Visit }) {
   const outcome = OUTCOME[visit.stopped ?? "ok"] ?? OUTCOME.error;
@@ -85,7 +123,7 @@ export function VisitSummary({ visit }: { visit: Visit }) {
           <ul className="mt-2 space-y-1 text-sm text-slate-300">
             {visit.notes.map((note) => (
               <li key={note} className="flex gap-2">
-                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
                 {note}
               </li>
             ))}
@@ -96,12 +134,33 @@ export function VisitSummary({ visit }: { visit: Visit }) {
       {visit.screenshot_jpeg_b64 && (
         <Section title="Safe preview">
           <figure>
-            <img
-              src={`data:image/jpeg;base64,${visit.screenshot_jpeg_b64}`}
-              alt="Screenshot of the page, taken inside the sandbox"
-              className="w-full rounded-xl border border-line"
-            />
-            <figcaption className="mt-2 text-xs text-slate-500">
+            <div className="overflow-hidden rounded-xl border border-line bg-ink/60">
+              {/* A pretend browser bar, so it's obvious this is a picture of the page, not the page. */}
+              <div className="flex items-center gap-3 border-b border-line px-3 py-2" aria-hidden="true">
+                <span className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500/60" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
+                </span>
+                <span className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-slate-300">
+                  {(visit.final_url ?? visit.requested_url).startsWith("https:") ? (
+                    <Lock className="h-3 w-3 shrink-0 text-slate-400" />
+                  ) : (
+                    <LockOpen className="h-3 w-3 shrink-0 text-amber-300" />
+                  )}
+                  <span className="truncate">{defang(visit.final_url ?? visit.requested_url)}</span>
+                </span>
+                <span className="hidden shrink-0 rounded bg-blue-500/15 px-1.5 py-0.5 text-xs font-medium text-blue-200 sm:inline">
+                  Picture only
+                </span>
+              </div>
+              <img
+                src={`data:image/jpeg;base64,${visit.screenshot_jpeg_b64}`}
+                alt="Screenshot of the page, taken inside the sandbox"
+                className="block w-full"
+              />
+            </div>
+            <figcaption className="mt-2 text-xs text-slate-400">
               A picture taken inside the sandbox. It's only an image, so nothing on it can run or be clicked.
             </figcaption>
           </figure>
@@ -131,6 +190,7 @@ export function VisitDetails({ visit, recon, sharedHost }: { visit: Visit; recon
 
       {visit.hops.length > 0 && (
         <Section title={`Link trail (${visit.hops.length} ${visit.hops.length === 1 ? "step" : "steps"})`}>
+          {visit.hops.length > 1 && <Journey hops={visit.hops} />}
           <ol>
             {visit.hops.map((hop, i) => (
               <HopRow key={`${i}-${hop.url}`} hop={hop} index={i} />

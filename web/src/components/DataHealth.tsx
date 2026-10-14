@@ -5,7 +5,7 @@ import { Database, Fingerprint, ListX, RefreshCw, type LucideIcon } from "lucide
 import { useEffect, useState } from "react";
 
 import { getStats, type Stats } from "../lib/api";
-import { formatDate } from "../lib/format";
+import { formatDate, formatCount } from "../lib/format";
 
 const SOURCE_NAMES: Record<string, string> = {
   scan: "Scans on this site",
@@ -18,9 +18,7 @@ const JOB_NAMES: Record<string, string> = {
   cluster: "Family grouping",
 };
 
-function count(n: number): string {
-  return n.toLocaleString("en-IN");
-}
+const count = formatCount;
 
 function Tile({ icon: Icon, value, label }: { icon: LucideIcon; value: string; label: string }) {
   return (
@@ -67,7 +65,7 @@ export default function DataHealth({ online }: { online: boolean | null }) {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Where the pages came from</h3>
+          <h3 className="text-sm font-semibold tracking-wide text-slate-200">Where the pages came from</h3>
           {sources.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">Nothing yet. The first scan adds the first page.</p>
           ) : (
@@ -88,7 +86,7 @@ export default function DataHealth({ online }: { online: boolean | null }) {
           )}
         </div>
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Latest data runs</h3>
+          <h3 className="text-sm font-semibold tracking-wide text-slate-200">Latest data runs</h3>
           {stats.last_runs.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">
               No data job has run against this database yet. Scheduled feed runs start once a shared database exists.
@@ -103,13 +101,13 @@ export default function DataHealth({ online }: { online: boolean | null }) {
                       {run.ok ? "finished" : "had a problem"} on {formatDate(run.finished_at)}
                     </span>
                   </p>
-                  {run.note && <p className="mt-0.5 text-slate-500">{run.note}</p>}
+                  {run.note && <p className="mt-0.5 text-slate-400">{run.note}</p>}
                 </li>
               ))}
             </ul>
           )}
           {lists?.updated && (
-            <p className="mt-3 text-xs text-slate-500">Phishing lists last refreshed on {formatDate(lists.updated)}.</p>
+            <p className="mt-3 text-xs text-slate-400">Phishing lists last refreshed on {formatDate(lists.updated)}.</p>
           )}
         </div>
       </div>

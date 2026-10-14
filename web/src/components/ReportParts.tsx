@@ -29,7 +29,10 @@ export function CopyButton({ text, label = "Copy the defanged address" }: { text
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold tracking-wide text-slate-200">
+        <span aria-hidden="true" className="h-3.5 w-1 rounded-full bg-blue-400/70" />
+        {title}
+      </h3>
       {children}
     </section>
   );
