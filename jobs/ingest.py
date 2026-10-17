@@ -1,5 +1,8 @@
 """Feed ingestion: take fresh links from free scam feeds, open each one in the sandbox, and keep
-its fingerprints, so new scam pages join the page library within about an hour.
+its fingerprints, so new scam pages join the page library within a few hours.
+
+The feeds are read together: a link listed by more than one feed is visited once, links seen in
+earlier runs are skipped, and noise (redirect notices, real popular sites) is dropped first.
 
 Three steps, so the step that touches live scam pages has no secrets (safety rule 2):
 
@@ -29,6 +32,8 @@ from urllib.parse import urlsplit
 import httpx
 
 from app import pages, recon, sandbox_client
+from app.analysis.lexical import analyze_link
+from app.analysis.toplist import toplist
 from app.fingerprint import Fingerprints, favicon_hash, screenshot_phash, thumbnail
 from app.library import digest_page
 from app.recon.geoip import geo
@@ -38,8 +43,9 @@ from app.similarity import BOILERPLATE_TITLE
 from app.urls import UrlError, normalize_url
 from jobs.common import connect, now, say
 
-# name -> lists of links. Phishing.Database is MIT licensed. OpenPhish's community feed is
-# supported but off unless FEEDS names it, because its terms forbid passing the data on.
+# Plain-text feeds: name -> lists of links. Phishing.Database is MIT licensed. OpenPhish's
+# community feed is supported but off unless FEEDS names it, because its terms forbid passing the
+# data on.
 FEEDS: dict[str, dict[str, str]] = {
     "phishing_database": {
         "new": "https://phish.co.za/latest/phishing-links-NEW-today.txt",
@@ -49,7 +55,19 @@ FEEDS: dict[str, dict[str, str]] = {
         "new": "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
     },
 }
-DEFAULT_FEEDS = "phishing_database"
+# phishunt.io: suspected phishing links, updated hourly, data released as CC0 (public domain).
+PHISHUNT_FEED = "https://phishunt.io/feed.json"
+# PhishStats: the newest reported links through its API. 100 is the most one request returns.
+# Free accounts get 150 requests a day with a key (PHISHSTATS_API_KEY); without one the limit is
+# 50 a day per IP address, which GitHub's shared runners may already have used up.
+PHISHSTATS_API = "https://api.phishstats.info/api/phishing"
+PHISHSTATS_PAGE = 100
+API_FEEDS = ("phishunt", "phishstats")
+DEFAULT_FEEDS = "phishing_database,phishunt,phishstats"
+
+# Notice pages that only say "you are leaving this site" and wait for a click. The sandbox never
+# clicks, so visiting them finds nothing; PhishStats lists many of them.
+INTERSTITIALS = {"away.vk.ru", "l.facebook.com", "lm.facebook.com", "l.instagram.com", "href.li"}
 MAX_LIST_BYTES = 40_000_000
 MAX_PER_RUN = 40
 NOT_CAPTURED = ("blocked", "unreachable", "download", "crashed", "error")
@@ -61,7 +79,61 @@ def url_hash(url: str) -> bytes:
 
 def enabled_feeds() -> list[str]:
     names = [n.strip() for n in (os.environ.get("FEEDS") or DEFAULT_FEEDS).split(",") if n.strip()]
-    return [n for n in names if n in FEEDS]
+    return [n for n in names if n in FEEDS or n in API_FEEDS]
+
+
+def is_noise(url: str) -> bool:
+    """Links not worth a visit: a redirect notice, or the plain front page of a brand's real site or
+    of a very popular site (feeds sometimes list the brand a scam copies instead of the scam)."""
+    parts = urlsplit(url)
+    host = (parts.hostname or "").lower()
+    if host in INTERSTITIALS or (host in ("vk.com", "m.vk.com") and parts.path.startswith("/away")):
+        return True
+    if parts.path not in ("", "/") or parts.query:
+        return False
+    link = analyze_link(url)
+    front = host in {link.site, f"www.{link.site}"} if link.site else False
+    popular = link.tranco_rank is not None and link.tranco_rank <= 10_000
+    return front and (popular or bool(link.official_brand))
+
+
+def merge(lists: dict[str, tuple[list[str], list[str]]]) -> tuple[list[str], list[str], dict[str, list[str]]]:
+    """All feeds' links as one list, each link once. Links that several feeds agree on come first,
+    then the feeds' newest links taken in turn, so no single feed fills the run. Returns the new
+    links, the backlog, and which feeds listed each link."""
+    sources: dict[str, list[str]] = {}
+    for name, (new, backlog) in lists.items():
+        for url in new + backlog:
+            if name not in sources.setdefault(url, []):
+                sources[url].append(name)
+    newest = [new for new, _ in lists.values()]
+    turns: list[str] = []
+    for i in range(max((len(n) for n in newest), default=0)):
+        turns += [n[i] for n in newest if i < len(n)]
+    turns = list(dict.fromkeys(turns))
+    shared = [u for u in turns if len(sources[u]) > 1]
+    new_links = shared + [u for u in turns if len(sources[u]) == 1]
+    backlog = [u for _, b in lists.values() for u in b if u not in set(new_links)]
+    return new_links, list(dict.fromkeys(backlog)), sources
+
+
+def read_feed(name: str) -> tuple[list[str], list[str]]:
+    """One feed's links: the newest first, plus a backlog to pick a few older ones from."""
+    if name == "phishunt":
+        rows = json.loads(_download(PHISHUNT_FEED))
+        rows.sort(key=lambda r: r.get("first_seen") or "", reverse=True)
+        return clean_links("\n".join(r.get("url") or "" for r in rows)), []
+    if name == "phishstats":
+        key = os.environ.get("PHISHSTATS_API_KEY") or ""
+        headers = {"User-Agent": USER_AGENT, **({"X-API-Key": key} if key else {})}
+        with httpx.Client(timeout=60, headers=headers) as client:
+            resp = client.get(PHISHSTATS_API, params={"_sort": "-id", "_size": PHISHSTATS_PAGE})
+            resp.raise_for_status()
+        return clean_links("\n".join(r.get("url") or "" for r in resp.json())), []
+    lists = FEEDS[name]
+    new = clean_links(_download(lists["new"]))
+    backlog = clean_links(_download(lists["active"])) if "active" in lists else []
+    return new, backlog
 
 
 def clean_links(text: str) -> list[str]:
@@ -121,31 +193,41 @@ def plan(args: argparse.Namespace) -> None:
         Path(args.out).write_text("[]", encoding="utf-8")
         return
 
-    jobs_out: list[dict] = []
+    toplist.load()  # so a real popular site isn't visited as if it were a scam
     rng = random.Random()
-    per_feed = max(limit // max(len(enabled_feeds()), 1), 1)
+    lists: dict[str, tuple[list[str], list[str]]] = {}
     for name in enabled_feeds():
-        lists = FEEDS[name]
         try:
-            new = clean_links(_download(lists["new"]))
-            backlog = clean_links(_download(lists["active"])) if "active" in lists else []
+            lists[name] = read_feed(name)
         except Exception as err:
             say(f"{name}: feed could not be read ({type(err).__name__})")
             continue
-        seen: set[bytes] = set()
-        if conn is not None:
-            hashes = [url_hash(u) for u in new + backlog]
-            cur = conn.execute("SELECT url_hash FROM feed_urls WHERE url_hash = ANY(%s)", (hashes,))
-            seen = {bytes(r[0]) for r in cur.fetchall()}
-        picked = choose(new, backlog, seen, per_feed, rng)
-        if conn is not None and picked:
-            with conn.cursor() as cur:
-                cur.executemany(
-                    "INSERT INTO feed_urls (url_hash, source) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    [(url_hash(u), name) for u in picked],
-                )
-        say(f"{name}: {len(new):,} new today, {len(backlog):,} active, {len(picked)} picked")
-        jobs_out += [{"url": u, "source": name} for u in picked]
+        new, backlog = lists[name]
+        say(f"{name}: {len(new):,} new" + (f", {len(backlog):,} older" if backlog else ""))
+
+    new, backlog, sources = merge(lists)
+    both = sum(1 for links in sources.values() if len(links) > 1)
+    noise = [u for u in new + backlog if is_noise(u)]
+    new = [u for u in new if u not in set(noise)]
+    backlog = [u for u in backlog if u not in set(noise)]
+    seen: set[bytes] = set()
+    if conn is not None and (new or backlog):
+        hashes = [url_hash(u) for u in new + backlog]
+        cur = conn.execute("SELECT url_hash FROM feed_urls WHERE url_hash = ANY(%s)", (hashes,))
+        seen = {bytes(r[0]) for r in cur.fetchall()}
+    fresh = sum(1 for u in new + backlog if url_hash(u) not in seen)
+    picked = choose(new, backlog, seen, limit, rng)
+    if conn is not None and picked:
+        with conn.cursor() as cur:
+            cur.executemany(
+                "INSERT INTO feed_urls (url_hash, source) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                [(url_hash(u), "+".join(sources[u])) for u in picked],
+            )
+    say(
+        f"{len(sources):,} links in all: {both:,} listed by more than one feed (kept once), "
+        f"{len(noise):,} noise dropped, {fresh:,} not seen before, {len(picked)} picked"
+    )
+    jobs_out = [{"url": u, "source": "+".join(sources[u])} for u in picked]
     Path(args.out).write_text(json.dumps(jobs_out), encoding="utf-8")
     say(f"Planned {len(jobs_out)} links.")
 

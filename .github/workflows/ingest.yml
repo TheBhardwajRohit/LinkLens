@@ -4,14 +4,15 @@ name: Feed ingestion
 # Three jobs, so the one that touches live scam pages has no secrets and no token permissions
 # (safety rule 2). Raw pages never leave the "visit" job; only fingerprints are passed on.
 #
-# The hourly schedule is skipped until the repository variable INGEST_ENABLED is set to "true"
+# Runs every 2 hours. The schedule is skipped until the repository variable INGEST_ENABLED is set to "true"
 # (do that once the DATABASE_URL secret exists, since without a database there is nowhere to
 # store pages). A manual run can use "dry run" to try the whole chain without a database.
 
 on:
   schedule:
-    # An odd minute: GitHub delays or drops jobs scheduled at the top of the hour.
-    - cron: "17 * * * *"
+    # Every 2 hours, at an odd minute: GitHub delays or drops jobs scheduled at the top of the hour.
+    # PhishStats refreshes every 90 minutes, so asking more often would gain nothing.
+    - cron: "17 */2 * * *"
   workflow_dispatch:
     inputs:
       max:
@@ -43,7 +44,10 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       FEEDS: ${{ vars.FEEDS }}
-      MAX: ${{ inputs.max || '20' }}
+      # Only the step that reads the feeds gets this key; the visit job stays free of secrets.
+      PHISHSTATS_API_KEY: ${{ secrets.PHISHSTATS_API_KEY }}
+      LISTS_DIR: ${{ github.workspace }}/lists
+      MAX: ${{ inputs.max || '30' }}
       DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
     steps:
       - uses: actions/checkout@v7
@@ -53,6 +57,8 @@ jobs:
           cache: pip
           cache-dependency-path: api/requirements.txt
       - run: pip install -r api/requirements.txt
+      - name: Download the Tranco list, so real popular sites are skipped
+        run: python -c "import asyncio; from app.analysis.toplist import toplist; asyncio.run(toplist.refresh())"
       - id: plan
         run: |
           python -m jobs.ingest plan --out urls.json --max "$MAX" $DRY_RUN

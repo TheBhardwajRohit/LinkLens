@@ -113,6 +113,7 @@ LinkLens handles live scam links, so a few rules never bend:
 - Domain and IP registration data: RDAP servers listed by [IANA](https://data.iana.org/rdap/).
 - Certificate history: [crt.sh](https://crt.sh/) and [Cert Spotter](https://sslmate.com/certspotter/).
 - Blacklists: [Google Safe Browsing](https://developers.google.com/safe-browsing/v4/advisory) (advisory provided by Google), [Phishing.Database](https://github.com/Phishing-Database/Phishing.Database) (MIT license), [urlscan.io](https://urlscan.io/) search. VirusTotal and URLhaus switch on when you add a free key.
+- Scam feeds for the page library: [phishunt.io](https://phishunt.io/) (CC0) and [PhishStats](https://phishstats.info/), alongside Phishing.Database.
 - Site popularity: the [Tranco list](https://tranco-list.eu/) (Le Pochat et al., NDSS 2019). The list ID used is shown on each report.
 - Page library and model training data: [PhreshPhish](https://huggingface.co/datasets/phreshphish/phreshphish) (Dalton et al., 2025, CC BY 4.0). Only fingerprints and feature numbers are kept, never the pages.
 - Link-graph method: SiNMULI (Gayen, Mondal, Jana, [arXiv:2608.19190](https://arxiv.org/abs/2608.19190)).

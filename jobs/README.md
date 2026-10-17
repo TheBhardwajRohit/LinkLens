@@ -6,7 +6,7 @@ Data jobs: plain Python scripts that fill the page library. They reuse the API's
 | Job | Script | Runs | What it does |
 |---|---|---|---|
 | Dataset load | `seed_phreshphish.py` | By hand (workflow "Load dataset", or Docker) | Streams rows of the PhreshPhish research dataset, fingerprints each page, stores the fingerprints and writes the feature file the model is trained from. The HTML is thrown away. |
-| Feed ingestion | `ingest.py` | Hourly on GitHub Actions (workflow "Feed ingestion") | Picks new links from free scam feeds, opens each in the sandbox, stores fingerprints and who is behind the page. |
+| Feed ingestion | `ingest.py` | Every 2 hours on GitHub Actions (workflow "Feed ingestion") | Reads all the free scam feeds together, keeps each link once, drops noise and links seen before, opens the rest in the sandbox, and stores fingerprints and who is behind the page. |
 | Family grouping | `cluster.py` | Nightly on GitHub Actions (workflow "Family grouping") | Links pages whose fingerprints agree and groups them into scam families, named after the brand they target. |
 | Model training | `train.py` | By hand, in Docker | Trains the page-reading model from the feature files, checks it on the test split and on the saved real honest pages, and writes `api/app/ml/model.json` and `docs/MODEL_REPORT.md`. |
 | Real-site check | `honest_check.py` | By hand, in Docker, with the local scan server running | Sends the well-known honest pages listed in `data/honest_sites.txt` to the scan server and saves the numbers the model reads, so training can report how the model rates pages from outside the dataset. |
@@ -77,7 +77,7 @@ move on to the store step.
 **Never run the visit step on a personal computer or a campus network** (safety rule 10). It is
 made for GitHub Actions runners or a separate server.
 
-## Turning the hourly schedule on
+## Turning the schedule on
 
 The schedule is skipped until two things exist in the GitHub repository settings
 (Settings, Secrets and variables, Actions):
@@ -86,7 +86,9 @@ The schedule is skipped until two things exist in the GitHub repository settings
 2. Variable `INGEST_ENABLED` set to `true`.
 
 Optional: secrets `MAXMIND_ACCOUNT_ID` and `MAXMIND_LICENSE_KEY` (server locations), variable
-`FEEDS` (comma-separated feed names; the default is `phishing_database`).
+`FEEDS` (comma-separated feed names; the default is `phishing_database,phishunt,phishstats`),
+secret `PHISHSTATS_API_KEY` (a free PhishStats key; without it PhishStats allows only 50 requests
+a day per IP address, shared with everyone else on GitHub's runners).
 
 Without a database, a manual run with "dry run" ticked still tries the whole chain and prints
 what it would have stored.
@@ -96,9 +98,15 @@ what it would have stored.
 | Name | Source | On by default | Notes |
 |---|---|---|---|
 | `phishing_database` | [Phishing.Database](https://github.com/Phishing-Database/Phishing.Database) | Yes | MIT license. New links first, then a random handful from the active list. |
+| `phishunt` | [phishunt.io](https://phishunt.io/feed/) | Yes | Suspected phishing links with the brand they copy, updated hourly. Data released as CC0 (public domain); attribution requested. Their terms ask not to call a listed page "confirmed"; LinkLens only says "likely". |
+| `phishstats` | [PhishStats](https://phishstats.info/api-docs) API | Yes | The newest 100 reported links per run (one request). Updated every 90 minutes. Free key: 150 requests a day; one run uses one. Noisy: many entries are redirect notices (VK's "leaving VK" page) or real sites, which the job drops. Its terms forbid redistributing the raw feed, so LinkLens only uses the links as visit targets and keeps its own findings. |
 | `openphish` | OpenPhish community feed | No | Its terms allow personal research only and forbid passing the data on, so it stays off unless you add it to `FEEDS` for private use. |
 
-Each run takes at most 40 links, one per site, so the volume stays modest.
+How a run picks links: all feeds are read first. A link listed by more than one feed is kept once and
+goes first (several feeds agree). Then the feeds' newest links are taken in turn, so no single feed
+fills the run. Redirect notices and the plain front pages of real popular sites are dropped, and so
+are links seen in earlier runs. Each run takes at most 30 links (40 at most by hand), one per site.
+If a feed is down, the run carries on with the others and says which one failed.
 
 ## Tests
 
