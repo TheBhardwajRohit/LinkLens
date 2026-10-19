@@ -8,7 +8,7 @@ export type ScanState =
   | { kind: "invalid"; error: string }
   | { kind: "loading" } // reopening a saved scan
   | { kind: "sending"; id: string | null; url: string; startedAt: number; steps: Step[]; preview: Preview }
-  | { kind: "done"; scan: Scan; refanged: boolean; reopened: boolean }
+  | { kind: "done"; scan: Scan; refanged: boolean; reopened: boolean; example?: boolean }
   | { kind: "rejected"; error: string }
   | { kind: "unavailable"; error: string }
   | { kind: "offline" };
@@ -19,6 +19,8 @@ export type ScanControl = {
   submit: (raw: string) => Promise<void>;
   /** Show a finished scan by its id (used by bulk scans). */
   open: (id: string) => Promise<void>;
+  /** Show the saved example report (for when no scanner is online). */
+  showExample: () => Promise<void>;
   clearError: () => void;
 };
 
@@ -122,9 +124,16 @@ export function useScan(): ScanControl {
     else setState({ kind: "offline" });
   }, []);
 
+  const showExample = useCallback(async () => {
+    stop.current();
+    setState({ kind: "loading" });
+    const { default: example } = await import("../example/report.json");
+    setState({ kind: "done", scan: example as unknown as Scan, refanged: false, reopened: true, example: true });
+  }, []);
+
   const clearError = useCallback(() => {
     setState((s) => (s.kind === "invalid" || s.kind === "rejected" ? { kind: "idle" } : s));
   }, []);
 
-  return { state, online, submit, open, clearError };
+  return { state, online, submit, open, showExample, clearError };
 }

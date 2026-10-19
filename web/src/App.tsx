@@ -1,17 +1,16 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import BulkScan from "./components/BulkScan";
 import DataHealth from "./components/DataHealth";
-import Features from "./components/Features";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
 import NavBar from "./components/NavBar";
-import ProofStrip from "./components/ProofStrip";
 import ScanInput from "./components/ScanInput";
 import ScanResults from "./components/ScanResults";
 import Trends from "./components/Trends";
 import { EXAMPLE_MODEL, modelFromPreview, modelFromVisit, searchingModel, type GraphModel } from "./graph/model";
 import { prefersReducedMotion } from "./lib/device";
+import { takeHandOff } from "./lib/pages";
 import { useScan } from "./lib/useScan";
 
 export default function App() {
@@ -19,6 +18,8 @@ export default function App() {
   const inputRef = useRef<HTMLInputElement>(null);
   const reportRef = useRef<HTMLElement>(null);
   const lastModel = useRef<GraphModel>(EXAMPLE_MODEL);
+  // A link typed on the homepage, checked as soon as this page opens.
+  const [handedOff] = useState(takeHandOff);
 
   // The hero graph shows an example until a scan starts, grows as each step reports in, then shows
   // the result. The same graph is kept until its data really changes, so it doesn't restart.
@@ -36,7 +37,6 @@ export default function App() {
     return next;
   }, [scan.state]);
 
-  const showingReport = scan.state.kind === "done";
   const behavior = () => (prefersReducedMotion() ? "auto" : "smooth") as ScrollBehavior;
 
   function focusInput() {
@@ -53,6 +53,7 @@ export default function App() {
           <ScanInput
             scan={scan}
             inputRef={inputRef}
+            initialUrl={handedOff}
             onShowReport={() => reportRef.current?.scrollIntoView({ behavior: behavior() })}
           />
           <BulkScan
@@ -62,20 +63,17 @@ export default function App() {
             }}
           />
         </Hero>
-        <ProofStrip />
         {scan.state.kind === "done" && (
           <ScanResults
             scan={scan.state.scan}
             reopened={scan.state.reopened}
+            example={scan.state.example}
             sectionRef={reportRef}
             onScanAnother={focusInput}
           />
         )}
-        {/* With a report on screen, the feature list moves to the end so the report isn't followed by a pitch. */}
-        {!showingReport && <Features />}
         <DataHealth online={scan.online} />
         <Trends online={scan.online} />
-        {showingReport && <Features />}
       </main>
       <Footer />
     </>

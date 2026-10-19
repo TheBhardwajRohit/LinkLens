@@ -4,7 +4,7 @@
   --color-ink: #0b1220;
   --color-panel: #151d2e;
   --color-line: #2a3448;
-  --color-cream: #f4f1ea;
+  --color-cream: #f1f4f9;
   --font-sans: "Red Hat Text Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Red Hat Display Variable", "Red Hat Text Variable", ui-sans-serif, system-ui, sans-serif;
 }
@@ -43,9 +43,10 @@
   --color-cyan-300: #0e7490;
 }
 
-/* Text on solid blue buttons stays white in both themes. */
-:root[data-theme="light"] :is([class*="bg-blue-5"], [class*="bg-blue-6"], [class*="from-blue-"]) {
+/* Text on solid blue buttons and on the homepage's colour fields stays white in both themes. */
+:root[data-theme="light"] :is([class*="bg-blue-5"], [class*="bg-blue-6"], [class*="bg-blue-7"], [class*="from-blue-"], .showcase) {
   --color-white: #ffffff;
+  --color-slate-900: #0f172a;
 }
 
 :root[data-theme="light"] .hero-glow {
@@ -96,8 +97,62 @@ body {
     radial-gradient(40% 40% at 10% 0%, rgb(30 58 138 / 0.3), transparent 70%);
 }
 
-.card-spotlight {
-  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(59 130 246 / 0.14), transparent 70%);
+/* Homepage headline: each line rises from behind its own baseline, then the text under it fades up. */
+.lines .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.lines [data-line] {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lines [data-line] {
+    transform: translateY(105%);
+    animation: line-up 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--i) * 110ms + 150ms);
+  }
+
+  .after-lines {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) 700ms forwards;
+  }
+
+  .hero-result {
+    animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes line-up {
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The showcase's verdict switch, set large: everything inside is sized in em. */
+.showcase-control {
+  font-size: min(4.6vw, 22px);
+}
+
+@media (min-width: 1024px) {
+  .showcase-control {
+    font-size: min(3.3vw, 4.6vh);
+  }
 }
 
 /* Speech bubbles on the graph. The anchor sits on the node; the card floats above it (or below). */

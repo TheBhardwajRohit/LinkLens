@@ -22,7 +22,7 @@ Full original brief: `docs/PROJECT_BRIEF.md`. This file wins where they disagree
 
 | Piece | Runs on | Notes |
 |---|---|---|
-| Website | GitHub Pages (static single-page app), live at https://thebhardwajrohit.github.io/LinkLens/ | Deployed by `.github/workflows/pages.yml`. Built with `VITE_API_URL=none` until the repo variable `VITE_API_URL` names a public scan server, so the live site makes no API calls yet. |
+| Website | GitHub Pages (static site: homepage + scanner page), live at https://thebhardwajrohit.github.io/LinkLens/ | Deployed by `.github/workflows/pages.yml`. Built with `VITE_API_URL=none` until the repo variable `VITE_API_URL` names a public scan server, so the live site makes no API calls yet. |
 | Scheduled jobs (feed ingestion, nightly clustering, dataset seeding) | GitHub Actions | Public repo, so standard runner minutes are free. Ingest every 30 to 60 min. |
 | Database + screenshots | Supabase free (Postgres 500 MB, storage 1 GB, 50 MB max file) | Pauses after 1 week without DB activity; the cron keeps it awake. Local Postgres in Docker for dev and tests. |
 | Live scan server (API + sandbox) | Docker containers. Rohit's PC for now; free cloud host picked in phase 10 | GitHub cannot host it. Actions terms forbid using Actions as part of a serverless app. |
@@ -101,18 +101,24 @@ Scam types: banking/financial fraud, credential phishing, crypto, fake prize/adv
 
 Verdict card, screenshot, scam type tag, family card, siblings (4 tabs), network map, server/recon + map pin, link trail, "why we flagged it", blacklist results, actions (PDF, report mistake, share, scan another).
 
-## Homepage
+## Website: two pages (redesigned 2026-10-20, Rohit approved)
 
-Redesigned 2026-09-25, inspired by OneText's split hero (Rohit approved). Replaces the brief's original layout.
+Two real pages, built by Vite as two HTML entries so GitHub Pages serves both: the homepage (`web/index.html`, `src/home/`) and the scanner (`web/scan/index.html`, `src/App.tsx`). Old result links (`/?scan=<id>`) are forwarded to `/scan/?scan=<id>`. A link typed on the homepage reaches the scanner through session storage (`lib/pages.ts`, never the address, so it stays out of server logs) and is checked on arrival.
 
-- Slim top bar: logo, Features, How it stays safe, GitHub, "Scan a link".
-- Hero 60/40. Left: "See who's really behind the link.", subheading, glass input with blue Scan button, trust line with scanner status. Right: 3D force graph (`web/src/graph/`). Before a scan it plays a looping example story in speech bubbles (labeled "Example scan", reserved `.example` names only); during a scan it pulses; after, it draws the real scan (chain, loaded domains, blocked hosts in red).
-- Dark panel overlapping the hero bottom: safety quote + 4 tiles. Then the scan report (after a scan), then the feature grid.
-- Report layout (redesigned 2026-10-14): two columns on wide screens, one on phones. Left: verdict card (score dial + top 3 reasons), "What should you do?" (with cybercrime.gov.in and the 1930 helpline unless Safe), "At a glance" key facts, "Warn your family" (copy or WhatsApp, link defanged and without its query string; hidden for Safe). Right: tabs Overview (sandbox outcome, screenshot in a browser frame, why we flagged it, blacklists), Who's behind it (recon, link journey + trail, contacted domains), Family and siblings (family, sibling tabs, network map). A Simple / Full report switch is remembered per device. Hidden tabs stay in the page with `hidden print:block`, so print and PDF show everything.
-- Light / dark theme: switch in the top bar, remembered per device (`lib/theme.ts`). Light remaps Tailwind's colour variables in `index.css` (`:root[data-theme="light"]`), so components need no light classes; solid blue buttons keep white text.
-- "Try an example" chips under the scan box: example.com, Google's Safe Browsing test address, and localtest.me (blocked as a private address). All harmless.
-- Readability: no text under 12px, dim text no darker than slate-400, numbers formatted one way (`formatCount`, 1,234,567). Trends draws every day of the window with dates. With a report open, the feature list moves to the end.
-- Feature cards: glass, hover glow, Live / Coming soon badges. Flip `status` in `web/src/features.ts` when a phase ships. Never claim a check that doesn't exist.
+Homepage (built with the design-taste-frontend skill, direction "The product performs", seed 262485324; its house rules apply here: no gradients, glass, shadows at rest, eyebrows, thin rules, icon cards, or uppercase labels; outside `data-ui` fragments):
+- Hero split in two tones. Left: "Don't click it. / Check it." (each line rises from behind its baseline), one sentence, one blue "Check a link" button to the scanner. Right: a working example: three scam text messages (Bank KYC, E-challan, Parcel), "Check this link" plays the scan steps and lands on that example's verdict. No nav bar: logo, How it works, GitHub, Scanner, theme switch.
+- "How a check works": three exchanges (paste, sandbox journey, verdict with every reason). The verdict switch blown up on a full-width verdict-coloured field ("This one looks dangerous."). Three capability rows (scam family and siblings, sandbox rules, warn your family). A tile board of real numbers and sources. A blue closing section with the scanner's first step open. A footer of tiles with the GeoLite credit.
+- Every example is labelled "Example", uses reserved `.example` links, is defanged, and never links anywhere. Examples live in `src/home/examples.ts`; each one's reasons must add up to its score (tested). Proof tiles use real numbers only; update them in `ProofBoard.tsx` when the library grows a lot.
+
+Scanner page:
+- Top bar: logo (home), How it works, Trends, GitHub, theme switch, "Scan a link". Hero 60/40: "See who's really behind the link.", the scan box, bulk scan; right: the 3D graph (`web/src/graph/`), which plays a labelled example story before a scan, pulses during one, and draws the real scan after (blocked hosts in red).
+- "Try an example" chips under the scan box: example.com, Google's Safe Browsing test address, and localtest.me (blocked as a private address). All harmless. When no scanner is online (the live site today), "See an example report" opens `src/example/report.json`, a real saved scan of Google's test address, labelled as an example.
+- Report layout (redesigned 2026-10-14): two columns on wide screens, one on phones. Left: verdict card (score dial + top 3 reasons), "What should you do?" (with cybercrime.gov.in and the 1930 helpline unless Safe), "At a glance" key facts, "Warn your family" (copy or WhatsApp, link defanged and without its query string; hidden for Safe). Right: tabs Overview (sandbox outcome, screenshot in a browser frame, why we flagged it, blacklists), Who's behind it (recon, link journey + trail, contacted domains), Family and siblings (family, sibling tabs, network map). A Simple / Full report switch is remembered per device. Hidden tabs stay in the page with `hidden print:block`, so print and PDF show everything. Then "What LinkLens knows" and Trends.
+
+Both pages:
+- Light / dark theme: switch in the top bar, remembered per device (`lib/theme.ts`). Light remaps Tailwind's colour variables in `index.css` (`:root[data-theme="light"]`), so components need no light classes; solid blue buttons and the homepage's colour fields keep white text.
+- Readability: no text under 12px (homepage: 14px), dim text no darker than slate-400, numbers formatted one way (`formatCount`, 1,234,567). Trends draws every day of the window with dates.
+- Never claim a check that doesn't exist.
 - Blue is the action color. Green, yellow, and red mean verdicts only (red also marks blocked hosts in the graph).
 - No full-page 3D background. Phones stack text first. Reduced motion renders a still graph; no WebGL, a crash, or under 24 fps falls back to a flat SVG graph.
 - Fonts: Red Hat Display (headings), Red Hat Text (body), self-hosted.

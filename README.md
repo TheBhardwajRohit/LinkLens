@@ -14,7 +14,7 @@ You never open the page yourself. A locked-down sandbox browser visits it and ta
 
 > **Status:** all ten planned phases are built. Scans run on a local install (`docker compose up`). Putting the scanner online needs three free accounts that are not created yet; the steps are in [docs/DEPLOY.md](docs/DEPLOY.md). See [PROGRESS.md](PROGRESS.md) for what was checked and how.
 >
-> **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage only, until a public scan server exists)
+> **Live site:** https://thebhardwajrohit.github.io/LinkLens/ (homepage and scanner page; scans need a public scan server, so until then the scanner shows an example report)
 
 ## What a scan does
 

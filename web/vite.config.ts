@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 
 // Adds a Content Security Policy to the built page. The browser then refuses any script, style,
@@ -36,10 +37,20 @@ function contentSecurityPolicy(): Plugin {
 }
 
 // VITE_BASE is "/LinkLens/" when building for GitHub Pages, "/" everywhere else.
+// Two pages: the homepage (index.html) and the scanner (scan/index.html). Each is a real file, so
+// GitHub Pages serves both without any redirect tricks.
 export default defineConfig({
   base: process.env.VITE_BASE ?? "/",
   plugins: [react(), tailwindcss(), contentSecurityPolicy()],
   server: { port: 5173 },
-  // The three.js chunk is about 900 kB but loads lazily, after the page is already on screen.
-  build: { chunkSizeWarningLimit: 1000 },
+  build: {
+    // The three.js chunk is about 900 kB but loads lazily, after the page is already on screen.
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      input: {
+        home: fileURLToPath(new URL("./index.html", import.meta.url)),
+        scan: fileURLToPath(new URL("./scan/index.html", import.meta.url)),
+      },
+    },
+  },
 });

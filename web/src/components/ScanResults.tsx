@@ -68,11 +68,13 @@ function Panel({ active, children }: { active: boolean; children: ReactNode }) {
 export default function ScanResults({
   scan,
   reopened,
+  example = false,
   sectionRef,
   onScanAnother,
 }: {
   scan: Scan;
   reopened: boolean;
+  example?: boolean;
   sectionRef: Ref<HTMLElement>;
   onScanAnother: () => void;
 }) {
@@ -95,7 +97,12 @@ export default function ScanResults({
           <div>
             <h2 className="font-display text-2xl font-medium tracking-tight text-cream sm:text-3xl">Scan report</h2>
             <p className="mt-1 break-all font-mono text-sm text-slate-300">{defang(scan.url)}</p>
-            {reopened && (
+            {example ? (
+              <p className="mt-1 max-w-2xl text-sm text-slate-300">
+                Example report: a real scan of Google's harmless test address, saved so you can see what a report looks
+                like while the scanner is offline.
+              </p>
+            ) : reopened && (
               <p className="mt-1 text-sm text-slate-400">
                 Saved scan from {formatDate(scan.created_at)}. Personal details in the link were removed before saving.
               </p>

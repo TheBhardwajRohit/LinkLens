@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowRight, Check, CircleAlert, Link2, LoaderCircle, X } from "lucide-react";
-import { useEffect, useId, useState, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 
 import type { Step } from "../lib/api";
 import type { ScanControl } from "../lib/useScan";
@@ -72,13 +72,23 @@ const EXAMPLES = [
 export default function ScanInput({
   scan,
   inputRef,
+  initialUrl = null,
   onShowReport,
 }: {
   scan: ScanControl;
   inputRef: RefObject<HTMLInputElement | null>;
+  /** A link handed over from the homepage: filled in and checked once, on arrival. */
+  initialUrl?: string | null;
   onShowReport: () => void;
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialUrl ?? "");
+  const started = useRef(false);
+  useEffect(() => {
+    if (initialUrl && !started.current) {
+      started.current = true;
+      scan.submit(initialUrl);
+    }
+  }, [initialUrl, scan]);
   const { state, online } = scan;
   const statusId = useId();
   const sending = state.kind === "sending";
@@ -185,6 +195,15 @@ export default function ScanInput({
             The scanner isn't online right now. Scanning runs on a local install until a public scan server is set
             up.
           </p>
+        )}
+        {online === false && state.kind !== "done" && state.kind !== "loading" && (
+          <button
+            type="button"
+            onClick={() => scan.showExample().then(() => window.setTimeout(onShowReport, 60))}
+            className="mt-3 inline-flex items-center gap-1.5 font-medium text-blue-300 underline-offset-4 hover:text-blue-200 hover:underline"
+          >
+            See an example report <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
         )}
       </div>
 

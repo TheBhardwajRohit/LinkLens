@@ -1,11 +1,12 @@
 import { ArrowRight, Moon, ScanSearch, Sun } from "lucide-react";
 import { useState } from "react";
 
+import { HOME } from "../lib/pages";
 import { applyTheme, storedTheme, type Theme } from "../lib/theme";
 
 const REPO = "https://github.com/TheBhardwajRohit/LinkLens";
 
-function ThemeSwitch() {
+export function ThemeSwitch() {
   const [theme, setTheme] = useState<Theme>(storedTheme);
   const next: Theme = theme === "dark" ? "light" : "dark";
   return (
@@ -30,7 +31,8 @@ export default function NavBar({ onScanClick }: { onScanClick: () => void }) {
       <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-4 px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2.5">
           <a
-            href="#top"
+            href={HOME}
+            aria-label="LinkLens home"
             className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 font-display text-[15px] font-bold tracking-tight text-blue-600 shadow-[0_8px_28px_-10px_rgba(59,130,246,0.9)] transition hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
           >
             <ScanSearch className="h-4 w-4" aria-hidden="true" />
@@ -40,11 +42,11 @@ export default function NavBar({ onScanClick }: { onScanClick: () => void }) {
             aria-label="Main"
             className="hidden items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.06] p-1 text-sm text-slate-200 backdrop-blur md:flex"
           >
-            <a href="#features" className="rounded-md px-3 py-1 transition hover:bg-white/10 hover:text-white">
-              Features
+            <a href={`${HOME}#how`} className="rounded-md px-3 py-1 transition hover:bg-white/10 hover:text-white">
+              How it works
             </a>
-            <a href="#safety" className="rounded-md px-3 py-1 transition hover:bg-white/10 hover:text-white">
-              How it stays safe
+            <a href="#trends" className="rounded-md px-3 py-1 transition hover:bg-white/10 hover:text-white">
+              Trends
             </a>
             <a
               href={REPO}

@@ -123,10 +123,13 @@ export default function ReportActions({ id, saved, onScanAnother }: { id: string
           <FileDown className="h-4 w-4" aria-hidden="true" />
           Download report (PDF)
         </button>
-        <button type="button" onClick={() => setReporting((v) => !v)} aria-expanded={reporting} className={QUIET}>
-          <Flag className="h-4 w-4" aria-hidden="true" />
-          Report a mistake
-        </button>
+        {/* Feedback is kept with a saved scan, so unsaved ones (and the example) can't take it. */}
+        {saved && (
+          <button type="button" onClick={() => setReporting((v) => !v)} aria-expanded={reporting} className={QUIET}>
+            <Flag className="h-4 w-4" aria-hidden="true" />
+            Report a mistake
+          </button>
+        )}
         <button type="button" onClick={onScanAnother} className={QUIET}>
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
           Scan another link

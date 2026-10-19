@@ -1,0 +1,333 @@
+{
+ "id": "example",
+ "url": "http://malware.testing.google.test/testing/malware/",
+ "created_at": "2026-10-19T21:40:04.716396+00:00",
+ "visit": {
+  "requested_url": "http://malware.testing.google.test/testing/malware/",
+  "final_url": null,
+  "title": null,
+  "status": null,
+  "hops": [
+   {
+    "url": "http://malware.testing.google.test/testing/malware/",
+    "kind": "start",
+    "status": null,
+    "blocked": true,
+    "reason": "the domain name could not be found"
+   }
+  ],
+  "blocked": [
+   {
+    "host": "malware.testing.google.test",
+    "port": 80,
+    "reason": "the domain name could not be found"
+   }
+  ],
+  "contacted_domains": [],
+  "screenshot_jpeg_b64": null,
+  "html_truncated": false,
+  "bot_check": null,
+  "downloads": [],
+  "popups": [],
+  "pending_refresh": null,
+  "headers": {},
+  "server_ips": {},
+  "tls": null,
+  "stopped": "unreachable",
+  "notes": [
+   "The site didn't respond. It may be down or already taken offline."
+  ],
+  "duration_ms": 0
+ },
+ "recon": {
+  "host": "malware.testing.google.test",
+  "registered_domain": null,
+  "registration": null,
+  "chain_domains": [],
+  "dns": {
+   "host": "malware.testing.google.test",
+   "status": "not_found",
+   "a": [],
+   "aaaa": [],
+   "cname": [],
+   "mx": [],
+   "ns": [],
+   "txt": [],
+   "note": "This name doesn't exist in DNS (the site may be gone)."
+  },
+  "server": null,
+  "certificate": null,
+  "cert_history": null,
+  "http": {
+   "status": "skipped",
+   "server": null,
+   "powered_by": null,
+   "generator": null,
+   "tech": [],
+   "security_headers": {}
+  },
+  "duration_ms": 45
+ },
+ "blacklists": {
+  "sources": [
+   {
+    "id": "safe_browsing",
+    "name": "Google Safe Browsing",
+    "status": "listed",
+    "note": "Google lists this link as suspected malware.",
+    "threats": [
+     "malware"
+    ],
+    "matched": [
+     "http://malware.testing.google.test/testing/malware/"
+    ],
+    "detail": {},
+    "cached": true,
+    "reference": "https://developers.google.com/safe-browsing/v4/advisory"
+   },
+   {
+    "id": "phishing_database",
+    "name": "Phishing.Database",
+    "status": "clean",
+    "note": "Not among 59,223 phishing links and 392,178 phishing domains.",
+    "threats": [],
+    "matched": [],
+    "detail": {},
+    "cached": false,
+    "reference": "https://github.com/Phishing-Database/Phishing.Database"
+   },
+   {
+    "id": "virustotal",
+    "name": "VirusTotal",
+    "status": "not_configured",
+    "note": "No VirusTotal key is set, so this check was skipped.",
+    "threats": [],
+    "matched": [],
+    "detail": {},
+    "cached": false,
+    "reference": null
+   },
+   {
+    "id": "urlhaus",
+    "name": "URLhaus (abuse.ch)",
+    "status": "not_configured",
+    "note": "No abuse.ch key is set, so this check was skipped.",
+    "threats": [],
+    "matched": [],
+    "detail": {},
+    "cached": false,
+    "reference": null
+   },
+   {
+    "id": "urlscan",
+    "name": "urlscan.io",
+    "status": "unknown",
+    "note": "Nobody has scanned this site on urlscan.io yet.",
+    "threats": [],
+    "matched": [],
+    "detail": {
+     "scans": 0,
+     "latest": null,
+     "malicious": null
+    },
+    "cached": true,
+    "reference": "https://urlscan.io/search/#page.domain%3Amalware.testing.google.test"
+   },
+   {
+    "id": "linklens",
+    "name": "LinkLens history",
+    "status": "skipped",
+    "note": null,
+    "threats": [],
+    "matched": [],
+    "detail": {},
+    "cached": false,
+    "reference": null
+   }
+  ],
+  "listed_by": [
+   "Google Safe Browsing"
+  ],
+  "checked": [
+   "http://malware.testing.google.test/testing/malware/"
+  ],
+  "duration_ms": 0
+ },
+ "analysis": {
+  "score": 100,
+  "verdict": "dangerous",
+  "rule_score": 100,
+  "backing": 100,
+  "summary": "This link tries to get you to download something that may be malware.",
+  "scam_type": {
+   "id": "malware",
+   "label": "Malware download",
+   "brand": null,
+   "evidence": [
+    "a blacklist lists it as malware"
+   ]
+  },
+  "reasons": [
+   {
+    "text": "Google Safe Browsing lists this link as suspected malware.",
+    "points": 70,
+    "area": "blacklist"
+   },
+   {
+    "text": "The address puts \"google\" in front of an unrelated domain, imitating Google.",
+    "points": 30,
+    "area": "link"
+   },
+   {
+    "text": "The address has many layers of subdomains.",
+    "points": 8,
+    "area": "link"
+   },
+   {
+    "text": "The domain no longer exists in DNS, typical of a scam site that was taken down.",
+    "points": 5,
+    "area": "domain"
+   }
+  ],
+  "good_signs": [],
+  "partial": true,
+  "listed_by": [
+   "Google Safe Browsing"
+  ],
+  "model": null,
+  "link": {
+   "url": "http://malware.testing.google.test/testing/malware/",
+   "host": "malware.testing.google.test",
+   "unicode_host": null,
+   "registered_domain": null,
+   "site": null,
+   "suffix": null,
+   "free_hosting": null,
+   "is_ip": false,
+   "port": null,
+   "length": 51,
+   "subdomain_depth": 3,
+   "digit_ratio": 0.0,
+   "hyphens": 0,
+   "entropy": 1.5,
+   "random_name": false,
+   "has_at": false,
+   "double_slash_path": false,
+   "abused_tld": false,
+   "shortener": false,
+   "url_words": [],
+   "official_brand": null,
+   "lookalike": {
+    "brand": "Google",
+    "category": "tech",
+    "kind": "subdomain",
+    "detail": "puts \"google\" in front of an unrelated domain"
+   },
+   "tranco_rank": null
+  },
+  "final_link": null,
+  "page": {
+   "captured": false,
+   "title": null,
+   "forms": 0,
+   "inputs": 0,
+   "password_fields": 0,
+   "hidden_fields": 0,
+   "asks_for": [],
+   "form_targets": [],
+   "form_to_other_domain": false,
+   "form_without_target": false,
+   "mailto_form": false,
+   "brands_mentioned": [],
+   "brand_in_title": [],
+   "top_brand": null,
+   "top_brand_mentions": 0,
+   "wallets": [],
+   "phrases": {},
+   "words": 0,
+   "iframes": 0,
+   "hidden_iframes": 0,
+   "right_click_blocked": false,
+   "obfuscation": 0,
+   "base64_share": 0.0,
+   "links": 0,
+   "empty_link_share": 0.0,
+   "external_link_share": 0.0,
+   "executable_links": [],
+   "phone_numbers": 0,
+   "scripts": 0,
+   "external_scripts": 0,
+   "images": 0,
+   "meta_refresh": false,
+   "noindex": false
+  },
+  "tranco_list": "K9PXW"
+ },
+ "fingerprints": {
+  "tlsh": null,
+  "dom_hash": null,
+  "dom_simhash": null,
+  "text_simhash": null,
+  "phash": null,
+  "favicon_hash": null,
+  "tags": 0,
+  "words": 0,
+  "terms": [],
+  "out_domains": []
+ },
+ "family": {
+  "status": "skipped",
+  "note": "There was no page to compare.",
+  "family": null,
+  "similar": [],
+  "scam_matches": 0,
+  "copied_site": null,
+  "library_size": 0
+ },
+ "siblings": {
+  "same_server": {
+   "status": "skipped",
+   "note": "No public server address was found.",
+   "items": [],
+   "total": 0
+  },
+  "same_owner": {
+   "status": "skipped",
+   "note": "The link has no domain name to look up.",
+   "items": [],
+   "total": 0
+  },
+  "same_design": {
+   "status": "skipped",
+   "note": "There was no page to compare.",
+   "items": [],
+   "total": 0
+  },
+  "lookalikes": {
+   "status": "skipped",
+   "note": "The link has no domain name to vary.",
+   "items": [],
+   "total": 0
+  }
+ },
+ "graph": {
+  "status": "skipped",
+  "label": null,
+  "note": "The link has no site name to place in a graph.",
+  "positive_in": 0,
+  "negative_in": 0,
+  "unknown_in": 0,
+  "links_out": 0,
+  "scam_links_out": 0,
+  "triads": 0,
+  "inferred_edges": 0,
+  "in_degree": 0,
+  "out_degree": 0,
+  "pagerank": 0.0,
+  "eigenvector": 0.0,
+  "clustering": 0.0,
+  "nodes": [],
+  "edges": []
+ },
+ "saved": false
+}
