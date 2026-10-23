@@ -8,10 +8,12 @@ import { Reveal } from "./parts";
 
 const KYC = MESSAGES[0];
 
-function Row({ title, text, children, flip = false }: { title: string; text: string; children: ReactNode; flip?: boolean }) {
+// Every row has the same shape: the statement on the left, the piece of the report on the right,
+// filling its column, so the three rows line up on the same edges.
+function Row({ title, text, children }: { title: string; text: string; children: ReactNode }) {
   return (
-    <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
-      <div className={`lg:col-span-5 ${flip ? "lg:order-2" : ""}`}>
+    <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-12 lg:gap-16">
+      <div className="lg:col-span-5">
         <Reveal>
           <h3 className="font-display text-[clamp(1.75rem,2.6vw,2.5rem)] font-semibold leading-tight tracking-[-0.02em] text-cream">{title}</h3>
         </Reveal>
@@ -19,7 +21,7 @@ function Row({ title, text, children, flip = false }: { title: string; text: str
           <p className="mt-4 max-w-[42ch] text-[17px] leading-relaxed text-slate-200">{text}</p>
         </Reveal>
       </div>
-      <Reveal order={2} className={`lg:col-span-7 ${flip ? "lg:order-1" : ""}`}>
+      <Reveal order={2} className="lg:col-span-7">
         {children}
       </Reveal>
     </div>
@@ -99,7 +101,7 @@ const RULES = [
 
 function SandboxFragment() {
   return (
-    <div data-ui className="max-w-[440px] rounded-2xl bg-panel p-2 ring-1 ring-white/10 lg:ml-auto">
+    <div data-ui className="rounded-2xl bg-panel p-2 ring-1 ring-white/10">
       <p className="flex items-center gap-2 px-3 pb-2 pt-3 text-sm font-medium text-slate-200">
         <Lock className="h-4 w-4 text-blue-400" aria-hidden="true" />
         Sandbox rules, fixed for every scan
@@ -126,7 +128,7 @@ const WARNING = [
 function WarnFragment() {
   const [copied, setCopied] = useState(false);
   return (
-    <div data-ui className="max-w-[520px] rounded-2xl bg-panel p-5 ring-1 ring-white/10">
+    <div data-ui className="rounded-2xl bg-panel p-5 ring-1 ring-white/10">
       <div className="rounded-2xl rounded-tr-md bg-emerald-500/[0.12] px-4 py-3">
         <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-100">{WARNING}</p>
       </div>
@@ -168,7 +170,6 @@ export default function Capabilities() {
       <Row
         title="It never opens on your phone."
         text="The link loads in a sealed browser on the scanner, with rules no page can change. You only ever see a screenshot."
-        flip
       >
         <SandboxFragment />
       </Row>

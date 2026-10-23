@@ -10,7 +10,7 @@ import { VERDICT_STROKE } from "./examples";
 export const PILL =
   "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[17px] font-semibold transition-[background-color,transform] duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300 motion-reduce:active:scale-100";
 
-/** One part of a section arriving as it scrolls into view: rises a little and fades in, once.
+/** One part of a section arriving as it scrolls into view: rises a little and fades in, every time it comes back into view.
  * Parts of a section pass their place in reading order, so they arrive one after another. */
 export function Reveal({
   children,
@@ -30,7 +30,7 @@ export function Reveal({
       className={className}
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -12% 0px" }}
+      viewport={{ once: false, margin: "0px 0px -12% 0px" }}
       transition={{ duration: reduce ? 0.2 : 0.7, delay: order * 0.08, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}

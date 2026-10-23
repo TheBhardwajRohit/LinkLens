@@ -8,16 +8,19 @@ import { Dial, Reveal, points } from "./parts";
 
 const KYC = MESSAGES[0];
 
-function Exchange({ say, call, response, wide = false }: { say: string; call: ReactNode; response: ReactNode; wide?: boolean }) {
+// One exchange per row: what you give on the left, what comes back on the right. Phones stack them.
+function Exchange({ say, call, response }: { say: string; call: ReactNode; response: ReactNode }) {
   return (
-    <div>
-      <Reveal>
-        <p className="font-display text-2xl font-medium text-cream">{say}</p>
-      </Reveal>
-      <Reveal order={1} className="mt-4">
-        {call}
-      </Reveal>
-      <Reveal order={2} className={`mt-6 sm:pl-14 ${wide ? "lg:-mr-[200px]" : ""}`}>
+    <div className="grid gap-6 lg:grid-cols-12 lg:gap-16">
+      <div className="lg:col-span-5">
+        <Reveal>
+          <p className="font-display text-2xl font-medium text-cream">{say}</p>
+        </Reveal>
+        <Reveal order={1} className="mt-4">
+          {call}
+        </Reveal>
+      </div>
+      <Reveal order={2} className="lg:col-span-7 lg:pt-12">
         {response}
       </Reveal>
     </div>
@@ -150,20 +153,19 @@ function Verdict() {
 export default function HowItWorks() {
   return (
     <section id="how" className="scroll-mt-6 px-5 py-28 sm:px-10 lg:py-44">
-      <div className="mx-auto max-w-[560px] lg:ml-[calc(25%-40px)]">
+      <div className="mx-auto max-w-7xl">
         <Reveal>
           <h2 className="font-display text-[clamp(1.75rem,2.6vw,2.5rem)] font-semibold tracking-[-0.02em] text-cream">
             How a check works
           </h2>
         </Reveal>
-        <div className="mt-14 space-y-24">
+        <div className="mt-14 space-y-24 lg:space-y-32">
           <Exchange say="First, paste the link you were sent." call={<PastedLink />} response={<CleanedLink />} />
           <Exchange say="Then LinkLens opens it, so you don't." call={<StepsDone />} response={<Journey />} />
           <Exchange
             say="You get a verdict, with every reason."
             call={<p className="text-[17px] text-slate-300">In about a minute, a plain report: the score, the scam it looks like, and each sign that led there.</p>}
             response={<Verdict />}
-            wide
           />
         </div>
       </div>
