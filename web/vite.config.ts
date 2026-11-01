@@ -37,8 +37,8 @@ function contentSecurityPolicy(): Plugin {
 }
 
 // VITE_BASE is "/LinkLens/" when building for GitHub Pages, "/" everywhere else.
-// Two pages: the homepage (index.html) and the scanner (scan/index.html). Each is a real file, so
-// GitHub Pages serves both without any redirect tricks.
+// Three pages: the homepage (index.html), the scanner (scan/index.html), and the comparison
+// (compare/index.html). Each is a real file, so GitHub Pages serves them without redirect tricks.
 export default defineConfig({
   base: process.env.VITE_BASE ?? "/",
   plugins: [react(), tailwindcss(), contentSecurityPolicy()],
@@ -50,6 +50,7 @@ export default defineConfig({
       input: {
         home: fileURLToPath(new URL("./index.html", import.meta.url)),
         scan: fileURLToPath(new URL("./scan/index.html", import.meta.url)),
+        compare: fileURLToPath(new URL("./compare/index.html", import.meta.url)),
       },
     },
   },

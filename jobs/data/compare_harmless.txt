@@ -1,0 +1,11 @@
+# Harmless links for the comparison page (web/compare/). Every one is safe to open on any PC:
+# test pages run by Google and EICAR, real sites, a famous lookalike demo, and made-up names.
+# Run with:  python -m jobs.compare lists / scan / merge  (see jobs/compare.py)
+https://example.com/ | an ordinary safe page
+https://www.onlinesbi.sbi/ | SBI's real website
+https://www.xn--80ak6aa92e.com/ | "apple.com" spelled with Cyrillic letters, a 2017 security demo
+http://sbi-kyc-update.example/verify | a scam-shaped link made up for this test; the name can never exist
+http://localtest.me/ | a public name that points back at your own computer
+https://testsafebrowsing.appspot.com/s/phishing.html | Google's test phishing page
+http://malware.testing.google.test/testing/malware/ | Google's test malware address
+https://secure.eicar.org/eicar.com.txt | the standard antivirus test file

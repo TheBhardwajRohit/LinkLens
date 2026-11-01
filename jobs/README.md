@@ -10,6 +10,7 @@ Data jobs: plain Python scripts that fill the page library. They reuse the API's
 | Family grouping | `cluster.py` | Nightly on GitHub Actions (workflow "Family grouping") | Links pages whose fingerprints agree and groups them into scam families, named after the brand they target. |
 | Model training | `train.py` | By hand, in Docker | Trains the page-reading model from the feature files, checks it on the test split and on the saved real honest pages, and writes `api/app/ml/model.json` and `docs/MODEL_REPORT.md`. |
 | Real-site check | `honest_check.py` | By hand, in Docker, with the local scan server running | Sends the well-known honest pages listed in `data/honest_sites.txt` to the scan server and saves the numbers the model reads, so training can report how the model rates pages from outside the dataset. |
+| Comparison | `compare.py` | By hand | Asks VirusTotal and PhishTank about a list of links, scans the same links with a LinkLens scan server, and saves one run for the website's comparison page. |
 
 ## Run one locally (Docker)
 
@@ -107,6 +108,25 @@ goes first (several feeds agree). Then the feeds' newest links are taken in turn
 fills the run. Redirect notices and the plain front pages of real popular sites are dropped, and so
 are links seen in earlier runs. Each run takes at most 30 links (40 at most by hand), one per site.
 If a feed is down, the run carries on with the others and says which one failed.
+
+## Comparing with VirusTotal and PhishTank
+
+The website's comparison page (`web/compare/`) reads one saved run. To make a new one with the links in
+`data/compare_harmless.txt` (all harmless, so the local scan server may open them; live scam links
+must only go to a scan server in an isolated place, safety rule 10):
+
+```bash
+docker compose --profile jobs build jobs
+docker compose run --rm jobs python -m jobs.compare lists --in jobs/data/compare_harmless.txt --out /data/ml/compare-lists.json
+docker compose run --rm -v "$PWD/web/src/compare:/out" jobs python -m jobs.compare scan --in jobs/data/compare_harmless.txt --api http://api:8000 --out /data/ml/compare-scans.json --shots /out/shots --gap 32
+docker compose run --rm -v "$PWD/web/src/compare:/out" jobs python -m jobs.compare merge --lists /data/ml/compare-lists.json --scans /data/ml/compare-scans.json --in jobs/data/compare_harmless.txt --name harmless --out /out/runs/harmless.json
+```
+
+The steps in between are kept in the `ml_data` volume; the run file and the screenshots land in the website.
+`lists` needs `VIRUSTOTAL_API_KEY` (free key: 4 requests a minute, so eight links take about 7
+minutes). VirusTotal adds every link it is sent to its public dataset, so only send public links.
+PhishTank is asked through its public lookup, which needs no key; LinkLens itself never uses it.
+OpenPhish is never asked: its terms forbid showing its data.
 
 ## Tests
 

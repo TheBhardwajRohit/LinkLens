@@ -1,6 +1,6 @@
 // The close of the homepage: two rows of tiles, the name set large, and the way into the scanner.
 
-import { HOME, SCANNER } from "../lib/pages";
+import { COMPARE, HOME, SCANNER } from "../lib/pages";
 
 const REPO = "https://github.com/TheBhardwajRohit/LinkLens";
 
@@ -33,6 +33,11 @@ export default function SiteFooter() {
           <li>
             <a href={`${HOME}#how`} className={LINK}>
               How a check works
+            </a>
+          </li>
+          <li>
+            <a href={COMPARE} className={LINK}>
+              Compared with others
             </a>
           </li>
           <li>

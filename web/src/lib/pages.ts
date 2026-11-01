@@ -1,7 +1,8 @@
-// Addresses of the two pages, under whatever base the site is served from ("/" locally,
+// Addresses of the site's pages, under whatever base the site is served from ("/" locally,
 // "/LinkLens/" on GitHub Pages).
 export const HOME = import.meta.env.BASE_URL;
 export const SCANNER = `${import.meta.env.BASE_URL}scan/`;
+export const COMPARE = `${import.meta.env.BASE_URL}compare/`;
 
 const HANDOFF = "linklens-check";
 

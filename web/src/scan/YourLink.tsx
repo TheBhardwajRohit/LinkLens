@@ -24,7 +24,8 @@ function Step({ index, title, text, children }: { index: number; title: string; 
   );
 }
 
-function Cleaned() {
+/** A link before and after its personal details are removed (the comparison page shows it too). */
+export function Cleaned() {
   return (
     <div data-ui className="rounded-2xl bg-panel p-2 ring-1 ring-white/10">
       <div className="flex items-center gap-3 rounded-xl px-3 py-3">

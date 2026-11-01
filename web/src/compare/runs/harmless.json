@@ -1,0 +1,1708 @@
+{
+ "name": "harmless",
+ "made": "2026-11-01T17:39:16.349026+00:00",
+ "asked_at": "2026-11-01T17:26:34.153652+00:00",
+ "links": [
+  {
+   "url": "https://example.com/",
+   "asked_at": "2026-11-01T17:26:34.153652+00:00",
+   "phishtank": {
+    "status": "listed",
+    "phish_id": 7216639,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 0,
+     "suspicious": 0,
+     "harmless": 62,
+     "undetected": 31,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [],
+    "categories": [
+     "Information Technology (alphaMountain.ai)",
+     "computersandsoftware",
+     "domain_parking",
+     "information technology"
+    ],
+    "reputation": -346,
+    "votes": {
+     "harmless": 18,
+     "malicious": 23
+    },
+    "title": "Example Domain",
+    "final_url": "https://example.com/",
+    "first_seen": "2012-04-19T14:32:23+00:00",
+    "last_analysis": "2026-11-01T17:25:28+00:00",
+    "times_submitted": 32662
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 0,
+     "suspicious": 0,
+     "harmless": 62,
+     "undetected": 31,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [],
+    "categories": [
+     "Information Technology (alphaMountain.ai)",
+     "computersandsoftware",
+     "domain_parking",
+     "information technology"
+    ],
+    "reputation": -346,
+    "votes": {
+     "harmless": 18,
+     "malicious": 23
+    },
+    "title": "Example Domain",
+    "final_url": "https://example.com/",
+    "first_seen": "2012-04-19T14:32:23+00:00",
+    "last_analysis": "2026-11-01T17:25:28+00:00",
+    "times_submitted": 32662,
+    "complete": true
+   },
+   "linklens": {
+    "id": "0e16315c-5e8e-43ca-950a-9fa9d68c4524",
+    "scanned_at": "2026-11-01T17:34:27.286355+00:00",
+    "score": 0,
+    "own_score": 0,
+    "verdict": "safe",
+    "summary": "A well-known site with no warning signs found.",
+    "scam_type": null,
+    "partial": false,
+    "reasons": [],
+    "good_signs": [
+     {
+      "text": "It's one of the world's most visited sites (#177 on Tranco).",
+      "points": -30,
+      "area": "reputation"
+     },
+     {
+      "text": "The domain has existed for 31 years.",
+      "points": -15,
+      "area": "domain"
+     }
+    ],
+    "model": 0.825,
+    "unicode_host": null,
+    "lookalike": null,
+    "visit": {
+     "final_url": "https://example.com/",
+     "title": "Example Domain",
+     "stopped": null,
+     "notes": [],
+     "hops": 1,
+     "blocked": [],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": "RESERVED-Internet Assigned Numbers Authority",
+     "created": "1995-08-14T04:00:00+00:00",
+     "age_days": 11402,
+     "country": null,
+     "network": "Cloudflare, Inc.",
+     "abuse_email": "abuse@cloudflare.com",
+     "certs_first_seen": "2025-11-20T00:00:00Z",
+     "cert_count": 17
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "clean",
+      "note": "Not on Google's lists. That alone doesn't make a link safe."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "clean",
+      "note": "None of 93 security vendors flag this link."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "info",
+      "note": "Scanned 2,891 times on urlscan.io, most recently on 1 Nov 2026."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "info",
+      "note": "LinkLens has scanned this domain 18 times before. Last time (1 Nov 2026) it looked safe, with a score of 0."
+     }
+    ],
+    "family": {
+     "status": "copy",
+     "note": "This page is a near copy of a page on example[.]org, hosted somewhere else.",
+     "copied_site": "example.org",
+     "library_size": 55349,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 3,
+     "same_design": 1,
+     "lookalikes": 29
+    }
+   },
+   "shot": "example-com.jpg",
+   "note": "an ordinary safe page"
+  },
+  {
+   "url": "https://www.onlinesbi.sbi/",
+   "asked_at": "2026-11-01T17:26:34.153685+00:00",
+   "phishtank": {
+    "status": "not_listed",
+    "phish_id": null,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 0,
+     "suspicious": 0,
+     "harmless": 58,
+     "undetected": 35,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [],
+    "categories": [
+     "financial",
+     "financial data and services",
+     "financial services",
+     "financial_services"
+    ],
+    "reputation": 1,
+    "votes": {
+     "harmless": 1,
+     "malicious": 0
+    },
+    "title": "State Bank of India",
+    "final_url": "https://onlinesbi.sbi.bank.in/",
+    "first_seen": "2020-09-18T05:13:50+00:00",
+    "last_analysis": "2026-11-01T17:25:43+00:00",
+    "times_submitted": 677
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 0,
+     "suspicious": 0,
+     "harmless": 58,
+     "undetected": 35,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [],
+    "categories": [
+     "financial",
+     "financial data and services",
+     "financial services",
+     "financial_services"
+    ],
+    "reputation": 1,
+    "votes": {
+     "harmless": 1,
+     "malicious": 0
+    },
+    "title": "State Bank of India",
+    "final_url": "https://onlinesbi.sbi.bank.in/",
+    "first_seen": "2020-09-18T05:13:50+00:00",
+    "last_analysis": "2026-11-01T17:28:55+00:00",
+    "times_submitted": 678,
+    "complete": true
+   },
+   "linklens": {
+    "id": "c44563cb-61ae-4765-a1f0-83ad6da92dfa",
+    "scanned_at": "2026-11-01T17:35:10.205921+00:00",
+    "score": 0,
+    "own_score": 0,
+    "verdict": "safe",
+    "summary": "This looks like the real website of SBI. Only small warning signs found.",
+    "scam_type": null,
+    "partial": false,
+    "reasons": [
+     {
+      "text": "Its code is scrambled to hide what it does.",
+      "points": 8,
+      "area": "page"
+     }
+    ],
+    "good_signs": [
+     {
+      "text": "This is the real website of SBI.",
+      "points": -40,
+      "area": "reputation"
+     },
+     {
+      "text": "It's one of the world's most visited sites (#6,669 on Tranco).",
+      "points": -30,
+      "area": "reputation"
+     },
+     {
+      "text": "The domain has existed for 21 years.",
+      "points": -15,
+      "area": "domain"
+     },
+     {
+      "text": "The page-reading model sees little that looks like a scam page (12%).",
+      "points": -10,
+      "area": "model"
+     }
+    ],
+    "model": 0.1235,
+    "unicode_host": null,
+    "lookalike": null,
+    "visit": {
+     "final_url": "https://onlinesbi.sbi.bank.in/",
+     "title": "State Bank of India",
+     "stopped": null,
+     "notes": [],
+     "hops": 2,
+     "blocked": [],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": "National Internet Exchange of India",
+     "created": "2005-02-17T05:28:51.675000+00:00",
+     "age_days": 7927,
+     "country": "India",
+     "network": "IT-Networking Department",
+     "abuse_email": "abuseinfo.apnic@sbi.co.in",
+     "certs_first_seen": null,
+     "cert_count": 0
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "clean",
+      "note": "Not on Google's lists. That alone doesn't make a link safe."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "clean",
+      "note": "None of 92 security vendors flag this link."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "info",
+      "note": "Scanned 4 times on urlscan.io, most recently on 23 Oct 2026."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "info",
+      "note": "LinkLens has scanned this domain 6 times before. Last time (1 Nov 2026) it looked safe, with a score of 0."
+     }
+    ],
+    "family": {
+     "status": "none",
+     "note": "Nothing among 55,349 known pages looks like this one.",
+     "copied_site": null,
+     "library_size": 55349,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 14
+    }
+   },
+   "shot": "www-onlinesbi-sbi.jpg",
+   "note": "SBI's real website"
+  },
+  {
+   "url": "https://www.xn--80ak6aa92e.com/",
+   "asked_at": "2026-11-01T17:26:34.153695+00:00",
+   "phishtank": {
+    "status": "listed",
+    "phish_id": 4955582,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 4,
+     "suspicious": 0,
+     "harmless": 56,
+     "undetected": 33,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [
+     {
+      "engine": "ESET",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Forcepoint ThreatSeeker",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "LevelBlue",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Webroot",
+      "category": "malicious",
+      "label": "malicious"
+     }
+    ],
+    "categories": [
+     "Phishing and Other Frauds",
+     "misc",
+     "suspicious content"
+    ],
+    "reputation": -36,
+    "votes": {
+     "harmless": 0,
+     "malicious": 1
+    },
+    "title": "IDN Homograph Example",
+    "final_url": "https://www.xn--80ak6aa92e.com/",
+    "first_seen": "2017-04-14T16:05:37+00:00",
+    "last_analysis": "2026-11-01T17:25:59+00:00",
+    "times_submitted": 236
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 5,
+     "suspicious": 0,
+     "harmless": 54,
+     "undetected": 34,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [
+     {
+      "engine": "Chong Lua Dao",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "ESET",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Forcepoint ThreatSeeker",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "LevelBlue",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Webroot",
+      "category": "malicious",
+      "label": "malicious"
+     }
+    ],
+    "categories": [
+     "Phishing and Other Frauds",
+     "misc",
+     "suspicious content"
+    ],
+    "reputation": -36,
+    "votes": {
+     "harmless": 0,
+     "malicious": 1
+    },
+    "title": "IDN Homograph Example",
+    "final_url": "https://www.xn--80ak6aa92e.com/",
+    "first_seen": "2017-04-14T16:05:37+00:00",
+    "last_analysis": "2026-11-01T17:29:10+00:00",
+    "times_submitted": 237,
+    "complete": true
+   },
+   "linklens": {
+    "id": "908b7167-d84e-4e93-ae82-115a4dd1e061",
+    "scanned_at": "2026-11-01T17:35:47.999740+00:00",
+    "score": 100,
+    "own_score": 90,
+    "verdict": "dangerous",
+    "summary": "VirusTotal lists this link as unsafe. Don't open it.",
+    "scam_type": null,
+    "partial": false,
+    "reasons": [
+     {
+      "text": "5 of 93 security vendors on VirusTotal flag this link.",
+      "points": 60,
+      "area": "blacklist"
+     },
+     {
+      "text": "The page-reading model rates this page 97% likely to be a scam page, mostly because of the share of digits in the site name and showing a brand's name on a site that isn't the brand's.",
+      "points": 50,
+      "area": "model"
+     },
+     {
+      "text": "The address uses look-alike letters from another alphabet to spell \"apple\", imitating Apple.",
+      "points": 45,
+      "area": "link"
+     },
+     {
+      "text": "The name has several hyphens, like many scam domains.",
+      "points": 5,
+      "area": "link"
+     }
+    ],
+    "good_signs": [
+     {
+      "text": "The domain has existed for 9 years.",
+      "points": -10,
+      "area": "domain"
+     }
+    ],
+    "model": 0.9673,
+    "unicode_host": "www.аррӏе.com",
+    "lookalike": {
+     "brand": "Apple",
+     "category": "tech",
+     "kind": "homograph",
+     "detail": "uses look-alike letters from another alphabet to spell \"apple\""
+    },
+    "visit": {
+     "final_url": "https://www.xn--80ak6aa92e.com/",
+     "title": "IDN Homograph Example",
+     "stopped": null,
+     "notes": [],
+     "hops": 1,
+     "blocked": [],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": "Spaceship, Inc.",
+     "created": "2017-01-19T17:43:19+00:00",
+     "age_days": 3572,
+     "country": "United States",
+     "network": "Google LLC",
+     "abuse_email": "google-cloud-compliance@google.com",
+     "certs_first_seen": "2026-10-17T04:04:08Z",
+     "cert_count": 1
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "clean",
+      "note": "Not on Google's lists. That alone doesn't make a link safe."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "listed",
+      "note": "5 of 93 security vendors flag this link as malicious."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "info",
+      "note": "Scanned 2 times on urlscan.io, most recently on 22 Oct 2026."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "info",
+      "note": "LinkLens has scanned this domain once before. Last time (1 Nov 2026) it looked dangerous, with a score of 100."
+     }
+    ],
+    "family": {
+     "status": "none",
+     "note": "Nothing among 55,349 known pages looks like this one.",
+     "copied_site": null,
+     "library_size": 55349,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 60,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 0
+    }
+   },
+   "shot": "www-xn-80ak6aa92e-com.jpg",
+   "note": "\"apple.com\" spelled with Cyrillic letters, a 2017 security demo"
+  },
+  {
+   "url": "http://sbi-kyc-update.example/verify",
+   "asked_at": "2026-11-01T17:26:34.153709+00:00",
+   "phishtank": {
+    "status": "not_listed",
+    "phish_id": null,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": false
+   },
+   "vt_after": {
+    "known": false,
+    "refused": "Unable to canonicalize url"
+   },
+   "linklens": {
+    "id": "1aaf85f3-eb8b-4b94-929b-2cb0388f0f31",
+    "scanned_at": "2026-11-01T17:36:20.553245+00:00",
+    "score": 47,
+    "own_score": 47,
+    "verdict": "suspicious",
+    "summary": "This looks like a fake SBI banking page.",
+    "scam_type": {
+     "id": "banking",
+     "label": "Banking or payment fraud",
+     "brand": "SBI",
+     "evidence": [
+      "pretends to be a bank or payment service"
+     ]
+    },
+    "partial": true,
+    "reasons": [
+     {
+      "text": "The address puts \"sbi\" in front of an unrelated domain, imitating SBI.",
+      "points": 30,
+      "area": "link"
+     },
+     {
+      "text": "The link uses words scammers like: kyc, update, verify.",
+      "points": 12,
+      "area": "link"
+     },
+     {
+      "text": "The domain no longer exists in DNS, typical of a scam site that was taken down.",
+      "points": 5,
+      "area": "domain"
+     }
+    ],
+    "good_signs": [],
+    "model": null,
+    "unicode_host": null,
+    "lookalike": {
+     "brand": "SBI",
+     "category": "bank",
+     "kind": "subdomain",
+     "detail": "puts \"sbi\" in front of an unrelated domain"
+    },
+    "visit": {
+     "final_url": null,
+     "title": null,
+     "stopped": "unreachable",
+     "notes": [
+      "The site didn't respond. It may be down or already taken offline."
+     ],
+     "hops": 1,
+     "blocked": [
+      {
+       "host": "sbi-kyc-update.example",
+       "port": 80,
+       "reason": "the domain name could not be found"
+      }
+     ],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": null,
+     "created": null,
+     "age_days": null,
+     "country": null,
+     "network": null,
+     "abuse_email": null,
+     "certs_first_seen": null,
+     "cert_count": null
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "clean",
+      "note": "Not on Google's lists. That alone doesn't make a link safe."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "unknown",
+      "note": "VirusTotal has never analysed this link."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "unknown",
+      "note": "Nobody has scanned this site on urlscan.io yet."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "skipped",
+      "note": null
+     }
+    ],
+    "family": {
+     "status": "skipped",
+     "note": "There was no page to compare.",
+     "copied_site": null,
+     "library_size": 0,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 0
+    }
+   },
+   "note": "a scam-shaped link made up for this test; the name can never exist"
+  },
+  {
+   "url": "http://localtest.me/",
+   "asked_at": "2026-11-01T17:26:34.153718+00:00",
+   "phishtank": {
+    "status": "not_listed",
+    "phish_id": null,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 0,
+     "suspicious": 0,
+     "harmless": 59,
+     "undetected": 34,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [],
+    "categories": [
+     "Information Technology (alphaMountain.ai)",
+     "general business",
+     "human interests",
+     "misc"
+    ],
+    "reputation": 0,
+    "votes": {
+     "harmless": 0,
+     "malicious": 0
+    },
+    "title": "",
+    "final_url": "http://localtest.me/",
+    "first_seen": "2015-03-17T15:32:55+00:00",
+    "last_analysis": "2026-10-30T12:01:12+00:00",
+    "times_submitted": 599
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 0,
+     "suspicious": 0,
+     "harmless": 59,
+     "undetected": 34,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [],
+    "categories": [
+     "Information Technology (alphaMountain.ai)",
+     "general business",
+     "human interests",
+     "misc"
+    ],
+    "reputation": 0,
+    "votes": {
+     "harmless": 0,
+     "malicious": 0
+    },
+    "title": "",
+    "final_url": "http://localtest.me/",
+    "first_seen": "2015-03-17T15:32:55+00:00",
+    "last_analysis": "2026-11-01T17:29:41+00:00",
+    "times_submitted": 600,
+    "complete": true
+   },
+   "linklens": {
+    "id": "6a450209-8591-4374-9a66-4bb458cdebcc",
+    "scanned_at": "2026-11-01T17:36:54.039847+00:00",
+    "score": 40,
+    "own_score": 10,
+    "verdict": "suspicious",
+    "summary": "This link leads to a private address, which real websites never do. Don't trust it.",
+    "scam_type": null,
+    "partial": true,
+    "reasons": [
+     {
+      "text": "The link tried to reach a private or internal address. Real websites never do that.",
+      "points": 25,
+      "area": "behavior"
+     }
+    ],
+    "good_signs": [
+     {
+      "text": "The domain has existed for 14 years.",
+      "points": -15,
+      "area": "domain"
+     }
+    ],
+    "model": null,
+    "unicode_host": null,
+    "lookalike": null,
+    "visit": {
+     "final_url": null,
+     "title": null,
+     "stopped": "blocked",
+     "notes": [
+      "We stopped because the link leads to a local address (this machine). LinkLens only visits public websites."
+     ],
+     "hops": 1,
+     "blocked": [
+      {
+       "host": "localtest.me",
+       "port": 80,
+       "reason": "local address (this machine)"
+      }
+     ],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": "GoDaddy.com, LLC",
+     "created": "2012-05-02T14:51:05+00:00",
+     "age_days": 5296,
+     "country": null,
+     "network": null,
+     "abuse_email": null,
+     "certs_first_seen": null,
+     "cert_count": 0
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "clean",
+      "note": "Not on Google's lists. That alone doesn't make a link safe."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "clean",
+      "note": "None of 93 security vendors flag this link."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "info",
+      "note": "Scanned once on urlscan.io, most recently on 15 Oct 2026."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "info",
+      "note": "LinkLens has scanned this domain 6 times before. Last time (1 Nov 2026) it looked suspicious, with a score of 40."
+     }
+    ],
+    "family": {
+     "status": "skipped",
+     "note": "There was no page to compare.",
+     "copied_site": null,
+     "library_size": 0,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 7
+    }
+   },
+   "note": "a public name that points back at your own computer"
+  },
+  {
+   "url": "https://testsafebrowsing.appspot.com/s/phishing.html",
+   "asked_at": "2026-11-01T17:26:34.153726+00:00",
+   "phishtank": {
+    "status": "not_listed",
+    "phish_id": null,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 9,
+     "suspicious": 3,
+     "harmless": 48,
+     "undetected": 33,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [
+     {
+      "engine": "BitDefender",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "G-Data",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Google Safe Browsing",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Kaspersky",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "LevelBlue",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Lionic",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Sophos",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "VIPRE",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Webroot",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "alphaMountain.ai",
+      "category": "suspicious",
+      "label": "suspicious"
+     },
+     {
+      "engine": "ESET",
+      "category": "suspicious",
+      "label": "suspicious"
+     },
+     {
+      "engine": "Gridinsoft",
+      "category": "suspicious",
+      "label": "suspicious"
+     }
+    ],
+    "categories": [
+     "Information Technology, Suspicious (alphaMountain.ai)",
+     "Phishing and Other Frauds",
+     "information technology",
+     "misc",
+     "not recommended site",
+     "phishing and fraud"
+    ],
+    "reputation": 8,
+    "votes": {
+     "harmless": 0,
+     "malicious": 7
+    },
+    "title": "",
+    "final_url": "https://testsafebrowsing.appspot.com/s/phishing.html",
+    "first_seen": "2017-08-12T06:11:36+00:00",
+    "last_analysis": "2026-10-30T13:30:48+00:00",
+    "times_submitted": 2340
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 9,
+     "suspicious": 3,
+     "harmless": 48,
+     "undetected": 33,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [
+     {
+      "engine": "BitDefender",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "G-Data",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Google Safe Browsing",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Kaspersky",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "LevelBlue",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Lionic",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "Sophos",
+      "category": "malicious",
+      "label": "phishing"
+     },
+     {
+      "engine": "VIPRE",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Webroot",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "alphaMountain.ai",
+      "category": "suspicious",
+      "label": "suspicious"
+     },
+     {
+      "engine": "ESET",
+      "category": "suspicious",
+      "label": "suspicious"
+     },
+     {
+      "engine": "Gridinsoft",
+      "category": "suspicious",
+      "label": "suspicious"
+     }
+    ],
+    "categories": [
+     "Information Technology, Suspicious (alphaMountain.ai)",
+     "Phishing and Other Frauds",
+     "information technology",
+     "misc",
+     "not recommended site",
+     "phishing and fraud"
+    ],
+    "reputation": 8,
+    "votes": {
+     "harmless": 0,
+     "malicious": 7
+    },
+    "title": "",
+    "final_url": "https://testsafebrowsing.appspot.com/s/phishing.html",
+    "first_seen": "2017-08-12T06:11:36+00:00",
+    "last_analysis": "2026-11-01T17:29:57+00:00",
+    "times_submitted": 2341,
+    "complete": true
+   },
+   "linklens": {
+    "id": "32efa23f-4841-4de5-a227-2f6b37d9cbce",
+    "scanned_at": "2026-11-01T17:37:45.629081+00:00",
+    "score": 100,
+    "own_score": 40,
+    "verdict": "dangerous",
+    "summary": "Google Safe Browsing and VirusTotal list this link as unsafe. Don't open it.",
+    "scam_type": null,
+    "partial": false,
+    "reasons": [
+     {
+      "text": "Google Safe Browsing lists this link as suspected phishing.",
+      "points": 70,
+      "area": "blacklist"
+     },
+     {
+      "text": "9 of 93 security vendors on VirusTotal flag this link.",
+      "points": 60,
+      "area": "blacklist"
+     },
+     {
+      "text": "The page-reading model rates this page 98% likely to be a scam page, mostly because of the layers of subdomains and the size of the page. It has seen few honest pages on free hosting services, so here it counts for less.",
+      "points": 20,
+      "area": "model"
+     },
+     {
+      "text": "The page sits on a free hosting service (appspot.com), where anyone can make a site.",
+      "points": 10,
+      "area": "link"
+     },
+     {
+      "text": "The page asks for a password or PIN.",
+      "points": 10,
+      "area": "page"
+     }
+    ],
+    "good_signs": [],
+    "model": 0.9825,
+    "unicode_host": null,
+    "lookalike": null,
+    "visit": {
+     "final_url": "https://testsafebrowsing.appspot.com/s/phishing.html",
+     "title": null,
+     "stopped": null,
+     "notes": [],
+     "hops": 1,
+     "blocked": [],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": "MarkMonitor Inc.",
+     "created": "2005-03-10T02:27:55+00:00",
+     "age_days": 7906,
+     "country": "United States",
+     "network": "Google LLC",
+     "abuse_email": "network-abuse@google.com",
+     "certs_first_seen": null,
+     "cert_count": 0
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "listed",
+      "note": "Google lists this link as suspected phishing."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "listed",
+      "note": "9 of 93 security vendors flag this link as malicious."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "info",
+      "note": "Scanned 81 times on urlscan.io, most recently on 31 Oct 2026."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "info",
+      "note": "LinkLens has scanned this domain once before. Last time (1 Nov 2026) it looked dangerous, with a score of 100."
+     }
+    ],
+    "family": {
+     "status": "none",
+     "note": "Nothing among 55,349 known pages looks like this one.",
+     "copied_site": null,
+     "library_size": 55349,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 0
+    }
+   },
+   "shot": "testsafebrowsing-appspot-com-s-phishing-html.jpg",
+   "note": "Google's test phishing page"
+  },
+  {
+   "url": "http://malware.testing.google.test/testing/malware/",
+   "asked_at": "2026-11-01T17:26:34.153731+00:00",
+   "phishtank": {
+    "status": "listed",
+    "phish_id": 6308008,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 1,
+     "suspicious": 0,
+     "harmless": 60,
+     "undetected": 9,
+     "timeout": 0
+    },
+    "engines": 70,
+    "flagged": [
+     {
+      "engine": "Avira",
+      "category": "malicious",
+      "label": "malware"
+     }
+    ],
+    "categories": [],
+    "reputation": 168,
+    "votes": {
+     "harmless": 5,
+     "malicious": 2
+    },
+    "title": null,
+    "final_url": "http://malware.testing.google.test/testing/malware/",
+    "first_seen": "2010-09-11T11:50:58+00:00",
+    "last_analysis": "2019-07-12T17:07:46+00:00",
+    "times_submitted": 35
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 1,
+     "suspicious": 0,
+     "harmless": 60,
+     "undetected": 9,
+     "timeout": 0
+    },
+    "engines": 70,
+    "flagged": [
+     {
+      "engine": "Avira",
+      "category": "malicious",
+      "label": "malware"
+     }
+    ],
+    "categories": [],
+    "reputation": 168,
+    "votes": {
+     "harmless": 5,
+     "malicious": 2
+    },
+    "title": null,
+    "final_url": "http://malware.testing.google.test/testing/malware/",
+    "first_seen": "2010-09-11T11:50:58+00:00",
+    "last_analysis": "2019-07-12T17:07:46+00:00",
+    "times_submitted": 35,
+    "refused": "Unable to canonicalize url"
+   },
+   "linklens": {
+    "id": "798d1bbc-bd25-4dc4-af86-a5c0f878c98d",
+    "scanned_at": "2026-11-01T17:38:18.299029+00:00",
+    "score": 100,
+    "own_score": 43,
+    "verdict": "dangerous",
+    "summary": "This link tries to get you to download something that may be malware.",
+    "scam_type": {
+     "id": "malware",
+     "label": "Malware download",
+     "brand": null,
+     "evidence": [
+      "a blacklist lists it as malware"
+     ]
+    },
+    "partial": true,
+    "reasons": [
+     {
+      "text": "Google Safe Browsing lists this link as suspected malware.",
+      "points": 70,
+      "area": "blacklist"
+     },
+     {
+      "text": "The address puts \"google\" in front of an unrelated domain, imitating Google.",
+      "points": 30,
+      "area": "link"
+     },
+     {
+      "text": "One or two security vendors on VirusTotal flag this link.",
+      "points": 10,
+      "area": "blacklist"
+     },
+     {
+      "text": "The address has many layers of subdomains.",
+      "points": 8,
+      "area": "link"
+     },
+     {
+      "text": "The domain no longer exists in DNS, typical of a scam site that was taken down.",
+      "points": 5,
+      "area": "domain"
+     }
+    ],
+    "good_signs": [],
+    "model": null,
+    "unicode_host": null,
+    "lookalike": {
+     "brand": "Google",
+     "category": "tech",
+     "kind": "subdomain",
+     "detail": "puts \"google\" in front of an unrelated domain"
+    },
+    "visit": {
+     "final_url": null,
+     "title": null,
+     "stopped": "unreachable",
+     "notes": [
+      "The site didn't respond. It may be down or already taken offline."
+     ],
+     "hops": 1,
+     "blocked": [
+      {
+       "host": "malware.testing.google.test",
+       "port": 80,
+       "reason": "the domain name could not be found"
+      }
+     ],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": null,
+     "created": null,
+     "age_days": null,
+     "country": null,
+     "network": null,
+     "abuse_email": null,
+     "certs_first_seen": null,
+     "cert_count": null
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "listed",
+      "note": "Google lists this link as suspected malware."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "info",
+      "note": "1 of 70 security vendors flags this link. One or two flags are often false alarms."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "unknown",
+      "note": "Nobody has scanned this site on urlscan.io yet."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "skipped",
+      "note": null
+     }
+    ],
+    "family": {
+     "status": "skipped",
+     "note": "There was no page to compare.",
+     "copied_site": null,
+     "library_size": 0,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 0
+    }
+   },
+   "note": "Google's test malware address"
+  },
+  {
+   "url": "https://secure.eicar.org/eicar.com.txt",
+   "asked_at": "2026-11-01T17:26:34.153737+00:00",
+   "phishtank": {
+    "status": "not_listed",
+    "phish_id": null,
+    "verified": false,
+    "verified_at": null,
+    "valid": false
+   },
+   "vt_before": {
+    "known": true,
+    "stats": {
+     "malicious": 10,
+     "suspicious": 1,
+     "harmless": 52,
+     "undetected": 30,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [
+     {
+      "engine": "AILabs (MONITORAPP)",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Antiy-AVL",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "AutoShun",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "BitDefender",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Bkav",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "CTX AI",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "G-Data",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Lionic",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Sophos",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "VIPRE",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Gridinsoft",
+      "category": "suspicious",
+      "label": "suspicious"
+     }
+    ],
+    "categories": [
+     "Information/Computer Security (alphaMountain.ai)",
+     "computer security",
+     "computersandsoftware",
+     "spyware and malware"
+    ],
+    "reputation": 80,
+    "votes": {
+     "harmless": 26,
+     "malicious": 4
+    },
+    "title": "",
+    "final_url": "https://secure.eicar.org/eicar.com.txt",
+    "first_seen": "2010-08-11T15:12:06+00:00",
+    "last_analysis": "2026-11-01T03:46:55+00:00",
+    "times_submitted": 7116
+   },
+   "vt_after": {
+    "known": true,
+    "stats": {
+     "malicious": 10,
+     "suspicious": 1,
+     "harmless": 51,
+     "undetected": 31,
+     "timeout": 0
+    },
+    "engines": 93,
+    "flagged": [
+     {
+      "engine": "AILabs (MONITORAPP)",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Antiy-AVL",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "AutoShun",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "BitDefender",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Bkav",
+      "category": "malicious",
+      "label": "malicious"
+     },
+     {
+      "engine": "CTX AI",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "G-Data",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Lionic",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Sophos",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "VIPRE",
+      "category": "malicious",
+      "label": "malware"
+     },
+     {
+      "engine": "Gridinsoft",
+      "category": "suspicious",
+      "label": "suspicious"
+     }
+    ],
+    "categories": [
+     "Information/Computer Security (alphaMountain.ai)",
+     "computer security",
+     "computersandsoftware",
+     "information security",
+     "spyware and malware"
+    ],
+    "reputation": 80,
+    "votes": {
+     "harmless": 26,
+     "malicious": 4
+    },
+    "title": "",
+    "final_url": "https://secure.eicar.org/eicar.com.txt",
+    "first_seen": "2010-08-11T15:12:06+00:00",
+    "last_analysis": "2026-11-01T17:30:28+00:00",
+    "times_submitted": 7117,
+    "complete": true
+   },
+   "linklens": {
+    "id": "b0ec74dc-032d-4816-b176-4e6ae8792239",
+    "scanned_at": "2026-11-01T17:38:57.381670+00:00",
+    "score": 70,
+    "own_score": 4,
+    "verdict": "dangerous",
+    "summary": "VirusTotal lists this link as unsafe. Don't open it.",
+    "scam_type": null,
+    "partial": false,
+    "reasons": [
+     {
+      "text": "10 of 93 security vendors on VirusTotal flag this link.",
+      "points": 60,
+      "area": "blacklist"
+     },
+     {
+      "text": "It claims your device has a problem and needs support (\"virus\").",
+      "points": 15,
+      "area": "page"
+     },
+     {
+      "text": "The link uses words scammers like: secure.",
+      "points": 4,
+      "area": "link"
+     }
+    ],
+    "good_signs": [
+     {
+      "text": "The domain has existed for 28 years.",
+      "points": -15,
+      "area": "domain"
+     }
+    ],
+    "model": 0.3828,
+    "unicode_host": null,
+    "lookalike": null,
+    "visit": {
+     "final_url": "https://secure.eicar.org/eicar.com.txt",
+     "title": null,
+     "stopped": null,
+     "notes": [],
+     "hops": 1,
+     "blocked": [],
+     "downloads": 0,
+     "bot_check": null
+    },
+    "owner": {
+     "registrar": "InterNetX GmbH",
+     "created": "1998-03-25T05:00:00.790000+00:00",
+     "age_days": 10448,
+     "country": "Germany",
+     "network": "manitu GmbH",
+     "abuse_email": "abuse@manitu.net",
+     "certs_first_seen": "2026-08-06T21:16:37Z",
+     "cert_count": 6
+    },
+    "lists": [
+     {
+      "id": "safe_browsing",
+      "name": "Google Safe Browsing",
+      "status": "clean",
+      "note": "Not on Google's lists. That alone doesn't make a link safe."
+     },
+     {
+      "id": "phishing_database",
+      "name": "Phishing.Database",
+      "status": "clean",
+      "note": "Not among 59,223 phishing links and 392,178 phishing domains."
+     },
+     {
+      "id": "virustotal",
+      "name": "VirusTotal",
+      "status": "listed",
+      "note": "10 of 93 security vendors flag this link as malicious."
+     },
+     {
+      "id": "urlhaus",
+      "name": "URLhaus (abuse.ch)",
+      "status": "not_configured",
+      "note": "No abuse.ch key is set, so this check was skipped."
+     },
+     {
+      "id": "urlscan",
+      "name": "urlscan.io",
+      "status": "info",
+      "note": "Scanned 38 times on urlscan.io, most recently on 30 Oct 2026."
+     },
+     {
+      "id": "linklens",
+      "name": "LinkLens history",
+      "status": "info",
+      "note": "LinkLens has scanned this domain once before. Last time (1 Nov 2026) it looked safe, with a score of 4."
+     }
+    ],
+    "family": {
+     "status": "skipped",
+     "note": "This is a standard notice or a nearly empty page, the kind thousands of unrelated sites show, so comparing it would say nothing.",
+     "copied_site": null,
+     "library_size": 0,
+     "name": null
+    },
+    "siblings": {
+     "same_server": 0,
+     "same_owner": 0,
+     "same_design": 0,
+     "lookalikes": 8
+    }
+   },
+   "shot": "secure-eicar-org-eicar-com-txt.jpg",
+   "note": "the standard antivirus test file"
+  }
+ ]
+}

@@ -1,10 +1,10 @@
-// The top bar both pages share: the name, three links, and the theme switch. It sits over the
+// The top bar every page shares: the name, a few links, and the theme switch. It sits over the
 // first screen of each page in the same place, so moving between the pages feels like one site.
 
 import { Moon, Sun } from "lucide-react";
 import { useState } from "react";
 
-import { HOME, SCANNER } from "../lib/pages";
+import { COMPARE, HOME, SCANNER } from "../lib/pages";
 import { applyTheme, storedTheme, type Theme } from "../lib/theme";
 
 const REPO = "https://github.com/TheBhardwajRohit/LinkLens";
@@ -30,7 +30,7 @@ export function ThemeSwitch() {
 
 const LINK = "transition-colors duration-150 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300";
 
-export default function SiteHeader({ page }: { page: "home" | "scanner" }) {
+export default function SiteHeader({ page }: { page: "home" | "scanner" | "compare" }) {
   const onHome = page === "home";
   return (
     <header className="site-header absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-4 px-5 py-5 sm:px-10">
@@ -41,15 +41,22 @@ export default function SiteHeader({ page }: { page: "home" | "scanner" }) {
         <a href={onHome ? "#how" : `${HOME}#how`} className={`hidden sm:inline ${LINK}`}>
           How it works
         </a>
-        <a href={REPO} target="_blank" rel="noopener noreferrer" className={`hidden sm:inline ${LINK}`}>
+        <a
+          href={COMPARE}
+          aria-current={page === "compare" ? "page" : undefined}
+          className={`hidden sm:inline ${page === "compare" ? "font-medium text-cream" : ""} ${LINK}`}
+        >
+          Compared
+        </a>
+        <a href={REPO} target="_blank" rel="noopener noreferrer" className={`hidden md:inline ${LINK}`}>
           GitHub
         </a>
-        {onHome ? (
-          <a href={SCANNER} className="font-medium text-blue-300 transition-colors duration-150 hover:text-blue-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300">
+        {page === "scanner" ? (
+          <a href={SCANNER} aria-current="page" className={`font-medium text-cream ${LINK}`}>
             Scanner
           </a>
         ) : (
-          <a href={SCANNER} aria-current="page" className={`font-medium text-cream ${LINK}`}>
+          <a href={SCANNER} className="font-medium text-blue-300 transition-colors duration-150 hover:text-blue-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300">
             Scanner
           </a>
         )}
