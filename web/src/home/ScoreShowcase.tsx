@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import type { Verdict } from "../lib/api";
 import { SHOWCASE, total } from "./examples";
-import { Reveal, points } from "./parts";
+import { Reveal, points } from "../site/parts";
 
 const FIELD: Record<Verdict, string> = {
   safe: "bg-[#065f46]",

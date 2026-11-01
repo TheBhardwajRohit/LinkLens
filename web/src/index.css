@@ -49,10 +49,6 @@
   --color-slate-900: #0f172a;
 }
 
-:root[data-theme="light"] .hero-glow {
-  opacity: 0.45;
-}
-
 html,
 body,
 #root {
@@ -77,27 +73,30 @@ body {
   color: #fff;
 }
 
-/* Quiet page background: deep navy with a faint grid that fades out. */
-.page-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -10;
-  background:
-    linear-gradient(rgb(148 163 184 / 0.045) 1px, transparent 1px) 0 0 / 56px 56px,
-    linear-gradient(90deg, rgb(148 163 184 / 0.045) 1px, transparent 1px) 0 0 / 56px 56px,
-    var(--color-ink);
-  mask-image: radial-gradient(90% 70% at 50% 0%, #000 30%, transparent 90%);
+/* Moving between the homepage and the scanner: the page fades across while the shared top bar
+   stays put, so the two pages read as one site. Browsers without view transitions just load the
+   page as usual. */
+@view-transition {
+  navigation: auto;
 }
 
-/* Blue light behind the graph, with a hint of red, like studio lighting. */
-.hero-glow {
-  background:
-    radial-gradient(45% 55% at 76% 42%, rgb(37 99 235 / 0.38), transparent 70%),
-    radial-gradient(30% 35% at 88% 78%, rgb(244 63 94 / 0.1), transparent 70%),
-    radial-gradient(40% 40% at 10% 0%, rgb(30 58 138 / 0.3), transparent 70%);
+.site-header {
+  view-transition-name: site-header;
 }
 
-/* Homepage headline: each line rises from behind its own baseline, then the text under it fades up. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/* Each page's headline: each line rises from behind its own baseline, then the text under it fades up. */
 .lines .line {
   display: block;
   overflow: hidden;
@@ -124,6 +123,15 @@ body {
 
   .hero-result {
     animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Scanner page: a new figure rises into place, and a tab's rows arrive one after another. */
+  .figure-in {
+    animation: fade-up 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .band-in {
+    animation: fade-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 
@@ -212,8 +220,8 @@ body {
 
 @media (max-width: 640px) {
   .bubble-card {
-    max-width: 11rem;
-    font-size: 0.74rem;
+    max-width: 11.5rem;
+    font-size: 0.8125rem;
   }
 }
 
@@ -228,8 +236,6 @@ body {
     print-color-adjust: exact;
   }
 
-  .page-bg,
-  body > #root > header,
   body > #root > footer,
   main > :not(#report) {
     display: none !important;

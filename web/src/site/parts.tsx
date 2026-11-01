@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
 import type { Verdict } from "../lib/api";
-import { VERDICT_STROKE } from "./examples";
+import { VERDICT_STROKE } from "../home/examples";
 
 /** The page's one button shape: fully round, flat. */
 export const PILL =

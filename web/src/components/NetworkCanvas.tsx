@@ -127,12 +127,13 @@ export default function NetworkCanvas({
         ref={holder}
         role="img"
         aria-label="A map of the scanned site and the sites it is linked with. The list below says the same in words."
-        className="relative h-[380px] w-full rounded-xl border border-white/[0.08] bg-ink/60"
+        data-ui
+        className="relative h-[380px] w-full rounded-xl bg-panel"
       />
       <button
         type="button"
         onClick={() => graph.current?.animate({ fit: { eles: graph.current.elements(), padding: 24 } }, { duration: prefersReducedMotion() ? 0 : 250 })}
-        className="absolute right-3 top-3 rounded-md bg-white/10 px-2.5 py-1 text-xs text-slate-100 ring-1 ring-white/15 hover:bg-white/20"
+        className="absolute right-3 top-3 rounded-md bg-white/10 px-2.5 py-1 text-sm text-slate-100 hover:bg-white/20"
       >
         Fit to view
       </button>

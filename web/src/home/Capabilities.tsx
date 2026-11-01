@@ -4,7 +4,7 @@ import { Check, Copy, Lock, MessageCircle, Users } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { MESSAGES, VERDICT_WORD } from "./examples";
-import { Reveal } from "./parts";
+import { Reveal } from "../site/parts";
 
 const KYC = MESSAGES[0];
 

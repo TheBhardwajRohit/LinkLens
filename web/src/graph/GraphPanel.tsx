@@ -51,7 +51,7 @@ export default function GraphPanel({ model }: { model: GraphModel }) {
   const showFlat = () => setMode("2d");
 
   return (
-    <div className="relative h-full w-full">
+    <div data-ui className="relative h-full w-full">
       <p className="sr-only">{describe(model)}</p>
       {mode === "2d" && <Graph2D model={model} />}
       {mode === "3d" && (
@@ -64,8 +64,8 @@ export default function GraphPanel({ model }: { model: GraphModel }) {
         </div>
       )}
       {model.mode === "example" && (
-        <span className="absolute bottom-3 left-3 rounded-full border border-white/15 bg-ink/60 px-2.5 py-1 text-xs font-medium uppercase tracking-wider text-slate-300 backdrop-blur sm:bottom-6 sm:left-6">
-          Example scan
+        <span className="absolute bottom-4 left-4 rounded-full bg-ink px-3 py-1.5 text-sm text-slate-200 sm:bottom-8 sm:left-8">
+          Example scan, not a real link
         </span>
       )}
     </div>

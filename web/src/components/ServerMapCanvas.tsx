@@ -27,5 +27,5 @@ export default function ServerMapCanvas({ lat, lon, accuracyKm }: { lat: number;
     };
   }, [lat, lon, accuracyKm]);
 
-  return <div ref={holder} className="h-[260px] w-full rounded-xl border border-white/[0.08]" />;
+  return <div ref={holder} data-ui className="h-[260px] w-full rounded-xl bg-panel" />;
 }

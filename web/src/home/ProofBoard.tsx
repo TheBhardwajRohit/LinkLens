@@ -1,6 +1,6 @@
 // What LinkLens checks with: its own numbers, and the sources it asks. Names only, no logos.
 
-import { Reveal } from "./parts";
+import { Reveal } from "../site/parts";
 
 const TILES: { name: string; note: string; phone?: boolean }[] = [
   { name: "55,000+ pages", note: "fingerprinted from scams, scam feeds, and research data", phone: true },

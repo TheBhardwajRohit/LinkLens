@@ -55,8 +55,8 @@ export default function BulkScan({ online, onOpen }: { online: boolean | null; o
     .filter(Boolean);
 
   return (
-    <details className="mt-4 max-w-xl text-sm print:hidden">
-      <summary className="inline-flex cursor-pointer items-center gap-1.5 text-slate-400 hover:text-white">
+    <details data-ui className="mt-5 w-full max-w-xl text-[15px] print:hidden">
+      <summary className="inline-flex cursor-pointer items-center gap-2 text-slate-300 transition-colors hover:text-white">
         <ListPlus className="h-4 w-4" aria-hidden="true" />
         Scan several links at once
       </summary>
@@ -73,14 +73,14 @@ export default function BulkScan({ online, onOpen }: { online: boolean | null; o
           else setError(result.error);
         }}
       >
-        <label className="block text-slate-300">
+        <label className="block text-slate-200">
           One link per line, up to {MAX}
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={4}
             spellCheck={false}
-            className="mt-1 block w-full rounded-xl border border-white/15 bg-white/[0.045] px-3 py-2 font-mono text-[13px] text-slate-100 placeholder:font-sans placeholder:text-slate-400 focus:border-blue-400/60 focus:outline-none"
+            className="mt-2 block w-full rounded-xl bg-panel px-3 py-2.5 text-[15px] text-slate-100 ring-1 ring-white/10 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
             placeholder={"example.com\nhxxp://another[.]example/login"}
           />
         </label>
@@ -88,7 +88,7 @@ export default function BulkScan({ online, onOpen }: { online: boolean | null; o
           <button
             type="submit"
             disabled={busy || links.length === 0}
-            className="rounded-lg bg-blue-600 px-3.5 py-2 font-medium text-white ring-1 ring-inset ring-white/15 transition hover:bg-blue-500 disabled:opacity-60"
+            className="rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-blue-500 active:scale-[0.98] disabled:opacity-60"
           >
             {busy ? "Starting" : `Scan ${Math.min(links.length, MAX) || ""} ${links.length === 1 ? "link" : "links"}`}
           </button>
@@ -97,11 +97,11 @@ export default function BulkScan({ online, onOpen }: { online: boolean | null; o
         </div>
       </form>
       {rows.length > 0 && (
-        <ul className="mt-3 divide-y divide-white/[0.06] rounded-xl border border-white/[0.08] bg-ink/40 px-3" aria-live="polite">
+        <ul className="mt-3 space-y-1" aria-live="polite">
           {rows.map((row, i) => (
-            <li key={`${i}-${row.url}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+            <li key={`${i}-${row.url}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-panel px-3 py-2.5">
               {/* A refused entry is shown exactly as typed (it is plain text here, never a link). */}
-              <span className="min-w-0 flex-1 break-all font-mono text-[13px] text-slate-200">
+              <span className="min-w-0 flex-1 break-all text-sm text-slate-100">
                 {row.error && !row.id ? row.url : defang(row.url)}
               </span>
               {row.error && <span className="text-amber-300">{row.error}</span>}

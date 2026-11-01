@@ -1,13 +1,13 @@
 // The close of the homepage: two rows of tiles, the name set large, and the way into the scanner.
 
-import { SCANNER } from "../lib/pages";
+import { HOME, SCANNER } from "../lib/pages";
 
 const REPO = "https://github.com/TheBhardwajRohit/LinkLens";
 
 const TILE = "rounded-2xl bg-panel p-6";
 const LINK = "transition-colors hover:text-blue-300 focus-visible:outline-2 focus-visible:outline-blue-300";
 
-export default function HomeFooter() {
+export default function SiteFooter() {
   return (
     <footer className="grid grid-cols-2 gap-1.5 p-2 lg:grid-cols-12 lg:gap-2 lg:p-3">
       <div className="order-1 col-span-2 flex min-h-[160px] items-center justify-center rounded-2xl bg-[#dfe6f1] lg:order-5 lg:col-span-8 lg:min-h-[320px]">
@@ -31,7 +31,7 @@ export default function HomeFooter() {
             </a>
           </li>
           <li>
-            <a href="#how" className={LINK}>
+            <a href={`${HOME}#how`} className={LINK}>
               How a check works
             </a>
           </li>

@@ -7,10 +7,10 @@ import { sendFeedback, type FeedbackKind } from "../lib/api";
 import { resultLink } from "../lib/useScan";
 
 const BUTTON =
-  "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300";
-const QUIET = `${BUTTON} text-slate-300 ring-white/10 hover:text-white hover:ring-white/30`;
-const SOLID = `${BUTTON} bg-white/[0.06] text-slate-100 ring-white/10 hover:bg-white/10`;
-const PRIMARY = `${BUTTON} bg-blue-600 font-medium text-white ring-blue-400/40 hover:bg-blue-500 disabled:opacity-70`;
+  "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-base transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300";
+const QUIET = `${BUTTON} text-slate-300 hover:text-white hover:ring-white/30`;
+const SOLID = `${BUTTON} bg-white/[0.06] text-slate-100 hover:bg-white/10`;
+const PRIMARY = `${BUTTON} bg-blue-600 font-medium text-white hover:bg-blue-500 disabled:opacity-70`;
 
 const KINDS: { kind: FeedbackKind; label: string }[] = [
   { kind: "false_alarm", label: "The site is fine, but LinkLens flagged it" },
@@ -40,14 +40,14 @@ function MistakeForm({ id, onDone }: { id: string; onDone: () => void }) {
 
   if (state === "sent") {
     return (
-      <p className="mt-4 rounded-xl border border-white/[0.08] bg-ink/40 px-4 py-3 text-sm text-slate-200" role="status">
+      <p className="mt-4 rounded-xl bg-panel px-4 py-3 text-base text-slate-200" role="status">
         Thanks. Your report is saved with this scan and will be looked at. The verdict doesn't change by itself.
       </p>
     );
   }
   return (
     <form
-      className="mt-4 rounded-xl border border-white/[0.08] bg-ink/40 p-4 text-sm"
+      className="mt-4 rounded-xl bg-panel p-4 text-base"
       onSubmit={async (e) => {
         e.preventDefault();
         setState("sending");
@@ -81,7 +81,7 @@ function MistakeForm({ id, onDone }: { id: string; onDone: () => void }) {
           placeholder="For example: this is my own shop's site"
         />
       </label>
-      <p className="mt-1 text-xs text-slate-400">Don't include personal details. Email addresses are removed before saving.</p>
+      <p className="mt-1 text-sm text-slate-400">Don't include personal details. Email addresses are removed before saving.</p>
       {state === "failed" && <p className="mt-2 text-rose-300">{error}</p>}
       <div className="mt-3 flex gap-2">
         <button type="submit" disabled={state === "sending"} className={PRIMARY}>

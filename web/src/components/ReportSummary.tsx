@@ -26,17 +26,17 @@ const ADVICE: Record<Verdict, string[]> = {
 };
 
 const ADVICE_LOOK: Record<Verdict, string> = {
-  safe: "border-emerald-400/20 bg-emerald-400/[0.04]",
-  suspicious: "border-amber-400/25 bg-amber-400/[0.05]",
-  dangerous: "border-rose-400/30 bg-rose-500/[0.06]",
+  safe: "bg-emerald-400/[0.08]",
+  suspicious: "bg-amber-400/[0.09]",
+  dangerous: "bg-rose-500/[0.1]",
 };
 
 /** Plain advice for the verdict, with where to report a scam in India. */
 export function Advice({ verdict }: { verdict: Verdict }) {
   return (
-    <div className={`rounded-2xl border p-5 ${ADVICE_LOOK[verdict]}`}>
+    <div className={`rounded-2xl p-5 ${ADVICE_LOOK[verdict]}`}>
       <h3 className="font-display text-lg font-medium text-cream">What should you do?</h3>
-      <ul className="mt-2 space-y-2 text-sm text-slate-200">
+      <ul className="mt-2 space-y-2 text-base text-slate-200">
         {ADVICE[verdict].map((line) => (
           <li key={line} className="flex gap-2">
             <Check className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -45,7 +45,7 @@ export function Advice({ verdict }: { verdict: Verdict }) {
         ))}
       </ul>
       {verdict !== "safe" && (
-        <p className="mt-3 border-t border-white/[0.08] pt-3 text-sm text-slate-300">
+        <p className="mt-4 rounded-xl bg-ink/40 px-3 py-2.5 text-base text-slate-200">
           Lost money or shared details? Report it at{" "}
           <a
             href="https://cybercrime.gov.in"
@@ -67,8 +67,8 @@ function Fact({ icon: Icon, label, children }: { icon: typeof Globe; label: stri
     <li className="flex gap-3 py-2.5">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
       <div className="min-w-0">
-        <p className="text-xs text-slate-400">{label}</p>
-        <p className="text-sm text-slate-100">{children}</p>
+        <p className="text-sm text-slate-400">{label}</p>
+        <p className="text-base text-slate-100">{children}</p>
       </div>
     </li>
   );
@@ -105,9 +105,10 @@ export function KeyFacts({ scan }: { scan: Scan }) {
   else if (family?.status === "similar") familyText = `Looks like ${family.scam_matches} known scam ${family.scam_matches === 1 ? "page" : "pages"}`;
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-3">
-      <h3 className="pt-1 font-display text-lg font-medium text-cream">At a glance</h3>
-      <ul className="divide-y divide-white/[0.06]">
+    // No box of its own: a plain list under the two filled panels above it.
+    <div className="px-1 pt-2">
+      <h3 className="font-display text-lg font-medium text-cream">At a glance</h3>
+      <ul className="space-y-1">
         <Fact icon={Globe} label="Domain">
           {age}
         </Fact>
@@ -172,7 +173,7 @@ export function warningText(scan: Scan, reportLink: string | null): string {
 }
 
 const BUTTON =
-  "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm ring-1 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300";
+  "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-base transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300";
 
 /** "Warn your family": scam links mostly spread as forwards, so make the warning easy to forward too. */
 export function WarnFamily({ scan, reportLink }: { scan: Scan; reportLink: string | null }) {
@@ -180,16 +181,16 @@ export function WarnFamily({ scan, reportLink }: { scan: Scan; reportLink: strin
   if (scan.analysis.verdict === "safe") return null;
   const text = warningText(scan, reportLink && !isLocal() ? reportLink : null);
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 print:hidden">
+    <div className="rounded-2xl bg-panel p-5 print:hidden">
       <h3 className="font-display text-lg font-medium text-cream">Warn your family</h3>
-      <p className="mt-1 text-sm text-slate-300">
+      <p className="mt-1 text-base text-slate-300">
         Scam links spread through forwards. Send a short warning instead. The link in it is broken on purpose, so
         nobody can open it by accident.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          className={`${BUTTON} bg-white/[0.06] text-slate-100 ring-white/10 hover:bg-white/10`}
+          className={`${BUTTON} bg-white/[0.06] text-slate-100 hover:bg-white/10`}
           onClick={() => {
             navigator.clipboard
               ?.writeText(text)
@@ -207,7 +208,7 @@ export function WarnFamily({ scan, reportLink }: { scan: Scan; reportLink: strin
           href={`https://wa.me/?text=${encodeURIComponent(text)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${BUTTON} bg-blue-600 font-medium text-white ring-blue-400/40 hover:bg-blue-500`}
+          className={`${BUTTON} bg-blue-600 font-medium text-white hover:bg-blue-500`}
         >
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
           Send on WhatsApp

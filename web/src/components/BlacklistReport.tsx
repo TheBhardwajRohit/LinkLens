@@ -40,18 +40,18 @@ function SourceRow({ source }: { source: SourceResult }) {
     <li className="flex items-start gap-3 py-2.5">
       <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${look.tone}`} aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+        <p className="flex flex-wrap items-baseline gap-x-2 text-base">
           <span className="font-medium text-slate-100">{source.name}</span>
-          <span className={`text-xs ${look.tone}`}>{look.label}</span>
-          {source.cached && <span className="text-xs text-slate-400">from our cache</span>}
+          <span className={`text-sm ${look.tone}`}>{look.label}</span>
+          {source.cached && <span className="text-sm text-slate-400">from our cache</span>}
         </p>
-        {source.note && <p className="mt-0.5 text-sm text-slate-400">{source.note}</p>}
+        {source.note && <p className="mt-0.5 text-base text-slate-400">{source.note}</p>}
         {link && source.status !== "not_configured" && (
           <a
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-0.5 inline-block text-xs text-blue-300 underline-offset-4 hover:text-blue-200 hover:underline"
+            className="mt-0.5 inline-block text-sm text-blue-300 underline-offset-4 hover:text-blue-200 hover:underline"
           >
             {google ? "Advisory provided by Google" : `More on ${source.name}`}
           </a>
@@ -68,12 +68,12 @@ export default function BlacklistReport({ blacklists }: { blacklists: Blacklists
   const usesGoogle = blacklists.sources.some((s) => s.id === "safe_browsing" && s.status !== "not_configured");
   return (
     <Section title="Blacklist results">
-      <ul className="divide-y divide-white/[0.06]">
+      <ul className="space-y-1">
         {sources.map((s) => (
           <SourceRow key={s.id} source={s} />
         ))}
       </ul>
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 max-w-[72ch] text-base text-slate-400">
         "Not listed" only means nobody has reported the link yet. New scam pages are often on no list at all.
         {usesGoogle &&
           " Google works to provide the most accurate and up-to-date information about unsafe web resources. However, Google cannot guarantee that its information is comprehensive and error-free: some risky sites may not be identified, and some safe sites may be identified in error."}

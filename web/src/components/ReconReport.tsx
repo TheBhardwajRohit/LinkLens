@@ -14,12 +14,12 @@ const defangName = (name: string) => name.replaceAll(".", "[.]");
 
 function Card({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-ink/40 p-4">
-      <p className="flex items-center gap-2 text-sm font-semibold text-cream">
+    <div className="rounded-xl bg-panel p-4">
+      <p className="flex items-center gap-2 text-base font-semibold text-cream">
         <Icon className="h-4 w-4 text-blue-400" aria-hidden="true" />
         {title}
       </p>
-      <dl className="mt-3 space-y-2.5 text-sm">{children}</dl>
+      <dl className="mt-3 space-y-2.5 text-base">{children}</dl>
     </div>
   );
 }
@@ -27,19 +27,19 @@ function Card({ icon: Icon, title, children }: { icon: LucideIcon; title: string
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-slate-400">{label}</dt>
+      <dt className="text-sm text-slate-400">{label}</dt>
       <dd className="mt-0.5 break-words text-slate-200">{children}</dd>
     </div>
   );
 }
 
 function Note({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-slate-400">{children}</p>;
+  return <p className="text-base text-slate-400">{children}</p>;
 }
 
 function Warn({ children }: { children: ReactNode }) {
   return (
-    <p className="flex items-start gap-1.5 text-sm text-amber-300">
+    <p className="flex items-start gap-1.5 text-base text-amber-300">
       <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       <span>{children}</span>
     </p>
@@ -49,7 +49,7 @@ function Warn({ children }: { children: ReactNode }) {
 function Names({ names, limit = 4 }: { names: string[]; limit?: number }) {
   const shown = names.slice(0, limit);
   return (
-    <span className="font-mono text-[13px]">
+    <span className="tabular-nums text-sm">
       {shown.map(defangName).join(", ")}
       {names.length > limit && <span className="font-sans text-slate-400"> and {names.length - limit} more</span>}
     </span>
@@ -71,7 +71,7 @@ function ServerCard({ recon }: { recon: Recon }) {
       )}
       {s.ip && (
         <Row label="IP address">
-          <span className="flex items-center gap-1 font-mono text-[13px]">
+          <span className="flex items-center gap-1 tabular-nums text-sm">
             {s.ip}
             <CopyButton text={s.ip} label="Copy the IP address" />
           </span>
@@ -105,7 +105,7 @@ function DomainCard({ recon, sharedHost }: { recon: Recon; sharedHost?: string |
   return (
     <Card icon={Globe} title="Domain">
       <Row label="Domain">
-        <span className="font-mono text-[13px]">{defangName(r.domain)}</span>
+        <span className="tabular-nums text-sm">{defangName(r.domain)}</span>
       </Row>
       {sharedHost && (
         <Note>
@@ -147,14 +147,14 @@ function DomainCard({ recon, sharedHost }: { recon: Recon; sharedHost?: string |
           <ul className="space-y-0.5">
             {recon.chain_domains.map((d) => (
               <li key={d.domain}>
-                <span className="font-mono text-[13px]">{defangName(d.domain)}</span>
+                <span className="tabular-nums text-sm">{defangName(d.domain)}</span>
                 <span className="text-slate-400"> {d.age_days !== null ? `(${formatAge(d.age_days)} old)` : "(age unknown)"}</span>
               </li>
             ))}
           </ul>
         </Row>
       )}
-      {r.source && <p className="text-xs text-slate-400">From {r.source === "rdap" ? "RDAP" : "WHOIS"}</p>}
+      {r.source && <p className="text-sm text-slate-400">From {r.source === "rdap" ? "RDAP" : "WHOIS"}</p>}
     </Card>
   );
 }
@@ -169,7 +169,7 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
       {c && (
         <>
           {c.trusted ? (
-            <p className="flex items-center gap-1.5 text-sm text-slate-200">
+            <p className="flex items-center gap-1.5 text-base text-slate-200">
               <Check className="h-4 w-4 text-blue-400" aria-hidden="true" />
               Browsers trust it
             </p>
@@ -208,7 +208,7 @@ function CertificateCard({ recon, finalUrl }: { recon: Recon; finalUrl: string }
           <Names names={h.other_domains} />
         </Row>
       )}
-      {h && h.note && <p className="text-xs text-slate-400">{h.note}</p>}
+      {h && h.note && <p className="text-sm text-slate-400">{h.note}</p>}
     </Card>
   );
 }
@@ -225,14 +225,14 @@ function DnsDetails({ recon }: { recon: Recon }) {
     ["TXT", d.txt],
   ];
   return (
-    <details className="rounded-xl border border-white/[0.08] bg-ink/30 px-4 py-3 text-sm">
+    <details className="rounded-xl bg-panel px-4 py-3 text-base">
       <summary className="cursor-pointer text-slate-300 hover:text-white">DNS records</summary>
       {d.note && <p className="mt-2 text-slate-400">{d.note}</p>}
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-[10rem_1fr]">
         {rows.map(([label, values]) => (
           <div key={label} className="contents">
             <dt className="text-slate-400">{label}</dt>
-            <dd className="whitespace-pre-line break-all font-mono text-[13px] text-slate-300">{values.length ? values.join("\n") : <span className="font-sans text-slate-400">none</span>}</dd>
+            <dd className="whitespace-pre-line break-all tabular-nums text-sm text-slate-300">{values.length ? values.join("\n") : <span className="font-sans text-slate-400">none</span>}</dd>
           </div>
         ))}
       </dl>
@@ -244,7 +244,7 @@ function TechDetails({ recon }: { recon: Recon }) {
   const h = recon.http;
   if (!h || h.status !== "ok") return null;
   return (
-    <details className="rounded-xl border border-white/[0.08] bg-ink/30 px-4 py-3 text-sm">
+    <details className="rounded-xl bg-panel px-4 py-3 text-base">
       <summary className="cursor-pointer text-slate-300 hover:text-white">Server software and security headers</summary>
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-[10rem_1fr]">
         {h.tech.length > 0 && (
@@ -252,7 +252,7 @@ function TechDetails({ recon }: { recon: Recon }) {
             <dt className="text-slate-400">Built with</dt>
             <dd className="flex flex-wrap gap-1.5">
               {h.tech.map((t) => (
-                <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-slate-200 ring-1 ring-white/10">
+                <span key={t} className="rounded-md bg-white/5 px-2 py-0.5 text-slate-200">
                   {t}
                 </span>
               ))}
@@ -262,13 +262,13 @@ function TechDetails({ recon }: { recon: Recon }) {
         {h.server && (
           <div className="contents">
             <dt className="text-slate-400">Server header</dt>
-            <dd className="break-all font-mono text-[13px] text-slate-300">{h.server}</dd>
+            <dd className="break-all tabular-nums text-sm text-slate-300">{h.server}</dd>
           </div>
         )}
         {h.powered_by && (
           <div className="contents">
             <dt className="text-slate-400">Powered by</dt>
-            <dd className="break-all font-mono text-[13px] text-slate-300">{h.powered_by}</dd>
+            <dd className="break-all tabular-nums text-sm text-slate-300">{h.powered_by}</dd>
           </div>
         )}
         <div className="contents">

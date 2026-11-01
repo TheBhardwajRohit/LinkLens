@@ -15,7 +15,7 @@ export default class Guard extends Component<Props, { failed: boolean }> {
   render() {
     if (this.state.failed) {
       return (
-        <p className="rounded-xl border border-white/[0.08] bg-ink/40 px-4 py-3 text-sm text-slate-400">
+        <p className="rounded-xl bg-panel px-4 py-3 text-base text-slate-400">
           This part of the report ({this.props.name}) couldn't be shown.
         </p>
       );

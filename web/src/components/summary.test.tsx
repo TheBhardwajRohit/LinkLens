@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { Analysis, Recon, Scan, Verdict, Visit } from "../lib/api";
 import { Advice, KeyFacts, warningText } from "./ReportSummary";
 import ScanResults from "./ScanResults";
-import { fillDays } from "./Trends";
+import { fillDays } from "../scan/Knows";
 import { VerdictCard } from "./Verdict";
 
 function scanWith(verdict: Verdict, extra: Partial<Analysis> = {}): Scan {

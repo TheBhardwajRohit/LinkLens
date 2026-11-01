@@ -5,12 +5,11 @@ import { ArrowRight, Check, LoaderCircle, MessageSquareText } from "lucide-react
 import { useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-import { ThemeSwitch } from "../components/NavBar";
+import SiteHeader from "../site/SiteHeader";
 import { SCANNER } from "../lib/pages";
 import { MESSAGES, STEPS, VERDICT_TEXT, VERDICT_WORD, type ExampleMessage } from "./examples";
-import { Dial, PILL, points } from "./parts";
+import { Dial, PILL, points } from "../site/parts";
 
-const REPO = "https://github.com/TheBhardwajRohit/LinkLens";
 const STEP_MS = 420;
 
 type Phase = { kind: "idle" } | { kind: "checking"; step: number } | { kind: "done" };
@@ -169,26 +168,7 @@ function MessageCheck() {
 export default function HomeHero() {
   return (
     <section className="relative grid min-h-[max(100svh,640px)] lg:grid-cols-2">
-      <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-4 px-5 py-5 sm:px-10">
-        <a
-          href="#top"
-          className="font-display text-xl font-bold tracking-tight text-cream focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300"
-        >
-          LinkLens
-        </a>
-        <nav aria-label="Main" className="flex items-center gap-5 text-[15px] text-slate-200">
-          <a href="#how" className="hidden transition-colors hover:text-white sm:inline">
-            How it works
-          </a>
-          <a href={REPO} target="_blank" rel="noopener noreferrer" className="hidden transition-colors hover:text-white sm:inline">
-            GitHub
-          </a>
-          <a href={SCANNER} className="font-medium text-blue-300 transition-colors hover:text-blue-200">
-            Scanner
-          </a>
-          <ThemeSwitch />
-        </nav>
-      </header>
+      <SiteHeader page="home" />
 
       <div id="top" className="order-2 flex flex-col justify-end bg-ink px-5 pb-14 pt-10 sm:px-10 lg:order-1 lg:pb-16">
         <h1 className="lines font-display text-[clamp(2.6rem,5.4vw,6rem)] font-semibold leading-[0.98] tracking-[-0.03em] text-cream">

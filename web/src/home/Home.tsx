@@ -1,7 +1,7 @@
 // The homepage: what LinkLens is, shown working, and one way into the scanner.
 import Capabilities from "./Capabilities";
 import CheckCta from "./CheckCta";
-import HomeFooter from "./HomeFooter";
+import SiteFooter from "../site/SiteFooter";
 import HomeHero from "./HomeHero";
 import HowItWorks from "./HowItWorks";
 import ProofBoard from "./ProofBoard";
@@ -18,7 +18,7 @@ export default function Home() {
         <ProofBoard />
         <CheckCta />
       </main>
-      <HomeFooter />
+      <SiteFooter />
     </>
   );
 }

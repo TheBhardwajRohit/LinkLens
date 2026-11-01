@@ -1,0 +1,175 @@
+{
+ "taken": "2026-11-01",
+ "stats": {
+  "pages": 55412,
+  "newest_page": "2026-10-16T09:37:46.091854+00:00",
+  "by_source": {
+   "phreshphish": {
+    "benign": 30230,
+    "phish": 24850
+   },
+   "scan": {
+    "benign": 259,
+    "phish": 4,
+    "unknown": 69
+   }
+  },
+  "families": 531,
+  "pages_in_families": 6673,
+  "scans": 360,
+  "phishing_lists": {
+   "links": 59223,
+   "domains": 392178,
+   "updated": "2026-10-02T17:51:47Z"
+  },
+  "last_runs": []
+ },
+ "trends": {
+  "days": [
+   {
+    "date": "2026-10-02",
+    "safe": 108,
+    "suspicious": 2,
+    "dangerous": 2
+   },
+   {
+    "date": "2026-10-03",
+    "safe": 211,
+    "suspicious": 12,
+    "dangerous": 6
+   },
+   {
+    "date": "2026-10-14",
+    "safe": 1,
+    "suspicious": 3,
+    "dangerous": 0
+   },
+   {
+    "date": "2026-10-16",
+    "safe": 1,
+    "suspicious": 6,
+    "dangerous": 1
+   },
+   {
+    "date": "2026-10-19",
+    "safe": 0,
+    "suspicious": 1,
+    "dangerous": 2
+   }
+  ],
+  "scam_types": [
+   {
+    "id": "malware",
+    "label": "Malware download",
+    "count": 7
+   },
+   {
+    "id": "banking",
+    "label": "Banking or payment fraud",
+    "count": 1
+   }
+  ],
+  "brands": [
+   {
+    "brand": "Facebook",
+    "pages": 1588
+   },
+   {
+    "brand": "Meta",
+    "pages": 1291
+   },
+   {
+    "brand": "MetaMask",
+    "pages": 933
+   },
+   {
+    "brand": "Google",
+    "pages": 923
+   },
+   {
+    "brand": "Robinhood",
+    "pages": 666
+   },
+   {
+    "brand": "Betwinner",
+    "pages": 570
+   },
+   {
+    "brand": "Naver",
+    "pages": 472
+   },
+   {
+    "brand": "USPS",
+    "pages": 436
+   },
+   {
+    "brand": "Trezor",
+    "pages": 408
+   },
+   {
+    "brand": "Microsoft",
+    "pages": 395
+   }
+  ],
+  "families": [
+   {
+    "id": 14614,
+    "label": "unnamed scam kit",
+    "size": 361,
+    "sites": 44,
+    "last_seen": "2025-08-25T00:00:00+00:00"
+   },
+   {
+    "id": 14452,
+    "label": "unnamed scam kit",
+    "size": 343,
+    "sites": 2,
+    "last_seen": "2025-07-09T00:00:00+00:00"
+   },
+   {
+    "id": 14542,
+    "label": "fake Meta login page",
+    "size": 286,
+    "sites": 248,
+    "last_seen": "2025-09-06T00:00:00+00:00"
+   },
+   {
+    "id": 14465,
+    "label": "fake Meta page",
+    "size": 263,
+    "sites": 142,
+    "last_seen": "2025-06-30T00:00:00+00:00"
+   },
+   {
+    "id": 14470,
+    "label": "fake Booking page",
+    "size": 262,
+    "sites": 23,
+    "last_seen": "2025-08-16T00:00:00+00:00"
+   },
+   {
+    "id": 54969,
+    "label": "fake Betwinner page",
+    "size": 187,
+    "sites": 155,
+    "last_seen": "2025-10-31T00:00:00+00:00"
+   },
+   {
+    "id": 54771,
+    "label": "fake Roblox page",
+    "size": 184,
+    "sites": 66,
+    "last_seen": "2025-11-05T00:00:00+00:00"
+   },
+   {
+    "id": 14667,
+    "label": "fake MetaMask page",
+    "size": 164,
+    "sites": 164,
+    "last_seen": "2025-04-17T00:00:00+00:00"
+   }
+  ],
+  "window_days": 30,
+  "feedback": {}
+ }
+}

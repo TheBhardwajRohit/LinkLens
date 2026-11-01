@@ -5,7 +5,7 @@ import { ArrowRight, Link2 } from "lucide-react";
 import { useState } from "react";
 
 import { handOff, SCANNER } from "../lib/pages";
-import { Reveal } from "./parts";
+import { Reveal } from "../site/parts";
 
 type View = "simple" | "full";
 const VIEW_KEY = "linklens-view"; // the same choice the report remembers

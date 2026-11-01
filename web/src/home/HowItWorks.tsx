@@ -4,7 +4,7 @@ import { Ban, Check, CircleSlash, Link2, Lock, ShieldAlert } from "lucide-react"
 import type { ReactNode } from "react";
 
 import { MESSAGES, STEPS, VERDICT_TEXT, VERDICT_WORD } from "./examples";
-import { Dial, Reveal, points } from "./parts";
+import { Dial, Reveal, points } from "../site/parts";
 
 const KYC = MESSAGES[0];
 
@@ -46,7 +46,7 @@ function CleanedLink() {
   return (
     <div data-ui className="rounded-xl bg-white/[0.04] p-4 ring-1 ring-white/[0.08]">
       <p className="break-all text-sm text-slate-200">
-        https://sbi-kyc-update.example/verify?mobile=<span className="rounded bg-white/10 px-1 text-slate-300">[removed]</span>
+        https://sbi-kyc-update.example/verify?mobile=<span className="rounded bg-white/10 px-1 text-slate-300">REDACTED</span>
       </p>
       <ul className="mt-3 space-y-1.5 text-sm text-slate-300">
         {rows.map(({ icon: Icon, text }) => (

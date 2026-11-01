@@ -37,7 +37,7 @@ function ViewSwitch({ view, onChange }: { view: View; onChange: (v: View) => voi
     { id: "full", label: "Full report" },
   ];
   return (
-    <div role="radiogroup" aria-label="How much detail to show" className="inline-flex rounded-lg bg-white/[0.05] p-1 ring-1 ring-white/10 print:hidden">
+    <div role="radiogroup" aria-label="How much detail to show" className="inline-flex rounded-xl bg-panel p-1 print:hidden">
       {options.map((o) => (
         <button
           key={o.id}
@@ -45,7 +45,7 @@ function ViewSwitch({ view, onChange }: { view: View; onChange: (v: View) => voi
           role="radio"
           aria-checked={view === o.id}
           onClick={() => onChange(o.id)}
-          className={`rounded-md px-3 py-1.5 text-sm transition focus-visible:outline-2 focus-visible:outline-blue-300 ${
+          className={`rounded-md px-3 py-1.5 text-base transition focus-visible:outline-2 focus-visible:outline-blue-300 ${
             view === o.id ? "bg-blue-600 font-medium text-white" : "text-slate-300 hover:text-white"
           }`}
         >
@@ -91,19 +91,19 @@ export default function ScanResults({
   }
 
   return (
-    <section id="report" ref={sectionRef} className="mx-auto max-w-7xl scroll-mt-6 px-4 pt-20 sm:px-6">
-      <div className="rounded-3xl border border-white/[0.08] bg-panel/90 p-5 shadow-[0_40px_120px_-40px_rgba(59,130,246,0.35)] backdrop-blur-md sm:p-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <section id="report" ref={sectionRef} className="mx-auto max-w-7xl scroll-mt-6 px-5 pb-8 pt-24 sm:px-10 lg:pt-32">
+      <div>
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="font-display text-2xl font-medium tracking-tight text-cream sm:text-3xl">Scan report</h2>
-            <p className="mt-1 break-all font-mono text-sm text-slate-300">{defang(scan.url)}</p>
+            <h2 className="font-display text-[clamp(1.75rem,2.6vw,2.5rem)] font-semibold leading-tight tracking-[-0.02em] text-cream">Scan report</h2>
+            <p className="mt-3 break-all text-[17px] text-slate-200">{defang(scan.url)}</p>
             {example ? (
-              <p className="mt-1 max-w-2xl text-sm text-slate-300">
+              <p className="mt-2 max-w-2xl text-[15px] text-slate-300">
                 Example report: a real scan of Google's harmless test address, saved so you can see what a report looks
                 like while the scanner is offline.
               </p>
             ) : reopened && (
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-2 text-[15px] text-slate-300">
                 Saved scan from {formatDate(scan.created_at)}. Personal details in the link were removed before saving.
               </p>
             )}
@@ -114,8 +114,8 @@ export default function ScanResults({
           <ReportActions id={scan.id} saved={scan.saved} onScanAnother={onScanAnother} />
         </div>
         {/* Only on paper or in the PDF: what was scanned and when. */}
-        <p className="mb-4 hidden text-sm text-slate-300 print:block">
-          LinkLens report for <span className="font-mono">{defang(scan.url)}</span>, scanned {formatDate(scan.created_at)}.
+        <p className="mb-4 hidden text-base text-slate-300 print:block">
+          LinkLens report for <span className="tabular-nums">{defang(scan.url)}</span>, scanned {formatDate(scan.created_at)}.
           Results are likely, not certain.
         </p>
 
@@ -141,7 +141,7 @@ export default function ScanResults({
                 <Guard name="page preview">
                   <VisitSummary visit={scan.visit} />
                 </Guard>
-                <p className="text-sm text-slate-300">
+                <p className="text-base text-slate-300">
                   This is the short version.{" "}
                   <button
                     type="button"
@@ -156,7 +156,7 @@ export default function ScanResults({
             )}
 
             <div className={view === "simple" ? "hidden print:block" : ""}>
-              <div role="tablist" aria-label="Report sections" className="mb-6 flex flex-wrap gap-1 border-b border-white/[0.08] print:hidden">
+              <div role="tablist" aria-label="Report sections" className="mb-6 flex flex-wrap gap-1 rounded-xl bg-panel p-1 print:hidden">
                 {TABS.map((t) => (
                   <button
                     key={t.id}
@@ -166,10 +166,10 @@ export default function ScanResults({
                     aria-selected={tab === t.id}
                     aria-controls={`panel-${t.id}`}
                     onClick={() => setTab(t.id)}
-                    className={`-mb-px border-b-2 px-3.5 py-2.5 text-sm transition focus-visible:outline-2 focus-visible:outline-blue-300 ${
+                    className={`rounded-lg px-3.5 py-2 text-[15px] transition-[background-color,color] duration-150 focus-visible:outline-2 focus-visible:outline-blue-300 ${
                       tab === t.id
-                        ? "border-blue-400 font-medium text-cream"
-                        : "border-transparent text-slate-300 hover:border-white/20 hover:text-white"
+                        ? "bg-blue-600 font-medium text-white"
+                        : "text-slate-200 hover:bg-white/[0.06] hover:text-white"
                     }`}
                   >
                     {t.label}

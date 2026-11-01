@@ -29,17 +29,17 @@ const OUTCOME: Record<string, { text: string; tone: "good" | "warn" | "bad" | "m
 };
 
 const TONE = {
-  good: "border-emerald-400/25 bg-emerald-400/5 text-emerald-300",
-  warn: "border-amber-400/25 bg-amber-400/5 text-amber-300",
-  bad: "border-rose-400/30 bg-rose-500/5 text-rose-300",
-  muted: "border-line bg-ink/40 text-slate-300",
+  good: "bg-emerald-400/[0.09] text-emerald-300",
+  warn: "bg-amber-400/[0.09] text-amber-300",
+  bad: "bg-rose-500/[0.1] text-rose-300",
+  muted: "bg-panel text-slate-200",
 };
 
 function Address({ url }: { url: string }) {
   const safe = defang(url);
   return (
     <span className="flex min-w-0 items-start gap-1">
-      <span className="min-w-0 break-all font-mono text-sm text-slate-200">{safe}</span>
+      <span className="min-w-0 break-all tabular-nums text-base text-slate-200">{safe}</span>
       <CopyButton text={safe} />
     </span>
   );
@@ -49,16 +49,16 @@ function HopRow({ hop, index }: { hop: Hop; index: number }) {
   return (
     <li className="flex gap-3">
       <span
-        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
           hop.blocked ? "bg-rose-500/15 text-rose-300" : "bg-cyan-400/10 text-cyan-300"
         }`}
       >
         {index + 1}
       </span>
       <div className="min-w-0 flex-1 pb-3">
-        <p className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+        <p className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
           <span>{HOP_LABEL[hop.kind] ?? hop.kind}</span>
-          {hop.status !== null && <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono">{hop.status}</span>}
+          {hop.status !== null && <span className="rounded bg-white/5 px-1.5 py-0.5 tabular-nums">{hop.status}</span>}
           {hop.blocked && (
             <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-300">Blocked: {hop.reason}</span>
           )}
@@ -86,18 +86,18 @@ function Journey({ hops }: { hops: Hop[] }) {
         return (
           <li key={`${i}-${hop.url}`} className="flex items-center gap-1.5">
             <span
-              className={`rounded-lg px-2.5 py-1.5 text-xs ring-1 ${
+              className={`rounded-lg px-2.5 py-1.5 text-sm ${
                 hop.blocked
-                  ? "bg-rose-500/10 text-rose-300 ring-rose-400/30"
+                  ? "bg-rose-500/10 text-rose-300"
                   : last
-                    ? "bg-blue-500/10 text-slate-100 ring-blue-400/30"
-                    : "bg-white/[0.04] text-slate-200 ring-white/10"
+                    ? "bg-blue-500/10 text-slate-100"
+                    : "bg-white/[0.04] text-slate-200"
               }`}
             >
               <span className="block text-[0.75rem] text-slate-400">
                 {i === 0 ? "You paste" : hop.blocked ? "Blocked" : last ? "Lands on" : HOP_LABEL[hop.kind] ?? hop.kind}
               </span>
-              <span className="font-mono">{hostOf(hop.url).replaceAll(".", "[.]")}</span>
+              <span className="tabular-nums">{hostOf(hop.url).replaceAll(".", "[.]")}</span>
             </span>
             {!last && <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />}
           </li>
@@ -114,13 +114,13 @@ export function VisitSummary({ visit }: { visit: Visit }) {
 
   return (
     <div className="mt-2 space-y-6">
-      <div className={`rounded-xl border px-4 py-3 text-sm ${TONE[outcome.tone]}`}>
+      <div className={`rounded-xl px-4 py-3 text-base ${TONE[outcome.tone]}`}>
         <p className="flex items-center gap-2 font-medium">
           <Icon className="h-5 w-5" aria-hidden="true" />
           {outcome.text}
         </p>
         {visit.notes.length > 0 && (
-          <ul className="mt-2 space-y-1 text-sm text-slate-300">
+          <ul className="mt-2 space-y-1 text-base text-slate-300">
             {visit.notes.map((note) => (
               <li key={note} className="flex gap-2">
                 <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -134,15 +134,15 @@ export function VisitSummary({ visit }: { visit: Visit }) {
       {visit.screenshot_jpeg_b64 && (
         <Section title="Safe preview">
           <figure>
-            <div className="overflow-hidden rounded-xl border border-line bg-ink/60">
+            <div className="overflow-hidden rounded-xl bg-panel">
               {/* A pretend browser bar, so it's obvious this is a picture of the page, not the page. */}
-              <div className="flex items-center gap-3 border-b border-line px-3 py-2" aria-hidden="true">
+              <div className="flex items-center gap-3 bg-white/[0.04] px-3 py-2" aria-hidden="true">
                 <span className="flex gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-full bg-rose-500/60" />
                   <span className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
                 </span>
-                <span className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-slate-300">
+                <span className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 tabular-nums text-sm text-slate-300">
                   {(visit.final_url ?? visit.requested_url).startsWith("https:") ? (
                     <Lock className="h-3 w-3 shrink-0 text-slate-400" />
                   ) : (
@@ -150,7 +150,7 @@ export function VisitSummary({ visit }: { visit: Visit }) {
                   )}
                   <span className="truncate">{defang(visit.final_url ?? visit.requested_url)}</span>
                 </span>
-                <span className="hidden shrink-0 rounded bg-blue-500/15 px-1.5 py-0.5 text-xs font-medium text-blue-200 sm:inline">
+                <span className="hidden shrink-0 rounded bg-blue-500/15 px-1.5 py-0.5 text-sm font-medium text-blue-200 sm:inline">
                   Picture only
                 </span>
               </div>
@@ -160,7 +160,7 @@ export function VisitSummary({ visit }: { visit: Visit }) {
                 className="block w-full"
               />
             </div>
-            <figcaption className="mt-2 text-xs text-slate-400">
+            <figcaption className="mt-2 text-sm text-slate-400">
               A picture taken inside the sandbox. It's only an image, so nothing on it can run or be clicked.
             </figcaption>
           </figure>
@@ -171,7 +171,7 @@ export function VisitSummary({ visit }: { visit: Visit }) {
         <Section title="Final address">
           <Address url={visit.final_url} />
           {visit.title && (
-            <p className="mt-1 break-words text-sm text-slate-400">
+            <p className="mt-1 break-words text-base text-slate-400">
               Page title: <span className="text-slate-300">{visit.title}</span>
             </p>
           )}
@@ -197,8 +197,8 @@ export function VisitDetails({ visit, recon, sharedHost }: { visit: Visit; recon
             ))}
           </ol>
           {visit.pending_refresh && (
-            <p className="mt-1 text-sm text-slate-400">
-              The page would redirect again later, to <span className="font-mono">{defang(visit.pending_refresh)}</span>
+            <p className="mt-1 text-base text-slate-400">
+              The page would redirect again later, to <span className="tabular-nums">{defang(visit.pending_refresh)}</span>
             </p>
           )}
         </Section>
@@ -206,10 +206,10 @@ export function VisitDetails({ visit, recon, sharedHost }: { visit: Visit; recon
 
       {visit.blocked.length > 0 && (
         <Section title="Blocked by the sandbox">
-          <ul className="space-y-1 text-sm">
+          <ul className="space-y-1 text-base">
             {visit.blocked.map((b) => (
               <li key={`${b.host}:${b.port}`} className="flex flex-wrap gap-x-2">
-                <span className="font-mono text-slate-200">{defang(`${b.host}:${b.port}`)}</span>
+                <span className="tabular-nums text-slate-200">{defang(`${b.host}:${b.port}`)}</span>
                 <span className="text-rose-300">{b.reason}</span>
               </li>
             ))}
@@ -219,14 +219,14 @@ export function VisitDetails({ visit, recon, sharedHost }: { visit: Visit; recon
 
       {visit.contacted_domains.length > 0 && (
         <Section title="Contacted domains">
-          <details className="text-sm">
+          <details className="text-base">
             <summary className="cursor-pointer text-slate-300 hover:text-white">
               The page contacted {visit.contacted_domains.length}{" "}
               {visit.contacted_domains.length === 1 ? "domain" : "domains"}
             </summary>
             <ul className="mt-2 columns-1 gap-6 sm:columns-2">
               {visit.contacted_domains.map((d) => (
-                <li key={d} className="break-all font-mono text-slate-400">
+                <li key={d} className="break-all tabular-nums text-slate-400">
                   {d.replaceAll(".", "[.]")}
                 </li>
               ))}
