@@ -1,10 +1,11 @@
-import { useState, type ReactNode, type Ref } from "react";
+import { useRef, useState, type ReactNode, type Ref } from "react";
 
 import type { Scan } from "../lib/api";
 import { formatDate } from "../lib/format";
 import { defang } from "../lib/url";
 import { resultLink } from "../lib/useScan";
 import BlacklistReport from "./BlacklistReport";
+import CompareReport, { CompareButton, useComparison } from "./CompareReport";
 import { FamilyCard, SiblingTabs } from "./FamilyReport";
 import Guard from "./Guard";
 import NetworkMap from "./NetworkMap";
@@ -14,12 +15,13 @@ import { VerdictCard, WhyFlagged } from "./Verdict";
 import { VisitDetails, VisitSummary } from "./VisitReport";
 
 type View = "simple" | "full";
-type TabId = "overview" | "behind" | "family";
+type TabId = "overview" | "behind" | "family" | "compare";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "behind", label: "Who's behind it" },
   { id: "family", label: "Family and siblings" },
+  { id: "compare", label: "Other tools" },
 ];
 const VIEW_KEY = "linklens-view";
 
@@ -80,6 +82,15 @@ export default function ScanResults({
 }) {
   const [view, setView] = useState<View>(savedView);
   const [tab, setTab] = useState<TabId>("overview");
+  const comparison = useComparison(scan, example);
+  const tabs = useRef<HTMLDivElement>(null);
+
+  function openComparison() {
+    changeView("full");
+    setTab("compare");
+    if (comparison.state.kind === "idle" || comparison.state.kind === "failed") comparison.run(false);
+    window.setTimeout(() => tabs.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  }
 
   function changeView(next: View) {
     setView(next);
@@ -124,6 +135,9 @@ export default function ScanResults({
             <Guard name="verdict">
               <VerdictCard analysis={scan.analysis} />
             </Guard>
+            <Guard name="comparison button">
+              <CompareButton onClick={openComparison} state={comparison.state} available={comparison.available} />
+            </Guard>
             <Guard name="advice">
               <Advice verdict={scan.analysis.verdict} />
             </Guard>
@@ -155,7 +169,7 @@ export default function ScanResults({
               </div>
             )}
 
-            <div className={view === "simple" ? "hidden print:block" : ""}>
+            <div className={`scroll-mt-6 ${view === "simple" ? "hidden print:block" : ""}`} ref={tabs}>
               <div role="tablist" aria-label="Report sections" className="mb-6 flex flex-wrap gap-1 rounded-xl bg-panel p-1 print:hidden">
                 {TABS.map((t) => (
                   <button
@@ -212,6 +226,13 @@ export default function ScanResults({
                   {/* Drawn again when the tab opens: a map drawn while hidden has no size to fit into. */}
                   <Guard name="network map" key={tab === "family" ? "map-shown" : "map-hidden"}>
                     <NetworkMap graph={scan.graph} />
+                  </Guard>
+                </Panel>
+              </div>
+              <div role="tabpanel" id="panel-compare" aria-labelledby="tab-compare">
+                <Panel active={tab === "compare"}>
+                  <Guard name="comparison">
+                    <CompareReport analysis={scan.analysis} {...comparison} />
                   </Guard>
                 </Panel>
               </div>

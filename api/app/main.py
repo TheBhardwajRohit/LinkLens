@@ -16,6 +16,7 @@ from app import (
     access,
     cache,
     checks,
+    compare,
     extras,
     family,
     jobs,
@@ -75,6 +76,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-API-Key"],
 )
 app.include_router(extras.router)
+app.include_router(compare.router)
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 

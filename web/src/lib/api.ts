@@ -199,6 +199,7 @@ export type Scan = {
   family?: FamilyResult;
   siblings?: Siblings;
   graph?: GraphResult;
+  comparison?: Comparison; // only after someone asked to compare with other tools
   saved: boolean;
 };
 
@@ -412,6 +413,47 @@ export async function getStats(signal?: AbortSignal): Promise<Stats | null> {
     return resp.ok ? ((await resp.json()) as Stats) : null;
   } catch {
     return null;
+  }
+}
+
+/** What VirusTotal and PhishTank said about a scanned link, asked only when the visitor clicks. */
+export type VtFlag = { engine: string; category: string; label: string | null };
+export type VtAnswer = {
+  status: "found" | "unknown" | "refused" | "quota" | "error" | "not_configured" | "skipped";
+  note?: string;
+  fresh?: boolean;
+  asked_at?: string;
+  report?: {
+    stats: { malicious: number; suspicious: number; harmless: number; undetected: number; timeout: number };
+    engines: number;
+    flagged: VtFlag[];
+    categories: string[];
+    reputation: number | null;
+    votes: { harmless?: number; malicious?: number };
+    first_seen: string | null;
+    last_analysis: string | null;
+  };
+};
+export type PhishTankAnswer = {
+  status: "listed" | "not_listed" | "quota" | "error" | "skipped";
+  note?: string;
+  phish_id?: number | null;
+  verified?: boolean;
+};
+export type Comparison = { url: string; asked_at: string; virustotal: VtAnswer; phishtank: PhishTankAnswer };
+
+export async function compareScan(id: string, fresh: boolean): Promise<{ ok: true; comparison: Comparison } | { ok: false; error: string }> {
+  if (!API_URL) return { ok: false, error: "Comparing needs the scanner, which isn't online right now." };
+  try {
+    const resp = await fetch(`${API_URL}/scans/${encodeURIComponent(id)}/compare`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fresh }),
+    });
+    if (resp.ok) return { ok: true, comparison: (await resp.json()) as Comparison };
+    return { ok: false, error: (await detail(resp)) ?? "The comparison couldn't be made." };
+  } catch {
+    return { ok: false, error: "The scanner couldn't be reached." };
   }
 }
 

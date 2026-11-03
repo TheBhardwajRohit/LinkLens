@@ -9,6 +9,7 @@ import { CopyButton } from "../components/ReportParts";
 import { VERDICT_TEXT, VERDICT_WORD } from "../home/examples";
 import { defang } from "../lib/url";
 import { Dial, PILL, points } from "../site/parts";
+import { SCANNER } from "../lib/pages";
 import SiteHeader from "../site/SiteHeader";
 import { communityScore, ledger, phishTankAnswer, runDate, TESTED, vtAnswer, vtReport, minus, type Tested } from "./data";
 
@@ -122,6 +123,9 @@ export default function CompareHero() {
               How we tested
             </a>
           </div>
+          <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-slate-300">
+            Got your own link? Scan it on the <a href={SCANNER} className="font-medium text-blue-300 underline-offset-4 hover:text-blue-200 hover:underline">scanner</a>, then press "Compare with other tools" to ask VirusTotal and PhishTank about it live.
+          </p>
         </div>
       </div>
 

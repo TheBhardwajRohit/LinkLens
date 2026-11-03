@@ -32,6 +32,7 @@ from pathlib import Path
 
 import httpx
 
+from app.compare import vt_summary  # the same reading the scanner's live comparison uses
 from app.redact import redact_url
 from jobs.common import now, say
 
@@ -98,37 +99,6 @@ class VirusTotal:
         resp = self.call("GET", f"/analyses/{analysis_id}")
         resp.raise_for_status()
         return ((resp.json().get("data") or {}).get("attributes") or {}).get("status") == "completed"
-
-
-def vt_summary(attrs: dict) -> dict:
-    """What VirusTotal's report says, in the shape the page shows."""
-    results = attrs.get("last_analysis_results") or {}
-    flagged = sorted(
-        (
-            {"engine": name, "category": r.get("category"), "label": r.get("result")}
-            for name, r in results.items()
-            if r.get("category") in ("malicious", "suspicious")
-        ),
-        key=lambda f: (f["category"] != "malicious", f["engine"].lower()),
-    )
-    stats = attrs.get("last_analysis_stats") or {}
-    final = attrs.get("last_final_url")
-    return {
-        "known": True,
-        "stats": {
-            k: int(stats.get(k, 0)) for k in ("malicious", "suspicious", "harmless", "undetected", "timeout")
-        },
-        "engines": len(results),
-        "flagged": flagged,
-        "categories": sorted(set((attrs.get("categories") or {}).values())),
-        "reputation": attrs.get("reputation"),
-        "votes": attrs.get("total_votes") or {},
-        "title": attrs.get("title"),
-        "final_url": redact_url(final) if final else None,
-        "first_seen": iso(attrs.get("first_submission_date")),
-        "last_analysis": iso(attrs.get("last_analysis_date")),
-        "times_submitted": attrs.get("times_submitted"),
-    }
 
 
 def phishtank(url: str, client: httpx.Client) -> dict:
