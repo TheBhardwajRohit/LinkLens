@@ -1,16 +1,16 @@
 # Model report
 
-Written by `jobs/train.py` on 2026-10-03. Results are measured on pages the model never saw.
+Written by `jobs/train.py` on 2026-11-03. Results are measured on pages the model never saw.
 
 ## In short
 
 - The model reads only the link and the page (the 78 numbers in `api/app/ml/features.py`).
-- At its default cut-off (50%), it catches 75.9% of the scam pages in the test set,
-  and 97.5% of the pages it flags really are scams. It wrongly flags 1.6% of honest pages.
+- At its default cut-off (50%), it catches 75.5% of the scam pages in the test set,
+  and 97.6% of the pages it flags really are scams. It wrongly flags 1.5% of honest pages.
 - It is not trusted on its own. In a scan it can lift a page out of Safe only when the plain rules
-  found warning signs too. Scored that way, rules and model together mark 41.2% of the test
+  found warning signs too. Scored that way, rules and model together mark 40.8% of the test
   set's scam pages Suspicious or worse, and 1.0% of its honest pages.
-- On 126 real honest pages from outside the dataset, the model alone rates 13 as likely scams (60% or more). In a scan, 1 of them ends up above Safe.
+- On 126 real honest pages from outside the dataset, the model alone rates 14 as likely scams (60% or more). In a scan, 1 of them ends up above Safe.
 - These are results on a research dataset. Real links are harder, so the report page still says "likely".
 
 Words used here: *precision* is the share of flagged pages that really are scams. *Recall* is the
@@ -73,51 +73,51 @@ What the weights change, with everything else kept the same:
 
 | | Without the weights | With the weights |
 |---|---|---|
-| Scam pages caught (50% cut-off) | 84.6% | 75.9% |
-| Honest pages wrongly flagged | 3.3% | 1.6% |
-| Honest pages under 100 tags wrongly flagged (517 in the test set) | 22.2% | 8.1% |
-| Real honest pages rated 60% or more likely scam (of 126, see below) | 28 | 13 |
+| Scam pages caught (50% cut-off) | 84.7% | 75.5% |
+| Honest pages wrongly flagged | 3.2% | 1.5% |
+| Honest pages under 100 tags wrongly flagged (517 in the test set) | 20.7% | 8.5% |
+| Real honest pages rated 60% or more likely scam (of 126, see below) | 29 | 14 |
 
 ## Model
 
-Gradient-boosted decision trees (LightGBM), 200 trees of up to 31 leaves, learning
+Gradient-boosted decision trees (LightGBM), 158 trees of up to 31 leaves, learning
 rate 0.06. Training stopped when 30 more trees no longer helped on the held-back
 pages. The model ships as plain JSON and is run by about 40 lines of Python, checked against LightGBM.
 
 ## Results on the test set
 
-- ROC AUC: 0.9743 (1.0 is perfect ranking, 0.5 is guessing)
-- PR AUC: 0.9721
+- ROC AUC: 0.9745 (1.0 is perfect ranking, 0.5 is guessing)
+- PR AUC: 0.9722
 
 At different cut-offs of the model's probability:
 
 | | Precision | Recall | F1 | False alarms | Scams caught | Honest pages flagged | Scams missed |
 |---|---|---|---|---|---|---|---|
-| Flag when at least 95% | 99.7% | 35.9% | 52.8% | 0.1% | 2,528 | 7 | 4,515 |
-| Flag when at least 80% | 99.3% | 57.1% | 72.5% | 0.3% | 4,020 | 28 | 3,023 |
-| Flag when at least 60% | 98.3% | 69.6% | 81.5% | 1.0% | 4,905 | 84 | 2,138 |
-| Flag when at least 50% | 97.5% | 75.9% | 85.4% | 1.6% | 5,347 | 137 | 1,696 |
-| Flag when at least 40% | 96.7% | 79.7% | 87.4% | 2.2% | 5,610 | 189 | 1,433 |
+| Flag when at least 95% | 99.8% | 34.1% | 50.8% | 0.1% | 2,402 | 6 | 4,641 |
+| Flag when at least 80% | 99.4% | 55.2% | 70.9% | 0.3% | 3,885 | 25 | 3,158 |
+| Flag when at least 60% | 98.4% | 69.6% | 81.5% | 0.9% | 4,903 | 79 | 2,140 |
+| Flag when at least 50% | 97.6% | 75.5% | 85.1% | 1.5% | 5,315 | 130 | 1,728 |
+| Flag when at least 40% | 96.7% | 80.1% | 87.6% | 2.2% | 5,638 | 191 | 1,405 |
 
-When the model says 5% or less, 4.2% of those pages are scams anyway.
-When it says 15% or less, 8.5% are.
+When the model says 5% or less, 4.1% of those pages are scams anyway.
+When it says 15% or less, 8.1% are.
 
 The same test pages by size, at the 50% cut-off:
 
 | Page size (tags) | Honest pages | Wrongly flagged | Scam pages | Caught |
 |---|---|---|---|---|
-| under 40 | 138 | 24 (17.4%) | 1,174 | 1,021 (87.0%) |
-| 40 to 99 | 379 | 18 (4.7%) | 1,378 | 1,172 (85.1%) |
-| 100 to 299 | 849 | 38 (4.5%) | 2,379 | 1,809 (76.0%) |
-| 300 to 999 | 2,927 | 30 (1.0%) | 1,634 | 1,060 (64.9%) |
-| 1,000 or more | 4,222 | 27 (0.6%) | 478 | 285 (59.6%) |
+| under 40 | 138 | 26 (18.8%) | 1,174 | 1,016 (86.5%) |
+| 40 to 99 | 379 | 18 (4.7%) | 1,378 | 1,156 (83.9%) |
+| 100 to 299 | 849 | 33 (3.9%) | 2,379 | 1,831 (77.0%) |
+| 300 to 999 | 2,927 | 30 (1.0%) | 1,634 | 1,022 (62.5%) |
+| 1,000 or more | 4,222 | 23 (0.5%) | 478 | 290 (60.7%) |
 
 Small honest pages are still flagged far more often than large ones, and the test set holds few
 of them, so those percentages are rough.
 
 10,990 of the test pages (6,294 scam, 4,696 honest) are on sites that have no page at all in the
-training data. On those alone, at the 50% cut-off, the model catches 77.6% of the scam pages and
-wrongly flags 2.4% of the honest ones.
+training data. On those alone, at the 50% cut-off, the model catches 77.1% of the scam pages and
+wrongly flags 2.3% of the honest ones.
 
 ## Rules alone, and rules plus the model
 
@@ -133,16 +133,16 @@ How the model's opinion is added (`model_say` in `api/app/analysis/score.py`, th
 - On a free hosting service the model never adds more than 20, backed or not. The training data
   has 65 honest pages hosted that way, so there the model cannot tell honest from scam.
 - On a brand's real site, or one of the 10,000 most visited sites, the model never adds points.
-  336 of the test set's 7,043 scam pages sit on such sites.
+  339 of the test set's 7,043 scam pages sit on such sites.
 
 | | Precision | Recall | F1 | False alarms | Scams caught | Honest pages flagged | Scams missed |
 |---|---|---|---|---|---|---|---|
-| Rules alone: Suspicious or worse (31+) | 75.6% | 6.1% | 11.4% | 1.6% | 433 | 140 | 6,610 |
-| Rules + model: Suspicious or worse (31+) | 97.2% | 41.2% | 57.9% | 1.0% | 2,902 | 84 | 4,141 |
+| Rules alone: Suspicious or worse (31+) | 75.8% | 6.1% | 11.3% | 1.6% | 432 | 138 | 6,611 |
+| Rules + model: Suspicious or worse (31+) | 97.1% | 40.8% | 57.4% | 1.0% | 2,872 | 85 | 4,171 |
 | Rules alone: Likely dangerous (70+) | 91.4% | 0.5% | 0.9% | 0.0% | 32 | 3 | 7,011 |
-| Rules + model: Likely dangerous (70+) | 99.5% | 5.7% | 10.8% | 0.0% | 402 | 2 | 6,641 |
+| Rules + model: Likely dangerous (70+) | 99.0% | 5.4% | 10.2% | 0.0% | 379 | 4 | 6,664 |
 
-If the model always counted in full (no limits but the last one), the second row would catch 63.1% of the scam pages
+If the model always counted in full (no limits but the last one), the second row would catch 62.0% of the scam pages
 and flag 1.1% of the honest ones. The difference is the price of not letting the model
 raise a verdict alone. It looks large here because most scam pages in a dataset show no other
 warning sign: there is no domain age, certificate, blacklist, or family to look at. A live scan
@@ -158,14 +158,14 @@ local scan server, last on 2026-10-03. The numbers the model reads were saved by
 | | Pages |
 |---|---|
 | Honest pages checked | 126 |
-| Rated 40% or more likely to be a scam page | 21 |
-| Rated 60% or more | 13 |
-| Rated 80% or more | 8 |
+| Rated 40% or more likely to be a scam page | 19 |
+| Rated 60% or more | 14 |
+| Rated 80% or more | 6 |
 | Rated 95% or more | 0 |
 | Above Safe in a scan (rules, model, and the limit together) | 1 |
 | Above Safe if the model always counted in full | 5 |
 
-3 of the 13 pages rated 60% or more have under 40 tags (7 pages that small were
+3 of the 14 pages rated 60% or more have under 40 tags (7 pages that small were
 checked). Very small honest pages are the model's weak spot, and the reason it cannot raise a
 verdict alone.
 
@@ -178,21 +178,21 @@ while the fixes above were chosen.
 
 | Signal | Share of the model's total gain |
 |---|---|
-| the number of other sites it links to (`out_domains`) | 16.9% |
-| the number of links on the page (`links`) | 8.6% |
-| the layers of subdomains (`subdomain_depth`) | 7.3% |
-| the length of the site name (`host_length`) | 5.5% |
-| how deep the link's path goes (`path_depth`) | 5.4% |
-| the length of the link's path (`path_length`) | 4.2% |
+| the number of other sites it links to (`out_domains`) | 17.4% |
+| the number of links on the page (`links`) | 8.7% |
+| the layers of subdomains (`subdomain_depth`) | 7.5% |
+| the length of the site name (`host_length`) | 5.6% |
+| how deep the link's path goes (`path_depth`) | 5.5% |
 | the number of scripts (`scripts`) | 4.1% |
 | a domain ending scammers use often (`abused_tld`) | 4.0% |
+| the length of the link's path (`path_length`) | 3.9% |
 | the share of links to other sites (`external_link_share`) | 3.9% |
-| the size of the page (`tags_log`) | 3.6% |
-| how random the name looks (`entropy`) | 3.3% |
-| the brand names on the page (`brands_mentioned`) | 3.2% |
+| the size of the page (`tags_log`) | 3.8% |
+| how random the name looks (`entropy`) | 3.1% |
 | the share of links that go nowhere (`empty_link_share`) | 3.1% |
-| whether the link uses HTTPS (`https`) | 2.9% |
-| the scripts loaded from other sites (`external_scripts`) | 2.2% |
+| the brand names on the page (`brands_mentioned`) | 3.1% |
+| whether the link uses HTTPS (`https`) | 3.0% |
+| the scripts loaded from other sites (`external_scripts`) | 2.3% |
 
 ## Honest limits
 

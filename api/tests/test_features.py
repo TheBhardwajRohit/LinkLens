@@ -57,6 +57,14 @@ def test_vector_matches_names_for_new_page_counts():
     assert f["hidden_fields"] == 1 and f["password_fields"] == 1
 
 
+def test_a_punycode_name_is_measured_as_people_see_it():
+    d = digest_page("https://www.xn--80ak6aa92e.com/", None)
+    f = dict(zip(NAMES, d.features, strict=True))
+    assert f["host_length"] == len("www.аррӏе.com")
+    assert f["hyphens"] == 0 and f["digit_ratio"] == 0
+    assert f["punycode"] == 1  # the model still knows the name was written in punycode
+
+
 def test_the_model_never_sees_the_query_string():
     html = (PAGES / "benign.html").read_text(encoding="utf-8")
     plain = digest_page("https://lemon-cakes-example.com/menu", html).features

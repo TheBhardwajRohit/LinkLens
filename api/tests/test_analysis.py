@@ -42,6 +42,34 @@ def test_lookalike_names(url, brand, kind):
 
 
 @pytest.mark.parametrize(
+    ("url", "seen"),
+    [
+        ("https://www.xn--80ak6aa92e.com/", "аррӏе"),  # "apple" in Cyrillic letters
+        ("https://xn--bcher-kva.de/", "bücher"),
+        ("https://xn--80aaicscedivjahe7bt8m.xn--p1ai/", "дисконтныймагазин"),
+    ],
+)
+def test_punycode_names_are_measured_as_people_see_them(url, seen):
+    """The "xn--" prefix and the encoding's digits are not hyphens or digits in the real name."""
+    f = analyze_link(url)
+    assert f.hyphens == 0
+    assert f.digit_ratio == 0
+    assert f.entropy == round(shannon_entropy(seen), 2)
+    assert f.random_name is False
+
+
+def test_real_hyphens_in_a_punycode_name_still_count():
+    assert analyze_link("https://xn--kleinanzeigen-mritz-kbc.de/").hyphens == 1  # kleinanzeigen-müritz
+
+
+def test_a_punycode_lookalike_gets_no_hyphen_points():
+    url = "https://www.xn--80ak6aa92e.com/"
+    texts = [r.text for r in analyze(visit_for(url, None), recon(), url).reasons]
+    assert any("look-alike letters" in t for t in texts)
+    assert not any("hyphens" in t for t in texts)
+
+
+@pytest.mark.parametrize(
     ("url", "brand"),
     [
         ("https://retail.onlinesbi.sbi/", "SBI"),

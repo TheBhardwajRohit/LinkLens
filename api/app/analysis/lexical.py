@@ -212,8 +212,8 @@ def looks_random(label: str) -> bool:
     """Does a name look machine-made? Judged word by word, so readable names joined by hyphens
     (sbi-kyc-update) are not called random just for being long."""
     for token in re.split(r"[-_.]+", label.lower()):
-        if len(token) < 10:
-            continue
+        if len(token) < 10 or not token.isascii():
+            continue  # too short to judge, or in another alphabet, which these checks weren't made for
         letters = [c for c in token if c.isalpha()]
         vowels = sum(c in "aeiou" for c in letters)
         switches = sum(a.isdigit() != b.isdigit() for a, b in zip(token, token[1:], strict=False))
@@ -229,6 +229,17 @@ def _decode_host(host: str) -> str:
         return host.encode("ascii").decode("idna")
     except (UnicodeError, ValueError):
         return host
+
+
+def _seen(label: str) -> str:
+    """One label of a name as a person sees it. Punycode ("xn--80ak6aa92e") is turned back into its
+    letters ("аррӏе"), so the "xn--" and the encoding's digits don't count as hyphens and digits."""
+    if not label.startswith("xn--"):
+        return label
+    try:
+        return label.encode("ascii").decode("idna")
+    except (UnicodeError, ValueError):
+        return label[4:]  # broken punycode: at least the prefix isn't counted
 
 
 def skeleton(text: str) -> str:
@@ -319,10 +330,13 @@ def analyze_link(url: str) -> LinkFeatures:
     features.free_hosting = site.suffix if site.is_private and site.suffix else None
     features.subdomain_depth = len([s for s in site.subdomain.split(".") if s])
     label = pub.domain or ""
-    features.digit_ratio = round(sum(c.isdigit() for c in host) / max(len(host), 1), 2)
-    features.hyphens = label.count("-")
-    features.entropy = round(shannon_entropy(label), 2)
-    features.random_name = looks_random(label)
+    # Counted on the name a person sees, not its punycode form (see _seen).
+    seen_host = ".".join(_seen(part) for part in host.split("."))
+    seen_label = _seen(label)
+    features.digit_ratio = round(sum(c.isdigit() for c in seen_host) / max(len(seen_host), 1), 2)
+    features.hyphens = seen_label.count("-")
+    features.entropy = round(shannon_entropy(seen_label), 2)
+    features.random_name = looks_random(seen_label)
     features.abused_tld = (pub.suffix or "").split(".")[-1] in ABUSED_TLDS
     features.shortener = features.registered_domain in SHORTENERS
     features.tranco_rank = toplist.rank(features.site)

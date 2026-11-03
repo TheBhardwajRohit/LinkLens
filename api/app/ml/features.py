@@ -110,7 +110,8 @@ def vector(
     tags = prints.tags if prints else 0
     words = prints.words if prints else 0
     f: dict[str, float] = {
-        "host_length": len(link.host),
+        # Measured as a person sees the name: "xn--80ak6aa92e.com" is "аррӏе.com", 9 characters.
+        "host_length": len(link.unicode_host or link.host),
         "path_length": len(path),
         "path_depth": path.count("/"),
         "host_dots": link.host.count("."),
